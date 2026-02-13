@@ -1686,17 +1686,18 @@
         correctIndex: 0
       });
       
-      // 4. Bug (simplified - just show code)
+      // 4. Bug (改为回忆常见错误)
+      const commonMistakes = prob.mistakes && prob.mistakes.length > 0 
+        ? prob.mistakes 
+        : ['边界条件处理', '空值/空数组检查', '索引越界', '返回值类型'];
       exercises.push({
-        type: 'bug',
+        type: 'recall',
         emoji: '4️⃣',
-        title: 'Bug 识别',
+        title: '常见错误回忆',
         timeLimit: '60秒',
-        question: '检查这段代码是否有问题：',
-        lines: lines,
-        bugLineIndex: Math.floor(lines.length / 2),
-        bugDescription: prob.mistakes && prob.mistakes[0] ? prob.mistakes[0] : '请检查边界条件',
-        correctCode: code
+        question: `写这道题时容易犯哪些错误？（提示：想想边界条件、特殊情况）`,
+        hint: '回忆你做这题时踩过的坑',
+        answer: '常见错误：\n' + commonMistakes.map((m, i) => `${i+1}. ${m}`).join('\n')
       });
       
       // 5. Transfer

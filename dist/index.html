@@ -2137,8 +2137,7 @@
       resultDiv.innerHTML = `📅 下次复习：${nextDateStr}（间隔 ${interval} 天） | 难度系数：${(data.ease || 0).toFixed(2)}`;
       rateArea.appendChild(resultDiv);
 
-      // Update session progress
-      const session = window.currentSession;
+      // Update session progress (reuse session from above)
       if (session && session.current < session.total) {
         // Mark current item as completed
         session.queue[session.current].status = 'completed';

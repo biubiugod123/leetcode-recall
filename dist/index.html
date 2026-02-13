@@ -1163,17 +1163,21 @@
         font-size: 16px !important;
       }
       
-      /* === Code Blocks === */
+      /* === Code Blocks - Full Width === */
       .code-block, .code-block-fill, .bug-code-block, pre {
         font-size: 13px !important;
         line-height: 1.6 !important;
         padding: 12px !important;
-        border-radius: 10px !important;
+        border-radius: 0 !important;
         overflow-x: auto !important;
         overflow-y: visible !important;
         -webkit-overflow-scrolling: touch;
-        max-width: 100% !important;
         display: block !important;
+        /* Extend to full width */
+        margin-left: -16px !important;
+        margin-right: -16px !important;
+        width: calc(100% + 32px) !important;
+        max-width: none !important;
       }
       .code-block-fill, .bug-code-block {
         overflow-x: scroll !important;
@@ -1183,6 +1187,8 @@
         white-space: pre !important;
         display: block !important;
         min-width: max-content;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
       }
       pre code {
         display: block;

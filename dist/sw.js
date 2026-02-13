@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lc-recall-v11';
+const CACHE_NAME = 'lc-recall-v12';
 const ASSETS = [
   './',
   './index.html',

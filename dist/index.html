@@ -1164,17 +1164,34 @@
       }
       
       /* === Code Blocks === */
-      .code-block, .code-block-fill, pre, code {
-        font-size: 14px !important;
-        line-height: 1.5 !important;
-        padding: 14px !important;
+      .code-block, .code-block-fill, .bug-code-block, pre {
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+        padding: 12px !important;
         border-radius: 10px !important;
-        overflow-x: auto;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
         -webkit-overflow-scrolling: touch;
+        max-width: 100% !important;
+        display: block !important;
       }
-      .code-line {
-        font-size: 14px !important;
-        padding: 2px 0 !important;
+      .code-block-fill, .bug-code-block {
+        overflow-x: scroll !important;
+      }
+      .code-line, .bug-line {
+        font-size: 13px !important;
+        white-space: pre !important;
+        display: block !important;
+        min-width: max-content;
+      }
+      pre code {
+        display: block;
+        white-space: pre !important;
+        min-width: max-content;
+      }
+      /* Ensure card doesn't clip code */
+      .ex-card, .fs-card {
+        overflow: visible !important;
       }
       
       /* === Spacing === */

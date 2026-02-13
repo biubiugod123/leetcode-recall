@@ -1129,21 +1129,32 @@
 
     // ---- Init ----
     async function init() {
-      // Load problems from static JSON
-      const probRes = await fetch('problems.json');
-      problems = await probRes.json();
-      
-      // Load progress from localStorage
-      progressData = { progress: loadProgressLocal() };
-      
-      // Compute review data locally
-      reviewData = computeReviewData(progressData.progress);
-      
-      // Initialize daily session
-      window.currentSession = await initDailySession(progressData.progress || {});
-      
-      renderStats();
-      renderProblems();
+      try {
+        console.log('Init starting...');
+        
+        // Load problems from static JSON
+        const probRes = await fetch('problems.json');
+        if (!probRes.ok) throw new Error('Failed to fetch problems.json: ' + probRes.status);
+        problems = await probRes.json();
+        console.log('Loaded', problems.length, 'problems');
+        
+        // Load progress from localStorage
+        progressData = { progress: loadProgressLocal() };
+        
+        // Compute review data locally
+        reviewData = computeReviewData(progressData.progress);
+        
+        // Initialize daily session
+        window.currentSession = await initDailySession(progressData.progress || {});
+        console.log('Session initialized:', window.currentSession);
+        
+        renderStats();
+        renderProblems();
+        console.log('Init complete!');
+      } catch (err) {
+        console.error('Init failed:', err);
+        document.body.innerHTML = '<div style="color:red;padding:40px;text-align:center;"><h2>加载失败</h2><p>' + err.message + '</p><button onclick="location.reload()">刷新重试</button></div>';
+      }
     }
 
     function renderStats() {
@@ -2414,39 +2425,45 @@
 
     // ---- PWA Install Prompt ----
     let deferredPrompt = null;
-    const installBanner = document.getElementById('installBanner');
-    const installBtn = document.getElementById('installBtn');
+    
+    try {
+      const installBanner = document.getElementById('installBanner');
+      const installBtn = document.getElementById('installBtn');
 
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      console.log('Already installed as PWA');
-    } else {
-      // Listen for install prompt
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBanner.style.display = 'block';
-        console.log('Install prompt ready');
-      });
+      // Check if already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('Already installed as PWA');
+        if (installBanner) installBanner.style.display = 'none';
+      } else if (installBanner && installBtn) {
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          installBanner.style.display = 'block';
+          console.log('Install prompt ready');
+        });
 
-      // Handle install button click
-      installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) {
-          alert('请使用浏览器菜单中的"添加到主屏幕"选项');
-          return;
-        }
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log('Install outcome:', outcome);
-        deferredPrompt = null;
-        installBanner.style.display = 'none';
-      });
+        // Handle install button click
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) {
+            alert('请使用浏览器菜单中的"添加到主屏幕"选项');
+            return;
+          }
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('Install outcome:', outcome);
+          deferredPrompt = null;
+          installBanner.style.display = 'none';
+        });
 
-      // Hide banner if installed
-      window.addEventListener('appinstalled', () => {
-        installBanner.style.display = 'none';
-        console.log('App installed!');
-      });
+        // Hide banner if installed
+        window.addEventListener('appinstalled', () => {
+          installBanner.style.display = 'none';
+          console.log('App installed!');
+        });
+      }
+    } catch (e) {
+      console.error('PWA install setup error:', e);
     }
 
     init();

@@ -1025,6 +1025,109 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+    /* ---- Fullscreen Quiz Mode ---- */
+    .fs-quiz {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+      overflow: hidden;
+    }
+    .fs-quiz.open {
+      transform: translateY(0);
+    }
+    .fs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      padding-top: max(16px, env(safe-area-inset-top));
+    }
+    .fs-close {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--surface2);
+      color: var(--text2);
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .fs-close:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+    .fs-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .fs-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface3);
+      transition: all 0.2s;
+    }
+    .fs-dot.current {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .fs-dot.done {
+      background: var(--green);
+    }
+    .fs-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 20px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    .fs-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .fs-meta {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .fs-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 300px;
+    }
+    /* Swipe animation */
+    .fs-content.swipe-left {
+      animation: swipeLeft 0.3s ease-out;
+    }
+    .fs-content.swipe-right {
+      animation: swipeRight 0.3s ease-out;
+    }
+    @keyframes swipeLeft {
+      0% { opacity: 1; transform: translateX(0); }
+      50% { opacity: 0; transform: translateX(-30px); }
+      51% { transform: translateX(30px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes swipeRight {
+      0% { opacity: 1; transform: translateX(0); }
+      50% { opacity: 0; transform: translateX(30px); }
+      51% { transform: translateX(-30px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
   </style>
 </head>
 <body>
@@ -1082,6 +1185,17 @@
       <div id="exContainer"></div>
       <div class="nav-row" id="navRow"></div>
       <div class="score-card" id="scoreCard"></div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Quiz Mode (Mobile) -->
+  <div id="fullscreenQuiz" class="fs-quiz">
+    <div class="fs-header">
+      <button class="fs-close" onclick="closeFullscreen()">✕</button>
+      <div class="fs-dots" id="fsDots"></div>
+    </div>
+    <div class="fs-content" id="fsContent">
+      <!-- Quiz content injected here -->
     </div>
   </div>
 
@@ -1477,26 +1591,156 @@
       ratings = {};
       hintLevel = 0;
       document.getElementById('problemSection').classList.remove('open');
-      document.getElementById('quizArea').classList.add('open');
-      document.getElementById('quizName').textContent = quiz.problem;
-
-      const diff = document.getElementById('quizDiff');
-      diff.textContent = quiz.difficulty;
-      diff.className = `tag tag-${quiz.difficulty.toLowerCase()}`;
-
-      document.getElementById('quizCat').textContent = quiz.category.replace(/^\d+-/,'');
       document.getElementById('scoreCard').classList.remove('open');
 
-      renderStepper();
-      renderStepWithEnterAnimation();
-      document.getElementById('quizArea').scrollIntoView({ behavior: 'smooth' });
+      // Use fullscreen mode on mobile
+      if (window.innerWidth <= 768) {
+        openFullscreen();
+      } else {
+        // Desktop: use inline quiz area
+        document.getElementById('quizArea').classList.add('open');
+        document.getElementById('quizName').textContent = quiz.problem;
+
+        const diff = document.getElementById('quizDiff');
+        diff.textContent = quiz.difficulty;
+        diff.className = `tag tag-${quiz.difficulty.toLowerCase()}`;
+
+        document.getElementById('quizCat').textContent = quiz.category.replace(/^\d+-/,'');
+
+        renderStepper();
+        renderStepWithEnterAnimation();
+        document.getElementById('quizArea').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     function closeQuiz() {
       document.getElementById('quizArea').classList.remove('open');
+      closeFullscreen();
       stopAllTimers();
       // Refresh stats
       refreshData();
+    }
+
+    // ---- Fullscreen Mode ----
+    let fsSwipeStartX = 0;
+    let fsSwipeStartY = 0;
+
+    function openFullscreen() {
+      const fs = document.getElementById('fullscreenQuiz');
+      fs.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      renderFsDots();
+      renderFsContent();
+      setupSwipeGestures();
+    }
+
+    function closeFullscreen() {
+      const fs = document.getElementById('fullscreenQuiz');
+      fs.classList.remove('open');
+      document.body.style.overflow = '';
+      stopAllTimers();
+      refreshData();
+    }
+
+    function renderFsDots() {
+      const session = window.currentSession;
+      if (!session) return;
+      const container = document.getElementById('fsDots');
+      container.innerHTML = session.queue.map((item, i) => {
+        let cls = 'fs-dot';
+        if (i === session.current) cls += ' current';
+        else if (item.status === 'completed') cls += ' done';
+        return `<div class="${cls}"></div>`;
+      }).join('');
+    }
+
+    function renderFsContent() {
+      const container = document.getElementById('fsContent');
+      if (!quiz) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">没有题目</div>';
+        return;
+      }
+      
+      // Render current exercise
+      const ex = quiz.exercises[step];
+      if (!ex) {
+        // Show completion
+        renderFsCompletion();
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="fs-title">${quiz.problem}</div>
+        <div class="fs-meta">
+          <span class="tag tag-${quiz.difficulty.toLowerCase()}">${quiz.difficulty}</span>
+          <span class="tag tag-cat">${quiz.category.replace(/^\d+-/,'')}</span>
+        </div>
+        ${renderExCard(ex, step)}
+      `;
+      
+      // Start timer if needed
+      if (ex.timeLimit) startTimer(step, ex.timeLimit);
+    }
+
+    function renderFsCompletion() {
+      const container = document.getElementById('fsContent');
+      const session = window.currentSession;
+      const completed = session ? session.queue.filter(q => q.status === 'completed').length : 0;
+      
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;">
+          <div style="font-size:64px;margin-bottom:20px;">🎉</div>
+          <div style="font-size:24px;font-weight:700;margin-bottom:12px;">完成！</div>
+          <div style="color:var(--muted);margin-bottom:30px;">今日已完成 ${completed} 道题</div>
+        </div>
+      `;
+      
+      // Auto close after 2 seconds
+      setTimeout(() => {
+        closeFullscreen();
+      }, 2000);
+    }
+
+    function fsNextQuestion() {
+      const session = window.currentSession;
+      if (!session) return;
+      
+      if (session.current >= session.total) {
+        renderFsCompletion();
+        return;
+      }
+      
+      // Animate and load next
+      const content = document.getElementById('fsContent');
+      content.classList.add('swipe-left');
+      
+      setTimeout(() => {
+        content.classList.remove('swipe-left');
+        smartRecommend();
+      }, 300);
+    }
+
+    function setupSwipeGestures() {
+      const content = document.getElementById('fsContent');
+      
+      content.addEventListener('touchstart', (e) => {
+        fsSwipeStartX = e.touches[0].clientX;
+        fsSwipeStartY = e.touches[0].clientY;
+      }, { passive: true });
+      
+      content.addEventListener('touchend', (e) => {
+        const deltaX = e.changedTouches[0].clientX - fsSwipeStartX;
+        const deltaY = e.changedTouches[0].clientY - fsSwipeStartY;
+        
+        // Only trigger if horizontal swipe > 50px and more horizontal than vertical
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+          if (deltaX < 0) {
+            // Swipe left = next
+            fsNextQuestion();
+          }
+          // Swipe right could go to previous, but we'll skip for now
+        }
+      }, { passive: true });
     }
 
     async function refreshData() {
@@ -2153,10 +2397,20 @@
         
         // Auto-advance to next card or show summary
         setTimeout(() => {
+          // Update fullscreen dots if in fullscreen mode
+          if (document.getElementById('fullscreenQuiz').classList.contains('open')) {
+            renderFsDots();
+          }
+          
           if (session.current < session.total) {
             smartRecommend();
           } else {
-            showSessionSummary();
+            // Check if in fullscreen mode
+            if (document.getElementById('fullscreenQuiz').classList.contains('open')) {
+              renderFsCompletion();
+            } else {
+              showSessionSummary();
+            }
           }
         }, 500);
       }

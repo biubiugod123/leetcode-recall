@@ -1,10 +1,10 @@
-const CACHE_NAME = 'lc-recall-v2';
+const CACHE_NAME = 'lc-recall-v3';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/problems.json',
-  '/build-info.json',
-  '/manifest.json'
+  './',
+  './index.html',
+  './problems.json',
+  './build-info.json',
+  './manifest.json'
 ];
 
 // Install - cache core assets

@@ -1,0 +1,2416 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#818CF8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LC Recall" />
+  <title>LeetCode Recall Trainer 🧠</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090B;
+      --surface: #18181B;
+      --surface2: #1F1F23;
+      --surface3: #27272A;
+      --border: #2E2E32;
+      --border2: #3F3F46;
+      --text: #FAFAFA;
+      --text2: #D4D4D8;
+      --muted: #71717A;
+      --accent: #818CF8;
+      --accent2: #6366F1;
+      --accent-glow: rgba(129,140,248,.15);
+      --green: #4ADE80;
+      --green2: #22C55E;
+      --green-soft: rgba(74,222,128,.1);
+      --red: #F87171;
+      --red-soft: rgba(248,113,113,.1);
+      --orange: #FB923C;
+      --orange-soft: rgba(251,146,60,.1);
+      --blue: #60A5FA;
+      --yellow: #FBBF24;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --ease: cubic-bezier(.4,0,.2,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* ---- Layout ---- */
+    .app { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+    /* ---- Header ---- */
+    .header {
+      padding: 48px 0 40px;
+      text-align: center;
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+    }
+    .logo {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .hero {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+      line-height: 1.2;
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #818CF8 0%, #4ADE80 50%, #60A5FA 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: shimmer 3s ease infinite;
+    }
+    @keyframes shimmer {
+      0%,100% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+
+    /* ---- Stats Row ---- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin: 32px 0;
+    }
+    .stat {
+      background: var(--surface);
+      padding: 20px 16px;
+      text-align: center;
+      transition: background .2s var(--ease);
+    }
+    .stat:hover { background: var(--surface2); }
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      font-family: var(--mono);
+      line-height: 1;
+    }
+    .stat-num.purple { color: var(--accent); }
+    .stat-num.green { color: var(--green); }
+    .stat-num.orange { color: var(--orange); }
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* ---- Buttons ---- */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 28px 0;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn-primary:hover { background: #5558E6; box-shadow: 0 0 30px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface); }
+    .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+    .btn-icon { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 10px; }
+
+    /* ---- Problem Grid ---- */
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    #problemSection { display: none; }
+    #problemSection.open { display: block; animation: fadeIn .3s var(--ease); }
+
+    .pgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .pcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .pcard::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      padding: 1px;
+      background: linear-gradient(135deg, transparent 40%, var(--accent) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .pcard:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .pcard:hover::before { opacity: 1; }
+    .pcard-num {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .pcard-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 6px 0 10px;
+      line-height: 1.3;
+    }
+    .pcard-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pcard-status {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .pcard-status.due { background: var(--orange-soft); color: var(--orange); }
+    .pcard-status.mastered { background: var(--green-soft); color: var(--green); }
+
+    .tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .tag-easy { background: var(--green-soft); color: var(--green); }
+    .tag-medium { background: var(--orange-soft); color: var(--orange); }
+    .tag-hard { background: var(--red-soft); color: var(--red); }
+    .tag-cat {
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    /* ---- Quiz Area ---- */
+    #quizArea { display: none; }
+    #quizArea.open { display: block; animation: fadeIn .4s var(--ease); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .quiz-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .quiz-info { }
+    .quiz-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+    .quiz-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      align-items: center;
+    }
+
+    /* ---- Stepper ---- */
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 0 28px;
+    }
+    .step {
+      width: 40px;
+      height: 5px;
+      border-radius: 99px;
+      background: var(--surface3);
+      transition: all .3s var(--ease);
+      cursor: pointer;
+    }
+    .step.active { background: var(--accent); width: 56px; }
+    .step.done { background: var(--green2); }
+
+    /* ---- Exercise Card ---- */
+    .ex-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      animation: slideIn .4s var(--ease);
+    }
+    .ex-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 24px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .ex-type {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ex-type-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .ex-type-icon.recall { background: rgba(129,140,248,.15); }
+    .ex-type-icon.fill { background: rgba(96,165,250,.15); }
+    .ex-type-icon.choice { background: rgba(251,146,60,.15); }
+    .ex-type-icon.bug { background: rgba(248,113,113,.15); }
+    .ex-type-icon.transfer { background: rgba(74,222,128,.15); }
+    .ex-timer {
+      font-size: 13px;
+      font-family: var(--mono);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .timer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+    .timer-dot.stopped { animation: none; background: var(--muted); }
+
+    .ex-body { padding: 24px; }
+    .ex-question {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+
+    /* ---- Code Blocks ---- */
+    pre {
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      position: relative;
+    }
+    pre::before {
+      content: 'python';
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    code { font-family: var(--mono); font-size: 13px; }
+
+    /* Syntax highlighting */
+    .kw { color: #C792EA; }
+    .fn { color: #82AAFF; }
+    .str { color: #C3E88D; }
+    .num { color: #F78C6C; }
+    .cmt { color: #546E7A; font-style: italic; }
+    .op { color: #89DDFF; }
+    .var { color: #EEFFFF; }
+    .blank { 
+      background: rgba(129,140,248,.15);
+      color: var(--accent);
+      padding: 2px 16px;
+      border-radius: 4px;
+      border-bottom: 2px dashed var(--accent);
+      font-weight: 600;
+    }
+    .bug-mark {
+      background: var(--red-soft);
+      border-radius: 4px;
+      display: inline;
+    }
+
+    .icode {
+      background: var(--surface3);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    /* ---- Textarea (Recall/Fill input) ---- */
+    .input-area {
+      width: 100%;
+      min-height: 120px;
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s var(--ease);
+    }
+    .input-area:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .input-area::placeholder {
+      color: var(--muted);
+      opacity: .6;
+    }
+    .input-area.code-input {
+      min-height: 200px;
+      tab-size: 4;
+      white-space: pre;
+    }
+
+    /* ---- Submit / Check button ---- */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 16px;
+      background: var(--accent2);
+      border: 1px solid var(--accent2);
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn:hover { background: #5558E6; box-shadow: 0 0 20px var(--accent-glow); }
+    .submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ---- Comparison View (Recall) ---- */
+    .compare-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      animation: fadeIn .3s var(--ease);
+    }
+    .compare-col {
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    .compare-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .compare-label.user { color: var(--blue); }
+    .compare-label.ref { color: var(--green); }
+    .compare-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text2);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ---- Diff View (Fill) ---- */
+    .diff-view {
+      margin-top: 16px;
+      animation: fadeIn .3s var(--ease);
+    }
+    .diff-line {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      padding: 2px 12px;
+      white-space: pre;
+      border-radius: 4px;
+      margin: 1px 0;
+    }
+    .diff-line.same { color: var(--text2); }
+    .diff-line.added { background: rgba(74,222,128,.1); color: var(--green); }
+    .diff-line.removed { background: rgba(248,113,113,.1); color: var(--red); }
+    .diff-line.changed { background: rgba(251,146,60,.08); color: var(--orange); }
+    .diff-container {
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    .diff-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .diff-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .diff-legend span { display: flex; align-items: center; gap: 4px; }
+    .diff-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+    .diff-dot.g { background: var(--green); }
+    .diff-dot.r { background: var(--red); }
+
+    /* ---- Self-Rating Buttons ---- */
+    .self-rating {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      animation: fadeIn .3s var(--ease);
+    }
+    .rate-btn {
+      flex: 1;
+      padding: 14px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      text-align: center;
+      line-height: 1.4;
+    }
+    .rate-btn:hover { transform: translateY(-2px); }
+    .rate-btn.good {
+      border-color: rgba(74,222,128,.3);
+    }
+    .rate-btn.good:hover {
+      background: var(--green-soft);
+      border-color: var(--green);
+      box-shadow: 0 4px 20px rgba(74,222,128,.15);
+    }
+    .rate-btn.partial {
+      border-color: rgba(251,146,60,.3);
+    }
+    .rate-btn.partial:hover {
+      background: var(--orange-soft);
+      border-color: var(--orange);
+      box-shadow: 0 4px 20px rgba(251,146,60,.15);
+    }
+    .rate-btn.forgot {
+      border-color: rgba(248,113,113,.3);
+    }
+    .rate-btn.forgot:hover {
+      background: var(--red-soft);
+      border-color: var(--red);
+      box-shadow: 0 4px 20px rgba(248,113,113,.15);
+    }
+    .rate-btn.selected {
+      pointer-events: none;
+      opacity: .5;
+    }
+    .rate-btn.good.selected {
+      opacity: 1;
+      background: var(--green-soft);
+      border-color: var(--green);
+    }
+    .rate-btn.partial.selected {
+      opacity: 1;
+      background: var(--orange-soft);
+      border-color: var(--orange);
+    }
+    .rate-btn.forgot.selected {
+      opacity: 1;
+      background: var(--red-soft);
+      border-color: var(--red);
+    }
+    .rate-result {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--surface2);
+      font-size: 13px;
+      color: var(--muted);
+      animation: fadeIn .3s var(--ease);
+    }
+    .rate-suggestion {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(251,146,60,.08);
+      border: 1px solid rgba(251,146,60,.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--orange);
+      animation: fadeIn .3s var(--ease);
+    }
+
+    /* ---- Options ---- */
+    .opts { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .opt {
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .opt:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .opt-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--surface3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .opt.correct {
+      border-color: var(--green2);
+      background: var(--green-soft);
+    }
+    .opt.correct .opt-letter { background: var(--green2); color: white; }
+    .opt.wrong {
+      border-color: var(--red);
+      background: var(--red-soft);
+    }
+    .opt.wrong .opt-letter { background: var(--red); color: white; }
+    .opt.disabled { pointer-events: none; opacity: .6; }
+
+    /* ---- Reveal Button ---- */
+    .reveal {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px dashed var(--border2);
+      border-radius: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .reveal:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+    .answer {
+      display: none;
+      margin-top: 16px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(74,222,128,.06), rgba(96,165,250,.06));
+      border: 1px solid rgba(74,222,128,.15);
+      border-radius: 14px;
+      animation: fadeIn .3s var(--ease);
+    }
+    .answer.open { display: block; }
+    .answer-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+
+    /* ---- Progressive Hint System ---- */
+    .hint-btn {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid rgba(251,191,36,.3);
+      border-radius: 10px;
+      color: var(--yellow);
+      font-weight: 600;
+      font-size: 13px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all .3s var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .hint-btn:hover {
+      background: rgba(251,191,36,.08);
+      border-color: var(--yellow);
+      box-shadow: 0 0 16px rgba(251,191,36,.1);
+    }
+    .hint-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(251,191,36,.15);
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .hint-layer {
+      margin-bottom: 12px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      animation: hintReveal .5s var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .hint-layer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(251,191,36,.06) 0%, rgba(129,140,248,.06) 50%, rgba(74,222,128,.06) 100%);
+      background-size: 200% 200%;
+      animation: hintGradient 4s ease infinite;
+      z-index: 0;
+    }
+    .hint-layer > * { position: relative; z-index: 1; }
+    @keyframes hintGradient {
+      0%,100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    @keyframes hintReveal {
+      from { opacity: 0; max-height: 0; padding: 0 18px; margin: 0; }
+      to { opacity: 1; max-height: 200px; }
+    }
+    .hint-layer {
+      border: 1px solid rgba(251,191,36,.15);
+    }
+    .hint-level-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--yellow);
+      margin-bottom: 6px;
+    }
+    .hint-content {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    /* ---- Hint area in header ---- */
+    .hint-area { margin-bottom: 16px; }
+
+    /* ---- Navigation ---- */
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 24px 0 48px;
+    }
+
+    /* ---- Score Card ---- */
+    .score-card {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      margin: 24px 0 48px;
+      animation: fadeIn .5s var(--ease);
+    }
+    .score-card.open { display: block; }
+    .score-emoji { font-size: 48px; margin-bottom: 16px; }
+    .score-text {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .score-sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .score-nums {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin: 24px 0;
+    }
+    .score-n { text-align: center; }
+    .score-n .big {
+      font-size: 36px;
+      font-weight: 900;
+      font-family: var(--mono);
+    }
+    .score-n .lbl {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* ---- Old Hint (kept for compat) ---- */
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 560px) {
+      .pgrid { grid-template-columns: 1fr; }
+      .hero { font-size: 24px; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .stat-num { font-size: 24px; }
+      .ex-body { padding: 16px; }
+      .compare-view { grid-template-columns: 1fr; }
+      .self-rating { flex-direction: column; }
+    }
+
+    /* ---- Problem Description ---- */
+    .problem-desc {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text2);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .problem-desc p { margin-bottom: 8px; }
+    .problem-desc strong { color: var(--text); }
+
+    /* ---- Inline Fill Blanks ---- */
+    .code-block-fill {
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 2.2;
+      margin: 16px 0;
+    }
+    .code-line { white-space: pre; }
+
+    /* Bug hunt code block */
+    .bug-code-block {
+      background: #0D0D0F;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0;
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: 13px;
+      margin: 16px 0;
+    }
+    .bug-line {
+      white-space: pre;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all .15s var(--ease);
+      border-left: 3px solid transparent;
+    }
+    .bug-line:hover:not(.disabled) {
+      background: rgba(129,140,248,.08);
+      border-left-color: var(--accent);
+    }
+    .bug-line.disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+    .bug-line.correct {
+      background: var(--green-soft);
+      border-left-color: var(--green);
+      color: var(--green);
+    }
+    .bug-line.wrong {
+      background: var(--red-soft);
+      border-left-color: var(--red);
+      color: var(--red);
+    }
+    .blank-input {
+      background: rgba(129,140,248,.1);
+      border: 1px solid var(--accent);
+      border-bottom: 2px solid var(--accent);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 2px 8px;
+      min-width: 200px;
+      outline: none;
+      transition: all .2s var(--ease);
+    }
+    .blank-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      background: rgba(129,140,248,.15);
+    }
+    .blank-input.correct {
+      border-color: var(--green);
+      background: var(--green-soft);
+      color: var(--green);
+    }
+    .blank-input.wrong {
+      border-color: var(--red);
+      background: var(--red-soft);
+      color: var(--red);
+    }
+    .blank-answer {
+      display: none;
+      font-size: 12px;
+      color: var(--green);
+      margin-top: 2px;
+      padding-left: 8px;
+    }
+    .blank-answer.show { display: block; }
+    .blank-row { margin: 4px 0; }
+
+    /* ---- Card transitions ---- */
+    @keyframes slideOutLeft {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-100px); }
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .card-exit {
+      animation: slideOutLeft 0.3s var(--ease) forwards;
+    }
+
+    .card-enter {
+      animation: slideInRight 0.3s var(--ease) forwards;
+    }
+
+    /* ---- Scrollbar ---- */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">Active Recall</div>
+      <h1 class="hero"><span class="hero-gradient">LeetCode Recall Trainer</span></h1>
+      <p class="subtitle">不看答案，不看代码，只靠大脑检索 ✨</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="stats"></div>
+
+    <!-- Actions -->
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="smartRecommend()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        开始每日复习
+      </button>
+      <button class="btn btn-ghost" onclick="toggleProblems()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        选择题目
+      </button>
+    </div>
+
+    <!-- Problem Selection -->
+    <div id="problemSection">
+      <div class="section-title">已刷题目</div>
+      <div class="pgrid" id="problemGrid"></div>
+    </div>
+
+    <!-- Quiz Area -->
+    <div id="quizArea">
+      <div class="quiz-top">
+        <div class="quiz-info">
+          <div class="quiz-name" id="quizName"></div>
+          <div class="quiz-meta">
+            <span class="tag" id="quizDiff"></span>
+            <span class="tag tag-cat" id="quizCat"></span>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="closeQuiz()">✕ 关闭</button>
+      </div>
+      <div class="stepper" id="stepper"></div>
+      <div id="exContainer"></div>
+      <div class="nav-row" id="navRow"></div>
+      <div class="score-card" id="scoreCard"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---- State ----
+    let problems = [];
+    let quiz = null;
+    let step = 0;
+    let answers = {};
+    let timers = {};
+    let hintLevel = 0; // progressive hints: 0=none, 1/2/3=revealed
+    let ratings = {}; // step -> rating submitted
+    let progressData = {};
+    let reviewData = null;
+
+    // ---- Local Storage Helpers ----
+    const PROGRESS_KEY = 'lc-recall-progress';
+    
+    function loadProgressLocal() {
+      try {
+        return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
+      } catch (e) { return {}; }
+    }
+    
+    function saveProgressLocal(data) {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+    }
+    
+    function computeReviewData(progress) {
+      const today = getTodayStr();
+      const due = [];
+      const upcoming = [];
+      
+      for (const [numStr, problemData] of Object.entries(progress)) {
+        for (const [type, data] of Object.entries(problemData)) {
+          if (data.nextReview && data.nextReview <= today) {
+            due.push({ number: parseInt(numStr), type, ...data });
+          } else if (data.nextReview) {
+            upcoming.push({ number: parseInt(numStr), type, ...data });
+          }
+        }
+      }
+      return { due, upcoming, today };
+    }
+
+    // ---- Init ----
+    async function init() {
+      // Load problems from static JSON
+      const probRes = await fetch('problems.json');
+      problems = await probRes.json();
+      
+      // Load progress from localStorage
+      progressData = { progress: loadProgressLocal() };
+      
+      // Compute review data locally
+      reviewData = computeReviewData(progressData.progress);
+      
+      // Initialize daily session
+      window.currentSession = await initDailySession(progressData.progress || {});
+      
+      renderStats();
+      renderProblems();
+    }
+
+    function renderStats() {
+      const session = window.currentSession || { current: 0, total: 0 };
+      const progressPct = session.total > 0 ? Math.round((session.current / session.total) * 100) : 0;
+      const remaining = Math.max(0, session.total - session.current);
+      
+      const total = problems.length;
+      
+      document.getElementById('stats').innerHTML = `
+        <div class="stat">
+          <div class="stat-num green">${session.current}</div>
+          <div class="stat-label">已完成</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num orange">${remaining}</div>
+          <div class="stat-label">本轮剩余</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num purple">${total}</div>
+          <div class="stat-label">总题数</div>
+        </div>
+      `;
+      
+      // Update or create progress bar
+      const statsEl = document.getElementById('stats');
+      let progressBar = document.getElementById('daily-progress-bar');
+      
+      if (!progressBar) {
+        progressBar = document.createElement('div');
+        progressBar.id = 'daily-progress-bar';
+        progressBar.style.cssText = 'margin:20px 0;padding:0 20px';
+        statsEl.parentElement.insertBefore(progressBar, statsEl.nextSibling);
+      }
+      
+      progressBar.innerHTML = `
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between">
+          <span>今日进度</span>
+          <span>${session.current} / ${session.total} (${progressPct}%)</span>
+        </div>
+        <div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden">
+          <div style="width:${progressPct}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .3s var(--ease)"></div>
+        </div>
+      `;
+    }
+
+    function renderProblems() {
+      // Build a set of due problem numbers
+      const dueNums = new Set();
+      const masteredNums = new Set();
+      if (reviewData) {
+        reviewData.due.forEach(p => dueNums.add(p.number));
+      }
+      if (progressData && progressData.progress) {
+        for (const [key, entry] of Object.entries(progressData.progress)) {
+          if (Object.values(entry).some(ex => ex.interval >= 21)) {
+            masteredNums.add(parseInt(key));
+          }
+        }
+      }
+
+      document.getElementById('problemGrid').innerHTML = problems.map(p => {
+        let statusHtml = '';
+        if (dueNums.has(p.number)) {
+          statusHtml = '<span class="pcard-status due">待复习</span>';
+        } else if (masteredNums.has(p.number)) {
+          statusHtml = '<span class="pcard-status mastered">已掌握</span>';
+        }
+        return `
+          <div class="pcard" onclick="startQuiz(${p.number})">
+            ${statusHtml}
+            <div class="pcard-num">#${String(p.number).padStart(3,'0')}</div>
+            <div class="pcard-title">${p.title}</div>
+            <div class="pcard-tags">
+              <span class="tag tag-${p.difficulty.toLowerCase()}">${p.difficulty}</span>
+              <span class="tag tag-cat">${p.category.replace(/^\d+-/,'')}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleProblems() {
+      document.getElementById('problemSection').classList.toggle('open');
+    }
+
+    // ---- Smart Recommend (use daily session queue) ----
+    async function smartRecommend() {
+      const session = window.currentSession;
+      
+      if (!session || session.total === 0) {
+        alert('题库为空，请先添加题目！');
+        return;
+      }
+      
+      if (session.current >= session.total) {
+        // All done or no session - show summary
+        showSessionSummary();
+        return;
+      }
+      
+      // Get current item from queue
+      const currentItem = session.queue[session.current];
+      
+      if (!currentItem) {
+        console.error('No current item in queue');
+        return;
+      }
+      
+      // Show the card for this problem and type
+      showCard(currentItem.id, currentItem.type);
+    }
+
+    // ---- Show Session Summary ----
+    function showSessionSummary() {
+      const session = window.currentSession;
+      if (!session) return;
+      
+      // Calculate stats
+      const completed = session.queue.filter(item => item.status === 'completed');
+      const byRating = {
+        good: completed.filter(item => item.rating === 'good').length,
+        partial: completed.filter(item => item.rating === 'partial').length,
+        forgot: completed.filter(item => item.rating === 'forgot').length
+      };
+      const accuracy = completed.length > 0 
+        ? Math.round((byRating.good / completed.length) * 100) 
+        : 0;
+      
+      // Build summary HTML
+      const summaryHtml = `
+        <div style="text-align:center;padding:60px 20px">
+          <div style="font-size:48px;margin-bottom:20px">🎉</div>
+          <div style="font-size:28px;font-weight:700;margin-bottom:12px">今日任务完成！</div>
+          <div style="color:var(--muted);margin-bottom:40px">Keep up the great work!</div>
+          
+          <div style="background:var(--surface2);border-radius:12px;padding:24px;margin-bottom:24px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+              <div>
+                <div style="font-size:32px;font-weight:700;color:var(--green)">${completed.length}</div>
+                <div style="font-size:13px;color:var(--muted)">完成题数</div>
+              </div>
+              <div>
+                <div style="font-size:32px;font-weight:700;color:var(--accent)">${accuracy}%</div>
+                <div style="font-size:13px;color:var(--muted)">正确率</div>
+              </div>
+              <div>
+                <div style="font-size:32px;font-weight:700;color:var(--blue)">${byRating.good}</div>
+                <div style="font-size:13px;color:var(--muted)">完全掌握</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:12px;justify-content:center">
+            <button class="btn-primary" onclick="startNewRound()">
+              <i data-lucide="refresh-cw"></i> 再来一轮
+            </button>
+            <button class="btn-secondary" onclick="location.reload()">
+              <i data-lucide="home"></i> 返回首页
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Replace main content
+      document.querySelector('.app').innerHTML = summaryHtml;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function startNewRound() {
+      clearSession();
+      location.reload();
+    }
+
+    // ---- Show Card (single exercise type) ----
+    async function showCard(id, type) {
+      // Load only the specified exercise type
+      await startQuiz(id, type);
+    }
+
+    // ---- Generate Quiz Locally ----
+    function generateQuizFromProblem(prob) {
+      const exercises = [];
+      
+      // 1. Recall
+      exercises.push({
+        type: 'recall',
+        emoji: '1️⃣',
+        title: '解题思路回忆',
+        timeLimit: '60-90秒',
+        description: prob.descSummary || '',
+        question: '请描述你的解题思路（用什么算法？为什么？关键步骤是什么？）',
+        hint: '思路 > 代码，描述方法和关键步骤',
+        answer: prob.keyPoints || '请参考笔记'
+      });
+      
+      // 2. Fill (simplified)
+      const code = prob.codeBlocks && prob.codeBlocks[0] ? prob.codeBlocks[0] : '';
+      const lines = code.split('\n');
+      const outputLines = lines.map((line, i) => ({ type: 'code', content: line }));
+      exercises.push({
+        type: 'fill',
+        emoji: '2️⃣',
+        title: '关键逻辑填空',
+        timeLimit: '30-60秒',
+        question: '请回忆这道题的核心代码逻辑',
+        lines: outputLines,
+        blanks: [],
+        fullCode: code,
+        answer: '```python\n' + code + '\n```'
+      });
+      
+      // 3. Choice
+      const techOptions = {
+        '04-Hash-Table': ['哈希表', '排序', '二分查找', '数组遍历'],
+        '06-Tree': ['DFS递归', 'BFS层序', '双指针', '动态规划'],
+        '03-Sliding-Window': ['滑动窗口', '双指针', '前缀和', '分治'],
+        'default': ['哈希表', '双指针', '递归', '动态规划']
+      };
+      const opts = techOptions[prob.category] || techOptions['default'];
+      exercises.push({
+        type: 'choice',
+        emoji: '3️⃣',
+        title: '模式识别',
+        timeLimit: '20秒',
+        question: `${prob.fullTitle} 使用的核心算法是？`,
+        options: opts.sort(() => Math.random() - 0.5),
+        correctIndex: 0
+      });
+      
+      // 4. Bug (simplified - just show code)
+      exercises.push({
+        type: 'bug',
+        emoji: '4️⃣',
+        title: 'Bug 识别',
+        timeLimit: '60秒',
+        question: '检查这段代码是否有问题：',
+        lines: lines,
+        bugLineIndex: Math.floor(lines.length / 2),
+        bugDescription: prob.mistakes && prob.mistakes[0] ? prob.mistakes[0] : '请检查边界条件',
+        correctCode: code
+      });
+      
+      // 5. Transfer
+      exercises.push({
+        type: 'transfer',
+        emoji: '5️⃣',
+        title: '变式思考',
+        timeLimit: '60秒',
+        question: `如果 ${prob.title} 的输入规模从 10^4 变成 10^9，解法需要调整吗？`,
+        options: ['可以，不需要调整', '需要优化常数', '需要换算法', '无法完成'],
+        correctIndex: 0,
+        answer: '取决于当前时间复杂度'
+      });
+      
+      // Build hints
+      const hints = [
+        { level: 1, label: '算法标签', content: prob.category.replace(/^\d+-/, '') },
+        { level: 2, label: '题目描述', content: prob.descSummary || '见笔记' },
+        { level: 3, label: '关键要点', content: prob.keyPoints ? prob.keyPoints.split('\n').slice(0,3).join('\n') : '见笔记' }
+      ];
+      
+      return {
+        problem: prob.fullTitle,
+        number: prob.number,
+        difficulty: prob.difficulty,
+        category: prob.category,
+        hints,
+        exercises
+      };
+    }
+
+    // ---- Quiz ----
+    async function startQuiz(num, filterType = null) {
+      const quizArea = document.getElementById('quizArea');
+      const isQuizOpen = quizArea.classList.contains('open');
+      const c = document.getElementById('exContainer');
+      const currentCard = c.querySelector('.ex-card');
+      
+      // If quiz is already open with a card, apply exit animation first
+      if (isQuizOpen && currentCard) {
+        currentCard.classList.add('card-exit');
+        
+        // Wait for exit animation, then load new quiz
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      // Find problem and generate quiz locally
+      const prob = problems.find(p => p.number === num);
+      if (!prob) {
+        console.error('Problem not found:', num);
+        return;
+      }
+      const fullQuiz = generateQuizFromProblem(prob);
+      
+      // Filter to single exercise type if specified
+      if (filterType) {
+        quiz = {
+          ...fullQuiz,
+          exercises: fullQuiz.exercises.filter(ex => ex.type === filterType)
+        };
+        
+        // If no matching exercise, show error
+        if (quiz.exercises.length === 0) {
+          console.error(`No exercise of type "${filterType}" found`);
+          quiz = fullQuiz; // fallback to full quiz
+        }
+      } else {
+        quiz = fullQuiz;
+      }
+      
+      openQuiz();
+    }
+
+    function openQuiz() {
+      step = 0;
+      answers = {};
+      timers = {};
+      ratings = {};
+      hintLevel = 0;
+      document.getElementById('problemSection').classList.remove('open');
+      document.getElementById('quizArea').classList.add('open');
+      document.getElementById('quizName').textContent = quiz.problem;
+
+      const diff = document.getElementById('quizDiff');
+      diff.textContent = quiz.difficulty;
+      diff.className = `tag tag-${quiz.difficulty.toLowerCase()}`;
+
+      document.getElementById('quizCat').textContent = quiz.category.replace(/^\d+-/,'');
+      document.getElementById('scoreCard').classList.remove('open');
+
+      renderStepper();
+      renderStepWithEnterAnimation();
+      document.getElementById('quizArea').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeQuiz() {
+      document.getElementById('quizArea').classList.remove('open');
+      stopAllTimers();
+      // Refresh stats
+      refreshData();
+    }
+
+    async function refreshData() {
+      progressData = { progress: loadProgressLocal() };
+      reviewData = computeReviewData(progressData.progress);
+      renderStats();
+      renderProblems();
+    }
+
+    // ========== Daily Session Management ==========
+
+    function getTodayStr() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function loadSession() {
+      try {
+        const json = localStorage.getItem('leetcode-daily-session');
+        return json ? JSON.parse(json) : null;
+      } catch (e) {
+        console.error('Failed to load session:', e);
+        return null;
+      }
+    }
+
+    function saveSession(session) {
+      try {
+        localStorage.setItem('leetcode-daily-session', JSON.stringify(session));
+      } catch (e) {
+        console.error('Failed to save session:', e);
+      }
+    }
+
+    function clearSession() {
+      localStorage.removeItem('leetcode-daily-session');
+    }
+
+    function generateDailyQueue(progressData, targetCount = 10) {
+      const today = getTodayStr();
+      const allItems = [];
+      const newProblems = []; // Track problems never practiced
+      
+      // Build problem ID -> category mapping
+      const idToCategory = {};
+      const idToNumber = {};
+      const allProblemIds = new Set();
+      problems.forEach(p => {
+        const paddedId = String(p.number).padStart(3, '0');
+        idToCategory[paddedId] = p.category;
+        idToNumber[paddedId] = p.number;
+        allProblemIds.add(paddedId);
+      });
+      
+      // Collect all problem-type pairs with progress
+      const practicedIds = new Set();
+      for (const [id, problemData] of Object.entries(progressData)) {
+        practicedIds.add(id);
+        for (const [type, typeData] of Object.entries(problemData)) {
+          if (!typeData.nextReview) continue; // Skip uninitialized
+          
+          allItems.push({
+            id,
+            type,
+            ease: typeData.ease,
+            nextReview: typeData.nextReview,
+            isDue: typeData.nextReview <= today,
+            category: idToCategory[id] || 'unknown',
+            isNew: false
+          });
+        }
+      }
+      
+      // Add new problems (never practiced)
+      const exerciseTypes = ['recall', 'fill', 'choice', 'bug', 'transfer'];
+      for (const problemId of allProblemIds) {
+        if (!practicedIds.has(problemId)) {
+          // Add all 5 exercise types for this new problem
+          for (const type of exerciseTypes) {
+            newProblems.push({
+              id: problemId,
+              type,
+              ease: 2.5, // default ease
+              nextReview: today, // due today
+              isDue: true,
+              category: idToCategory[problemId] || 'unknown',
+              isNew: true
+            });
+          }
+        }
+      }
+      
+      // Prioritize new problems first (up to 50% of target)
+      const newSlots = Math.min(newProblems.length, Math.ceil(targetCount * 0.5));
+      const selected = [];
+      
+      if (newProblems.length > 0) {
+        // Shuffle and take first N new items
+        const shuffledNew = newProblems.sort(() => Math.random() - 0.5);
+        selected.push(...shuffledNew.slice(0, newSlots));
+      }
+      
+      // Fill remaining slots with practiced items (category-balanced)
+      const remainingSlots = targetCount - selected.length;
+      if (remainingSlots > 0 && allItems.length > 0) {
+        // Group by category
+        const byCategory = {};
+        for (const item of allItems) {
+          if (!byCategory[item.category]) {
+            byCategory[item.category] = [];
+          }
+          byCategory[item.category].push(item);
+        }
+        
+        // Select one item from each category (prioritize due items, then by ease)
+        const categories = Object.keys(byCategory).sort(() => Math.random() - 0.5);
+        
+        for (const cat of categories) {
+          if (selected.length >= targetCount) break;
+          
+          const items = byCategory[cat];
+          // Sort: due first, then by ease (lower = weaker = priority)
+          items.sort((a, b) => {
+            if (a.isDue !== b.isDue) return b.isDue ? 1 : -1;
+            return a.ease - b.ease;
+          });
+          
+          if (items.length > 0) {
+            selected.push(items[0]);
+          }
+        }
+        
+        // If still under target, fill with remaining items
+        if (selected.length < targetCount) {
+          const selectedIds = new Set(selected.map(s => `${s.id}-${s.type}`));
+          const remaining = allItems
+            .filter(item => !selectedIds.has(`${item.id}-${item.type}`))
+            .sort((a, b) => {
+              if (a.isDue !== b.isDue) return b.isDue ? 1 : -1;
+              return a.ease - b.ease;
+            });
+          
+          selected.push(...remaining.slice(0, targetCount - selected.length));
+        }
+      }
+      
+      // Shuffle for randomness
+      for (let i = selected.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [selected[i], selected[j]] = [selected[j], selected[i]];
+      }
+      
+      // Handle empty result
+      if (selected.length === 0) {
+        return {
+          date: today,
+          queue: [],
+          current: 0,
+          total: 0
+        };
+      }
+      
+      // Convert to queue format
+      return {
+        date: today,
+        queue: selected.map(item => ({
+          id: item.id,
+          type: item.type,
+          status: 'pending'
+        })),
+        current: 0,
+        total: selected.length
+      };
+    }
+
+    async function initDailySession(progressData) {
+      let session = loadSession();
+      const today = getTodayStr();
+      
+      // Check if session is valid for today
+      if (!session || session.date !== today || !session.queue || session.queue.length === 0) {
+        // Generate new daily session
+        session = generateDailyQueue(progressData);
+        saveSession(session);
+      } else {
+        // Resume existing session
+      }
+      
+      return session;
+    }
+
+    function renderStepper() {
+      document.getElementById('stepper').innerHTML = quiz.exercises.map((_, i) =>
+        `<div class="step ${i === step ? 'active' : ''} ${answers[i] !== undefined ? 'done' : ''}" onclick="goStep(${i})"></div>`
+      ).join('');
+    }
+
+    function goStep(i) {
+      const c = document.getElementById('exContainer');
+      const currentCard = c.querySelector('.ex-card');
+      
+      // Apply exit animation if card exists
+      if (currentCard) {
+        currentCard.classList.add('card-exit');
+        
+        // Wait for animation to complete
+        setTimeout(() => {
+          stopTimer(step);
+          step = i;
+          hintLevel = 0; // reset hints per exercise
+          renderStepper();
+          renderStepWithEnterAnimation();
+        }, 300);
+      } else {
+        // No current card, render immediately
+        stopTimer(step);
+        step = i;
+        hintLevel = 0;
+        renderStepper();
+        renderStep();
+      }
+    }
+
+    function renderStep() {
+      const ex = quiz.exercises[step];
+      const c = document.getElementById('exContainer');
+      c.innerHTML = renderExCard(ex, step);
+      startTimer(step, ex.timeLimit);
+      renderNav();
+    }
+
+    function renderStepWithEnterAnimation() {
+      const ex = quiz.exercises[step];
+      const c = document.getElementById('exContainer');
+      c.innerHTML = renderExCard(ex, step);
+      
+      // Apply enter animation
+      const newCard = c.querySelector('.ex-card');
+      if (newCard) {
+        newCard.classList.add('card-enter');
+        
+        // Remove animation class after completion
+        setTimeout(() => {
+          newCard.classList.remove('card-enter');
+        }, 300);
+      }
+      
+      startTimer(step, ex.timeLimit);
+      renderNav();
+    }
+
+    function renderExCard(ex, idx) {
+      const iconMap = {
+        recall: ['🎯', 'recall'],
+        fill: ['✏️', 'fill'],
+        choice: ['⚡', 'choice'],
+        bug: ['🐛', 'bug'],
+        transfer: ['🔀', 'transfer']
+      };
+      const [icon, cls] = iconMap[ex.type] || ['📝', 'recall'];
+
+      let body = '';
+
+      // Hint button (shown for all exercise types)
+      const hintBtnHtml = quiz.hints && quiz.hints.length > 0
+        ? `<button class="hint-btn" onclick="revealHint(${idx})">💡 提示 <span class="hint-badge">${hintLevel}/3</span></button>
+           <div class="hint-area" id="hintArea-${idx}"></div>`
+        : '';
+
+      switch (ex.type) {
+        case 'recall':
+          const descHtml = ex.description
+            ? `<div class="problem-desc">${formatMd(ex.description)}</div>`
+            : '';
+          body = `
+            ${hintBtnHtml}
+            ${descHtml}
+            <div class="ex-question">${esc(ex.question)}</div>
+            <div id="recallInput-${idx}">
+              <textarea class="input-area" id="recallText-${idx}" placeholder="描述你的解题思路...不要翻笔记！&#10;&#10;提示：用什么算法？为什么选这个方法？关键步骤是什么？" rows="6"></textarea>
+              <button class="submit-btn" onclick="submitRecall(${idx})">📝 提交思路</button>
+            </div>
+            <div id="recallResult-${idx}" style="display:none"></div>
+            <div id="rateArea-${idx}"></div>
+          `;
+          break;
+
+        case 'fill':
+          let fillBodyHtml = '';
+          if (ex.lines && ex.lines.length > 0) {
+            // New inline blank mode
+            const codeHtml = ex.lines.map((line, li) => {
+              if (line.type === 'blank') {
+                return `<div class="blank-row">${esc(line.indent)}<input type="text" class="blank-input" id="blank-${idx}-${line.blankIndex}" data-blank-idx="${line.blankIndex}" placeholder="填写代码..." autocomplete="off" spellcheck="false"></div>`;
+              } else {
+                return `<div class="code-line">${highlightPython(line.content)}</div>`;
+              }
+            }).join('\n');
+
+            fillBodyHtml = `
+              ${hintBtnHtml}
+              <div class="ex-question">${esc(ex.question)}</div>
+              <div class="code-block-fill" id="fillCode-${idx}">${codeHtml}</div>
+              <button class="submit-btn" id="fillSubmitBtn-${idx}" onclick="submitInlineFill(${idx})">🔍 检查代码</button>
+              <div id="fillResult-${idx}" style="display:none"></div>
+              <div id="rateArea-${idx}"></div>
+            `;
+          } else {
+            // Fallback: old textarea mode
+            fillBodyHtml = `
+              ${hintBtnHtml}
+              <div class="ex-question">补全下面代码的关键逻辑：</div>
+              <div id="fillInput-${idx}">
+                <textarea class="input-area code-input" id="fillText-${idx}" placeholder="在这里补全代码..."></textarea>
+                <button class="submit-btn" onclick="submitFill(${idx})">🔍 检查代码</button>
+              </div>
+              <div id="fillResult-${idx}" style="display:none"></div>
+              <div id="rateArea-${idx}"></div>
+            `;
+          }
+          body = fillBodyHtml;
+          break;
+
+        case 'choice':
+          const letters = ['A', 'B', 'C', 'D'];
+          body = `
+            ${hintBtnHtml}
+            <div class="ex-question">${esc(ex.question)}</div>
+            <div class="opts" id="opts-${idx}">
+              ${ex.options.map((o, i) => `
+                <div class="opt" id="opt-${idx}-${i}" onclick="pick(${idx},${i},${ex.correctIndex})">
+                  <div class="opt-letter">${letters[i]}</div>
+                  <span>${esc(o)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div id="rateArea-${idx}"></div>
+          `;
+          break;
+
+        case 'bug':
+          let bugCodeHtml = '';
+          if (ex.lines && ex.lines.length > 0) {
+            bugCodeHtml = `<div class="bug-code-block" id="bugCode-${idx}">` +
+              ex.lines.map((line, li) => {
+                return `<div class="bug-line" id="bugLine-${idx}-${li}" onclick="selectBugLine(${idx}, ${li})">${highlightPython(line)}</div>`;
+              }).join('\n') +
+              '</div>';
+          } else {
+            bugCodeHtml = ex.bugCode ? `<div>${formatCode(ex.bugCode, false)}</div>` : '';
+          }
+          body = `
+            ${hintBtnHtml}
+            <div class="ex-question">${esc(ex.question)}</div>
+            ${bugCodeHtml}
+            <div id="bugResult-${idx}" style="display:none"></div>
+            <button class="reveal" id="revealBtn-${idx}" onclick="revealBug(${idx})" style="display:none">👁 查看 Bug 解析</button>
+            <div class="answer" id="ans-${idx}">
+              <div class="answer-label">🐛 Bug 分析</div>
+              <div style="color:var(--text2)">
+                <strong>Bug 位置：</strong>第 ${(ex.bugLineIndex || 0) + 1} 行<br>
+                <strong>问题：</strong>${esc(ex.bugDescription || '代码逻辑有误')}<br><br>
+                <strong>正确代码：</strong>
+                <pre style="margin-top:8px;padding:12px;background:var(--surface3);border-radius:6px;overflow-x:auto"><code>${esc(ex.correctCode || '')}</code></pre>
+              </div>
+            </div>
+            <div id="rateArea-${idx}"></div>
+          `;
+          break;
+
+        case 'transfer':
+          body = `
+            ${hintBtnHtml}
+            <div class="ex-question">${esc(ex.question)}</div>
+            ${ex.options ? `
+              <div class="opts" id="opts-${idx}">
+                ${['A','B','C','D'].slice(0,ex.options.length).map((l,i) => `
+                  <div class="opt" id="opt-${idx}-${i}" onclick="pick(${idx},${i},${ex.correctIndex})">
+                    <div class="opt-letter">${l}</div>
+                    <span>${esc(ex.options[i])}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <button class="reveal" id="revealBtn-${idx}" onclick="reveal(${idx})">👁 查看解析</button>
+            <div class="answer" id="ans-${idx}">
+              <div class="answer-label">💡 解析</div>
+              <p style="color:var(--text2)">${esc(ex.answer)}</p>
+            </div>
+            <div id="rateArea-${idx}"></div>
+          `;
+          break;
+      }
+
+      return `
+        <div class="ex-card">
+          <div class="ex-top">
+            <div class="ex-type">
+              <div class="ex-type-icon ${cls}">${icon}</div>
+              ${ex.title}
+            </div>
+            <div class="ex-timer" id="timer-${idx}">
+              <div class="timer-dot" id="tdot-${idx}"></div>
+              <span id="tval-${idx}">0:00</span>
+            </div>
+          </div>
+          <div class="ex-body">${body}</div>
+        </div>
+      `;
+    }
+
+    function renderNav() {
+      const total = quiz.exercises.length;
+      document.getElementById('navRow').innerHTML = `
+        <button class="btn btn-sm btn-ghost" ${step === 0 ? 'disabled style="opacity:.3;pointer-events:none"' : ''} onclick="goStep(${step-1})">← 上一题</button>
+        <span style="color:var(--muted);font-size:13px;font-family:var(--mono)">${step+1} / ${total}</span>
+        ${step < total - 1
+          ? `<button class="btn btn-sm btn-primary" onclick="goStep(${step+1})">下一题 →</button>`
+          : `<button class="btn btn-sm" style="background:var(--green2);border-color:var(--green2);color:white" onclick="showScore()">完成 ✓</button>`
+        }
+      `;
+    }
+
+    // ---- Progressive Hints ----
+    function revealHint(idx) {
+      if (!quiz.hints || hintLevel >= 3) return;
+      hintLevel++;
+
+      const area = document.getElementById(`hintArea-${idx}`);
+      if (!area) return;
+
+      const hint = quiz.hints[hintLevel - 1];
+      if (!hint) return;
+
+      // Append new hint layer
+      const layer = document.createElement('div');
+      layer.className = 'hint-layer';
+      layer.innerHTML = `
+        <div>
+          <div class="hint-level-label">Level ${hint.level} — ${esc(hint.label)}</div>
+          <div class="hint-content">${esc(hint.content)}</div>
+        </div>
+      `;
+      area.appendChild(layer);
+
+      // Update badge
+      const badge = area.parentElement.querySelector('.hint-badge');
+      if (badge) badge.textContent = `${hintLevel}/3`;
+
+      // If used 3 hints, show suggestion
+      if (hintLevel >= 3) {
+        const suggestion = document.createElement('div');
+        suggestion.className = 'rate-suggestion';
+        suggestion.textContent = '💡 你使用了 3 级提示，建议自评时选择「部分回忆」';
+        area.appendChild(suggestion);
+      }
+    }
+
+    // ---- Recall: Submit & Compare ----
+    function submitRecall(idx) {
+      const textarea = document.getElementById(`recallText-${idx}`);
+      if (!textarea) return;
+      const userAnswer = textarea.value.trim();
+      if (!userAnswer) return;
+
+      const ex = quiz.exercises[idx];
+
+      // Hide input
+      document.getElementById(`recallInput-${idx}`).style.display = 'none';
+
+      // Show comparison
+      const resultDiv = document.getElementById(`recallResult-${idx}`);
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = `
+        <div class="compare-view">
+          <div class="compare-col">
+            <div class="compare-label user">📝 你的回答</div>
+            <div class="compare-content">${esc(userAnswer)}</div>
+          </div>
+          <div class="compare-col">
+            <div class="compare-label ref">✅ 参考思路</div>
+            <div class="compare-content">${formatMd(ex.answer)}</div>
+          </div>
+        </div>
+      `;
+
+      answers[idx] = true;
+      stopTimer(idx);
+      renderStepper();
+
+      // Show self-rating
+      showRating(idx, 'recall');
+    }
+
+    // ---- Fill: Submit & Diff ----
+    function submitFill(idx) {
+      const textarea = document.getElementById(`fillText-${idx}`);
+      if (!textarea) return;
+      const userCode = textarea.value;
+      const ex = quiz.exercises[idx];
+
+      // Get reference code
+      const refCode = ex.fullCode || '';
+
+      // Hide input
+      document.getElementById(`fillInput-${idx}`).style.display = 'none';
+
+      // Generate diff
+      const resultDiv = document.getElementById(`fillResult-${idx}`);
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = generateDiffHtml(userCode, refCode);
+
+      answers[idx] = true;
+      stopTimer(idx);
+      renderStepper();
+
+      // Show self-rating
+      showRating(idx, 'fill');
+    }
+
+    function generateDiffHtml(userCode, refCode) {
+      const userLines = userCode.split('\n');
+      const refLines = refCode.split('\n');
+      const maxLen = Math.max(userLines.length, refLines.length);
+
+      let diffHtml = '';
+      for (let i = 0; i < maxLen; i++) {
+        const uLine = i < userLines.length ? userLines[i] : '';
+        const rLine = i < refLines.length ? refLines[i] : '';
+
+        if (uLine.trim() === rLine.trim()) {
+          diffHtml += `<div class="diff-line same">${esc(rLine) || '&nbsp;'}</div>`;
+        } else if (!uLine.trim() && rLine.trim()) {
+          // User missed this line
+          diffHtml += `<div class="diff-line added">+ ${esc(rLine)}</div>`;
+        } else if (uLine.trim() && !rLine.trim()) {
+          // User added extra line
+          diffHtml += `<div class="diff-line removed">- ${esc(uLine)}</div>`;
+        } else {
+          // Different content
+          diffHtml += `<div class="diff-line removed">- ${esc(uLine)}</div>`;
+          diffHtml += `<div class="diff-line added">+ ${esc(rLine)}</div>`;
+        }
+      }
+
+      return `
+        <div class="diff-view">
+          <div class="diff-label">代码对比</div>
+          <div class="diff-container">${diffHtml}</div>
+          <div class="diff-legend">
+            <span><span class="diff-dot g"></span> 参考代码</span>
+            <span><span class="diff-dot r"></span> 你的代码（差异）</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ---- Self Rating ----
+    function showRating(idx, exerciseType) {
+      const rateArea = document.getElementById(`rateArea-${idx}`);
+      if (!rateArea) return;
+
+      const suggestPartial = hintLevel >= 3;
+
+      rateArea.innerHTML = `
+        <div class="self-rating" id="selfRate-${idx}">
+          <button class="rate-btn good" onclick="submitRating(${idx}, 'good', '${exerciseType}')">✅ 完全回忆</button>
+          <button class="rate-btn partial" onclick="submitRating(${idx}, 'partial', '${exerciseType}')">🟡 部分回忆</button>
+          <button class="rate-btn forgot" onclick="submitRating(${idx}, 'forgot', '${exerciseType}')">❌ 忘了</button>
+        </div>
+        ${suggestPartial ? '<div class="rate-suggestion">💡 你使用了 3 级提示，建议选择「🟡 部分回忆」</div>' : ''}
+      `;
+    }
+
+    async function submitRating(idx, rating, exerciseType) {
+      if (ratings[idx]) return; // already rated
+      
+      // Check if we've crossed into a new day
+      const session = window.currentSession;
+      const today = getTodayStr();
+      if (session && session.date !== today) {
+        if (confirm('新的一天开始了！要开始新的 10 题吗？')) {
+          clearSession();
+          location.reload();
+        }
+        return;
+      }
+      
+      ratings[idx] = rating;
+
+      // Highlight selected button
+      const btns = document.querySelectorAll(`#selfRate-${idx} .rate-btn`);
+      btns.forEach(b => {
+        if (b.classList.contains(rating)) {
+          b.classList.add('selected');
+        } else {
+          b.classList.add('selected');
+          b.style.opacity = '0.3';
+        }
+      });
+
+      // Save to localStorage (SM-2 algorithm)
+      const number = String(quiz.number).padStart(3, '0');
+      const progress = loadProgressLocal();
+      if (!progress[number]) progress[number] = {};
+      if (!progress[number][exerciseType]) {
+        progress[number][exerciseType] = { ease: 2.5, interval: 1, nextReview: getTodayStr(), history: [] };
+      }
+      
+      const entry = progress[number][exerciseType];
+      if (rating === 'good') {
+        entry.interval = Math.round(entry.interval * entry.ease);
+        entry.ease = Math.max(1.3, entry.ease + 0.1);
+      } else if (rating === 'partial') {
+        entry.interval = Math.round(entry.interval * 1.2);
+        entry.ease = Math.max(1.3, entry.ease - 0.15);
+      } else {
+        entry.interval = 1;
+        entry.ease = Math.max(1.3, entry.ease - 0.3);
+      }
+      
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + entry.interval);
+      entry.nextReview = nextDate.toISOString().slice(0, 10);
+      entry.history.push({ date: getTodayStr(), rating, interval: entry.interval });
+      
+      saveProgressLocal(progress);
+      const data = { nextReview: entry.nextReview, interval: entry.interval, ease: entry.ease };
+
+      // Show result
+      const rateArea = document.getElementById(`rateArea-${idx}`);
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'rate-result';
+      const nextDateStr = data.nextReview || '?';
+      const interval = data.interval || '?';
+      resultDiv.innerHTML = `📅 下次复习：${nextDateStr}（间隔 ${interval} 天） | 难度系数：${(data.ease || 0).toFixed(2)}`;
+      rateArea.appendChild(resultDiv);
+
+      // Update session progress
+      const session = window.currentSession;
+      if (session && session.current < session.total) {
+        // Mark current item as completed
+        session.queue[session.current].status = 'completed';
+        session.queue[session.current].rating = rating;
+        session.current++;
+        
+        // Save session
+        saveSession(session);
+        
+        // Refresh stats display
+        renderStats();
+        
+        // Auto-advance to next card or show summary
+        setTimeout(() => {
+          if (session.current < session.total) {
+            smartRecommend();
+          } else {
+            showSessionSummary();
+          }
+        }, 500);
+      }
+    }
+
+    // ---- Choice / Option Pick ----
+    function pick(idx, optIdx, correctIdx) {
+      if (answers[idx] !== undefined) return;
+      answers[idx] = optIdx === correctIdx;
+      stopTimer(idx);
+
+      const opts = document.querySelectorAll(`#opts-${idx} .opt`);
+      opts.forEach(o => o.classList.add('disabled'));
+
+      document.getElementById(`opt-${idx}-${optIdx}`).classList.add(optIdx === correctIdx ? 'correct' : 'wrong');
+      if (optIdx !== correctIdx) {
+        document.getElementById(`opt-${idx}-${correctIdx}`).classList.add('correct');
+      }
+
+      renderStepper();
+
+      // Show self-rating for choice/bug/transfer
+      const ex = quiz.exercises[idx];
+      showRating(idx, ex.type);
+    }
+
+    function reveal(idx) {
+      const el = document.getElementById(`ans-${idx}`);
+      el.classList.toggle('open');
+      if (el.classList.contains('open') && answers[idx] === undefined) {
+        answers[idx] = true;
+        stopTimer(idx);
+        renderStepper();
+
+        // Show self-rating
+        const ex = quiz.exercises[idx];
+        showRating(idx, ex.type);
+      }
+    }
+
+    function selectBugLine(idx, lineIdx) {
+      if (answers[idx] !== undefined) return; // Already answered
+
+      const ex = quiz.exercises[idx];
+      const correctLineIdx = ex.bugLineIndex;
+      const isCorrect = lineIdx === correctLineIdx;
+
+      // Mark answer
+      answers[idx] = isCorrect;
+      stopTimer(idx);
+
+      // Disable all lines
+      const allLines = document.querySelectorAll(`#bugCode-${idx} .bug-line`);
+      allLines.forEach(line => line.classList.add('disabled'));
+
+      // Highlight selected line
+      const selectedLine = document.getElementById(`bugLine-${idx}-${lineIdx}`);
+      if (isCorrect) {
+        selectedLine.classList.add('correct');
+      } else {
+        selectedLine.classList.add('wrong');
+        // Highlight correct line
+        const correctLine = document.getElementById(`bugLine-${idx}-${correctLineIdx}`);
+        if (correctLine) correctLine.classList.add('correct');
+      }
+
+      // Show result
+      const resultDiv = document.getElementById(`bugResult-${idx}`);
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = isCorrect 
+        ? `<div style="color:var(--green);padding:12px;background:var(--green-soft);border-radius:8px;margin-top:12px">✅ 正确！你找到了 bug</div>`
+        : `<div style="color:var(--red);padding:12px;background:var(--red-soft);border-radius:8px;margin-top:12px">❌ 不对，bug 在第 ${correctLineIdx + 1} 行</div>`;
+
+      // Show reveal button
+      const revealBtn = document.getElementById(`revealBtn-${idx}`);
+      if (revealBtn) revealBtn.style.display = 'inline-block';
+
+      renderStepper();
+
+      // Show self-rating
+      showRating(idx, 'bug');
+    }
+
+    function revealBug(idx) {
+      const el = document.getElementById(`ans-${idx}`);
+      el.classList.toggle('open');
+    }
+
+    function showScore() {
+      stopAllTimers();
+      const total = quiz.exercises.length;
+      const rated = Object.keys(ratings).length;
+      const goodCount = Object.values(ratings).filter(r => r === 'good').length;
+      const partialCount = Object.values(ratings).filter(r => r === 'partial').length;
+      const forgotCount = Object.values(ratings).filter(r => r === 'forgot').length;
+
+      const pct = rated > 0 ? Math.round(goodCount / rated * 100) : 0;
+      const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '💪' : pct >= 40 ? '🤔' : '📚';
+      const text = pct >= 80 ? '掌握得很好！' : pct >= 60 ? '不错，继续保持' : pct >= 40 ? '还需加强！' : '多复习几次吧';
+
+      const sc = document.getElementById('scoreCard');
+      sc.innerHTML = `
+        <div class="score-emoji">${emoji}</div>
+        <div class="score-text">${text}</div>
+        <div class="score-sub">${quiz.problem}</div>
+        <div class="score-nums">
+          <div class="score-n"><div class="big" style="color:var(--green)">${goodCount}</div><div class="lbl">完全回忆</div></div>
+          <div class="score-n"><div class="big" style="color:var(--orange)">${partialCount}</div><div class="lbl">部分回忆</div></div>
+          <div class="score-n"><div class="big" style="color:var(--red)">${forgotCount}</div><div class="lbl">忘了</div></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="smartRecommend()">⭐ 下一组</button>
+          <button class="btn btn-ghost" onclick="closeQuiz()">返回首页</button>
+        </div>
+      `;
+      sc.classList.add('open');
+      sc.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ---- Timer ----
+    function startTimer(idx, limit) {
+      const tval = document.getElementById(`tval-${idx}`);
+      const tdot = document.getElementById(`tdot-${idx}`);
+      if (!tval) return;
+
+      let sec = 0;
+      timers[idx] = setInterval(() => {
+        sec++;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        tval.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function stopTimer(idx) {
+      if (timers[idx]) {
+        clearInterval(timers[idx]);
+        delete timers[idx];
+      }
+      const dot = document.getElementById(`tdot-${idx}`);
+      if (dot) dot.classList.add('stopped');
+    }
+
+    function stopAllTimers() {
+      Object.keys(timers).forEach(k => {
+        clearInterval(timers[k]);
+        delete timers[k];
+      });
+    }
+
+    // ---- Formatting ----
+    function esc(s) {
+      if (!s) return '';
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function highlightPython(line) {
+      let escaped = esc(line);
+      if (line.trim().startsWith('#')) {
+        return `<span class="cmt">${escaped}</span>`;
+      }
+      escaped = escaped.replace(/\b(def|if|else|elif|while|for|in|return|import|from|and|or|not|True|False|None|class|try|except|with|as|lambda|yield|break|continue|pass|del|raise|finally|global|nonlocal|assert)\b/g, '<span class="kw">$1</span>');
+      escaped = escaped.replace(/\b(\d+)\b/g, '<span class="num">$1</span>');
+      escaped = escaped.replace(/(&#39;[^&#]*&#39;|&quot;[^&]*&quot;)/g, '<span class="str">$1</span>');
+      return escaped;
+    }
+
+    function submitInlineFill(idx) {
+      const ex = quiz.exercises[idx];
+      if (!ex.blanks || answers[idx] !== undefined) return;
+
+      let allCorrect = true;
+      ex.blanks.forEach(blank => {
+        const input = document.getElementById(`blank-${idx}-${blank.index}`);
+        if (!input) return;
+
+        const userVal = input.value.trim();
+        const expected = blank.answer.trim();
+
+        // Flexible comparison: normalize whitespace
+        const normalize = s => s.replace(/\s+/g, ' ').trim();
+        const isCorrect = normalize(userVal) === normalize(expected);
+
+        input.classList.add(isCorrect ? 'correct' : 'wrong');
+        input.readOnly = true;
+
+        if (!isCorrect) {
+          allCorrect = false;
+          // Show correct answer below
+          const answerEl = document.createElement('div');
+          answerEl.className = 'blank-answer show';
+          answerEl.textContent = `✅ ${expected}`;
+          input.parentElement.appendChild(answerEl);
+        }
+      });
+
+      answers[idx] = allCorrect;
+      stopTimer(idx);
+      renderStepper();
+
+      // Hide submit button
+      const btn = document.getElementById(`fillSubmitBtn-${idx}`);
+      if (btn) btn.style.display = 'none';
+
+      // Show self-rating
+      showRating(idx, 'fill');
+    }
+
+    function formatCode(text, highlight) {
+      let code = text;
+      const m = text.match(/```(?:python)?\n([\s\S]*?)```/);
+      if (m) code = m[1];
+      code = code.replace(/```\w*\n?/g, '');
+
+      let lines = code.split('\n');
+      lines = lines.map(line => {
+        const trimmed = line.trim();
+
+        if (highlight && /_{3,}/.test(line)) {
+          const indent = line.match(/^(\s*)/)[1];
+          const suffix = line.match(/#\s*填空\d*/);
+          return `${esc(indent)}<span class="blank">_____ ${suffix ? suffix[0] : ''}</span>`;
+        }
+
+        if (/🐛/.test(line)) {
+          const parts = line.split(/#\s*🐛/);
+          return esc(parts[0]) + `<span style="color:var(--red)"># 🐛${esc(parts[1] || '')}</span>`;
+        }
+
+        if (trimmed.startsWith('#')) {
+          return `<span class="cmt">${esc(line)}</span>`;
+        }
+
+        if (trimmed.startsWith('"""') || trimmed.startsWith("'''")) {
+          return `<span class="str">${esc(line)}</span>`;
+        }
+
+        let escaped = esc(line);
+        escaped = escaped.replace(/\b(def|if|else|elif|while|for|in|return|import|from|and|or|not|True|False|None|class|try|except|with|as|lambda|yield|break|continue|pass|del|raise|finally|global|nonlocal|assert)\b/g, '<span class="kw">$1</span>');
+        escaped = escaped.replace(/\b(\d+)\b/g, '<span class="num">$1</span>');
+        escaped = escaped.replace(/(&#39;[^&#]*&#39;|&quot;[^&]*&quot;)/g, '<span class="str">$1</span>');
+        return escaped;
+      });
+
+      return `<pre>${lines.join('\n')}</pre>`;
+    }
+
+    function formatMd(text) {
+      if (!text) return '';
+      return esc(text)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code class="icode">$1</code>')
+        .replace(/\n/g, '<br>');
+    }
+
+    // Handle tab key in textareas
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('code-input') && e.key === 'Tab') {
+        e.preventDefault();
+        const start = e.target.selectionStart;
+        const end = e.target.selectionEnd;
+        e.target.value = e.target.value.substring(0, start) + '    ' + e.target.value.substring(end);
+        e.target.selectionStart = e.target.selectionEnd = start + 4;
+      }
+    });
+
+    init();
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.log('SW registration failed:', err));
+    }
+  </script>
+</body>
+</html>

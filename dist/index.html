@@ -1119,6 +1119,165 @@
       51% { transform: translateX(30px); }
       100% { opacity: 1; transform: translateX(0); }
     }
+
+    /* ============================================
+       MOBILE-ONLY OPTIMIZATIONS (max-width: 768px)
+       ============================================ */
+    @media (max-width: 768px) {
+      /* === Typography === */
+      .fs-title {
+        font-size: 22px !important;
+        line-height: 1.4;
+      }
+      .ex-question {
+        font-size: 17px !important;
+        line-height: 1.6;
+      }
+      .ex-card {
+        padding: 16px !important;
+        border-radius: 12px !important;
+      }
+      
+      /* === Touch Targets (min 48px) === */
+      .opt {
+        min-height: 52px !important;
+        padding: 14px 16px !important;
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+        border-radius: 10px !important;
+      }
+      .rate-btn {
+        min-height: 52px !important;
+        padding: 14px 20px !important;
+        font-size: 15px !important;
+        border-radius: 10px !important;
+      }
+      .hint-btn {
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+      }
+      .submit-btn {
+        min-height: 48px !important;
+        padding: 14px 24px !important;
+        font-size: 16px !important;
+      }
+      
+      /* === Code Blocks === */
+      .code-block, .code-block-fill, pre, code {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+        padding: 14px !important;
+        border-radius: 10px !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .code-line {
+        font-size: 14px !important;
+        padding: 2px 0 !important;
+      }
+      
+      /* === Spacing === */
+      .fs-content {
+        padding: 0 16px 16px !important;
+      }
+      .fs-header {
+        padding: 12px 16px !important;
+      }
+      .fs-meta {
+        margin-bottom: 16px !important;
+      }
+      .tag {
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+      }
+      
+      /* === Rating Section === */
+      .rate-area {
+        gap: 10px !important;
+      }
+      .self-rate {
+        padding: 16px !important;
+        border-radius: 12px !important;
+      }
+      .rate-btns {
+        gap: 8px !important;
+        flex-wrap: wrap;
+      }
+      
+      /* === Progress Dots === */
+      .fs-dot {
+        width: 12px !important;
+        height: 12px !important;
+      }
+      .fs-dots {
+        gap: 10px !important;
+      }
+      
+      /* === Input Areas === */
+      .input-area, textarea {
+        font-size: 16px !important; /* Prevents iOS zoom */
+        padding: 14px !important;
+        border-radius: 10px !important;
+        min-height: 120px;
+      }
+      .blank-input {
+        font-size: 15px !important;
+        padding: 8px 12px !important;
+        min-width: 100px;
+      }
+      
+      /* === Main Page Mobile === */
+      .header {
+        padding: 20px 16px !important;
+      }
+      .hero {
+        font-size: 26px !important;
+      }
+      .subtitle {
+        font-size: 14px !important;
+      }
+      .stats {
+        padding: 16px !important;
+        gap: 0 !important;
+      }
+      .stat-value {
+        font-size: 28px !important;
+      }
+      .btn {
+        padding: 14px 20px !important;
+        font-size: 15px !important;
+        min-height: 48px;
+      }
+      .btn-row {
+        flex-direction: column;
+        gap: 10px !important;
+      }
+      .btn-row .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      /* === Problem Grid === */
+      .pgrid {
+        gap: 10px !important;
+      }
+      .pcard {
+        padding: 14px !important;
+      }
+      .pcard-num {
+        font-size: 13px !important;
+      }
+      .pcard-title {
+        font-size: 14px !important;
+      }
+      
+      /* === Better contrast === */
+      .ex-type-label {
+        font-size: 15px !important;
+        padding: 10px 14px !important;
+      }
+    }
   </style>
 </head>
 <body>

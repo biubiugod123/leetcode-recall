@@ -1113,20 +1113,34 @@
     .fs-content.swipe-left {
       animation: swipeLeft 0.3s ease-out;
     }
-    .fs-content.swipe-right {
-      animation: swipeRight 0.3s ease-out;
-    }
     @keyframes swipeLeft {
       0% { opacity: 1; transform: translateX(0); }
       50% { opacity: 0; transform: translateX(-30px); }
       51% { transform: translateX(30px); }
       100% { opacity: 1; transform: translateX(0); }
     }
-    @keyframes swipeRight {
-      0% { opacity: 1; transform: translateX(0); }
-      50% { opacity: 0; transform: translateX(30px); }
-      51% { transform: translateX(-30px); }
-      100% { opacity: 1; transform: translateX(0); }
+    /* Footer with next button */
+    .fs-footer {
+      padding: 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .fs-next-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fs-next-btn:active {
+      transform: scale(0.98);
+      background: var(--accent2);
     }
   </style>
 </head>
@@ -1199,6 +1213,9 @@
     </div>
     <div class="fs-content" id="fsContent">
       <!-- Quiz content injected here -->
+    </div>
+    <div class="fs-footer">
+      <button class="fs-next-btn" onclick="fsNextQuestion()">下一题 →</button>
     </div>
   </div>
 
@@ -1728,23 +1745,40 @@
     }
 
     function setupSwipeGestures() {
-      const content = document.getElementById('fsContent');
+      const fs = document.getElementById('fullscreenQuiz');
+      let startX = 0;
+      let startY = 0;
+      let startTime = 0;
       
-      content.addEventListener('touchstart', (e) => {
-        fsSwipeStartX = e.touches[0].clientX;
-        fsSwipeStartY = e.touches[0].clientY;
+      fs.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
       }, { passive: true });
       
-      content.addEventListener('touchend', (e) => {
-        const deltaX = e.changedTouches[0].clientX - fsSwipeStartX;
-        const deltaY = e.changedTouches[0].clientY - fsSwipeStartY;
+      fs.addEventListener('touchmove', (e) => {
+        // Track for visual feedback if needed
+      }, { passive: true });
+      
+      fs.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        const deltaTime = Date.now() - startTime;
         
-        // Only trigger if horizontal swipe > 30px and more horizontal than vertical
-        if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-          if (deltaX < 0) {
-            // Swipe left = next
-            fsNextQuestion();
-          }
+        // Swipe detection: 
+        // - horizontal distance > 50px
+        // - more horizontal than vertical
+        // - completed within 500ms
+        const isHorizontalSwipe = Math.abs(deltaX) > 50 && 
+                                   Math.abs(deltaX) > Math.abs(deltaY) * 1.2 &&
+                                   deltaTime < 500;
+        
+        if (isHorizontalSwipe && deltaX < 0) {
+          // Swipe left = next question
+          console.log('Swipe left detected!');
+          fsNextQuestion();
         }
       }, { passive: true });
     }

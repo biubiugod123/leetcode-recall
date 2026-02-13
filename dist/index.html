@@ -1163,21 +1163,24 @@
         font-size: 16px !important;
       }
       
-      /* === Code Blocks - Full Width === */
+      /* === Code Blocks - True Full Width === */
       .code-block, .code-block-fill, .bug-code-block, pre {
         font-size: 13px !important;
         line-height: 1.6 !important;
-        padding: 12px !important;
+        padding: 12px 16px !important;
         border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
         overflow-x: auto !important;
         overflow-y: visible !important;
         -webkit-overflow-scrolling: touch;
         display: block !important;
-        /* Extend to full width */
-        margin-left: -16px !important;
-        margin-right: -16px !important;
-        width: calc(100% + 32px) !important;
+        /* Break out of all parent padding */
+        margin-left: calc(-16px - 16px) !important;
+        margin-right: calc(-16px - 16px) !important;
+        width: calc(100% + 64px) !important;
         max-width: none !important;
+        box-sizing: border-box !important;
       }
       .code-block-fill, .bug-code-block {
         overflow-x: scroll !important;
@@ -1187,22 +1190,30 @@
         white-space: pre !important;
         display: block !important;
         min-width: max-content;
-        padding-left: 16px !important;
-        padding-right: 16px !important;
       }
       pre code {
         display: block;
         white-space: pre !important;
         min-width: max-content;
       }
-      /* Ensure card doesn't clip code */
-      .ex-card, .fs-card {
+      /* Remove card padding to let code extend */
+      .ex-card {
         overflow: visible !important;
+        padding: 16px !important;
+        border: none !important;
+        background: transparent !important;
+      }
+      .fs-card {
+        overflow: visible !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
       }
       
       /* === Spacing === */
       .fs-content {
         padding: 0 16px 16px !important;
+        overflow-x: hidden !important;
       }
       .fs-header {
         padding: 12px 16px !important;

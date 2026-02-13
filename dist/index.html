@@ -1161,6 +1161,9 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         选择题目
       </button>
+      <button class="btn btn-ghost" onclick="resetTodaySession()" style="color:var(--orange);">
+        🔄 重置
+      </button>
     </div>
 
     <!-- Problem Selection -->
@@ -1624,6 +1627,7 @@
     // ---- Fullscreen Mode ----
     let fsSwipeStartX = 0;
     let fsSwipeStartY = 0;
+    let fsSwipeSetup = false;
 
     function openFullscreen() {
       const fs = document.getElementById('fullscreenQuiz');
@@ -1631,7 +1635,10 @@
       document.body.style.overflow = 'hidden';
       renderFsDots();
       renderFsContent();
-      setupSwipeGestures();
+      if (!fsSwipeSetup) {
+        setupSwipeGestures();
+        fsSwipeSetup = true;
+      }
     }
 
     function closeFullscreen() {
@@ -1732,15 +1739,22 @@
         const deltaX = e.changedTouches[0].clientX - fsSwipeStartX;
         const deltaY = e.changedTouches[0].clientY - fsSwipeStartY;
         
-        // Only trigger if horizontal swipe > 50px and more horizontal than vertical
-        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Only trigger if horizontal swipe > 30px and more horizontal than vertical
+        if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
           if (deltaX < 0) {
             // Swipe left = next
             fsNextQuestion();
           }
-          // Swipe right could go to previous, but we'll skip for now
         }
       }, { passive: true });
+    }
+
+    // Reset today's session
+    function resetTodaySession() {
+      if (confirm('确定要重置今日进度吗？')) {
+        clearSession();
+        location.reload();
+      }
     }
 
     async function refreshData() {

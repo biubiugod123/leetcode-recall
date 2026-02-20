@@ -1841,14 +1841,14 @@
       if (category === 'leetcode') {
         // 更新标题
         document.querySelector('.hero-gradient').textContent = 'LeetCode Recall Trainer';
-        window.currentSession = await initDailySession(loadProgress());
+        window.currentSession = await initDailySession(loadProgressLocal());
         console.log('[DEBUG] currentSession set:', window.currentSession);
         
         // Safety check: if session is still empty but we have problems, force regenerate
         if ((!window.currentSession || window.currentSession.total === 0) && problems.length > 0) {
           console.log('[DEBUG] Session still empty, forcing regeneration');
           clearSession();
-          window.currentSession = generateDailyQueue(loadProgress() || {});
+          window.currentSession = generateDailyQueue(loadProgressLocal() || {});
           saveSession(window.currentSession);
         }
         
@@ -2239,7 +2239,7 @@
         if (problems.length > 0) {
           console.log('[DEBUG] Regenerating daily queue...');
           clearSession();
-          session = generateDailyQueue(loadProgress() || {});
+          session = generateDailyQueue(loadProgressLocal() || {});
           saveSession(session);
           window.currentSession = session;
           renderStats();

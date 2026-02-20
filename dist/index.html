@@ -2328,7 +2328,14 @@
               <textarea class="input-area" id="recallText-${idx}" placeholder="描述你的解题思路...不要翻笔记！&#10;&#10;提示：用什么算法？为什么选这个方法？关键步骤是什么？" rows="6"></textarea>
               <button class="submit-btn" onclick="submitRecall(${idx})">📝 提交思路</button>
             </div>
-            <div id="recallResult-${idx}" style="display:none"></div>
+            <div class="flip-container" id="recallFlipContainer-${idx}" style="display:none">
+              <div class="flip-card" id="recallFlipCard-${idx}">
+                <div class="flip-front"></div>
+                <div class="flip-back">
+                  <div id="recallResult-${idx}"></div>
+                </div>
+              </div>
+            </div>
             <div id="rateArea-${idx}"></div>
           `;
           break;
@@ -2350,7 +2357,14 @@
               <div class="ex-question">${esc(ex.question)}</div>
               <div class="code-block-fill" id="fillCode-${idx}">${codeHtml}</div>
               <button class="submit-btn" id="fillSubmitBtn-${idx}" onclick="submitInlineFill(${idx})">🔍 检查代码</button>
-              <div id="fillResult-${idx}" style="display:none"></div>
+              <div class="flip-container" id="fillFlipContainer-${idx}" style="display:none">
+                <div class="flip-card" id="fillFlipCard-${idx}">
+                  <div class="flip-front"></div>
+                  <div class="flip-back">
+                    <div id="fillResult-${idx}"></div>
+                  </div>
+                </div>
+              </div>
               <div id="rateArea-${idx}"></div>
             `;
           } else {
@@ -2362,7 +2376,14 @@
                 <textarea class="input-area code-input" id="fillText-${idx}" placeholder="在这里补全代码..."></textarea>
                 <button class="submit-btn" onclick="submitFill(${idx})">🔍 检查代码</button>
               </div>
-              <div id="fillResult-${idx}" style="display:none"></div>
+              <div class="flip-container" id="fillFlipContainer-${idx}" style="display:none">
+                <div class="flip-card" id="fillFlipCard-${idx}">
+                  <div class="flip-front"></div>
+                  <div class="flip-back">
+                    <div id="fillResult-${idx}"></div>
+                  </div>
+                </div>
+              </div>
               <div id="rateArea-${idx}"></div>
             `;
           }
@@ -2402,14 +2423,22 @@
             <div class="ex-question">${esc(ex.question)}</div>
             ${bugCodeHtml}
             <div id="bugResult-${idx}" style="display:none"></div>
-            <button class="reveal" id="revealBtn-${idx}" onclick="revealBug(${idx})" style="display:none">👁 查看 Bug 解析</button>
-            <div class="answer" id="ans-${idx}">
-              <div class="answer-label">🐛 Bug 分析</div>
-              <div style="color:var(--text2)">
-                <strong>Bug 位置：</strong>第 ${(ex.bugLineIndex || 0) + 1} 行<br>
-                <strong>问题：</strong>${esc(ex.bugDescription || '代码逻辑有误')}<br><br>
-                <strong>正确代码：</strong>
-                <pre style="margin-top:8px;padding:12px;background:var(--surface3);border-radius:6px;overflow-x:auto"><code>${esc(ex.correctCode || '')}</code></pre>
+            <div class="flip-container" id="bugFlipContainer-${idx}" style="display:none">
+              <div class="flip-card" id="bugFlipCard-${idx}">
+                <div class="flip-front">
+                  <button class="reveal" id="revealBtn-${idx}" onclick="flipBugReveal(${idx})">👁 查看 Bug 解析</button>
+                </div>
+                <div class="flip-back">
+                  <div class="answer">
+                    <div class="answer-label">🐛 Bug 分析</div>
+                    <div style="color:var(--text2)">
+                      <strong>Bug 位置：</strong>第 ${(ex.bugLineIndex || 0) + 1} 行<br>
+                      <strong>问题：</strong>${esc(ex.bugDescription || '代码逻辑有误')}<br><br>
+                      <strong>正确代码：</strong>
+                      <pre style="margin-top:8px;padding:12px;background:var(--surface3);border-radius:6px;overflow-x:auto"><code>${esc(ex.correctCode || '')}</code></pre>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div id="rateArea-${idx}"></div>
@@ -2524,28 +2553,41 @@
       // Hide input
       document.getElementById(`recallInput-${idx}`).style.display = 'none';
 
-      // Show comparison
+      // Prepare comparison content
       const resultDiv = document.getElementById(`recallResult-${idx}`);
-      resultDiv.style.display = 'block';
       resultDiv.innerHTML = `
-        <div class="compare-view">
-          <div class="compare-col">
-            <div class="compare-label user">📝 你的回答</div>
-            <div class="compare-content">${esc(userAnswer)}</div>
-          </div>
-          <div class="compare-col">
-            <div class="compare-label ref">✅ 参考思路</div>
-            <div class="compare-content">${formatMd(ex.answer)}</div>
+        <div class="answer">
+          <div class="compare-view">
+            <div class="compare-col">
+              <div class="compare-label user">📝 你的回答</div>
+              <div class="compare-content">${esc(userAnswer)}</div>
+            </div>
+            <div class="compare-col">
+              <div class="compare-label ref">✅ 参考思路</div>
+              <div class="compare-content">${formatMd(ex.answer)}</div>
+            </div>
           </div>
         </div>
       `;
+
+      // Show flip container and trigger animation
+      const flipContainer = document.getElementById(`recallFlipContainer-${idx}`);
+      const flipCard = document.getElementById(`recallFlipCard-${idx}`);
+      flipContainer.style.display = 'block';
+      
+      // Trigger flip after brief delay for DOM update
+      setTimeout(() => {
+        flipCard.classList.add('flipped');
+      }, 50);
 
       answers[idx] = true;
       stopTimer(idx);
       renderStepper();
 
-      // Show self-rating
-      showRating(idx, 'recall');
+      // Show self-rating after flip
+      setTimeout(() => {
+        showRating(idx, 'recall');
+      }, 450);
     }
 
     // ---- Fill: Submit & Diff ----
@@ -2561,17 +2603,27 @@
       // Hide input
       document.getElementById(`fillInput-${idx}`).style.display = 'none';
 
-      // Generate diff
+      // Generate diff content
       const resultDiv = document.getElementById(`fillResult-${idx}`);
-      resultDiv.style.display = 'block';
-      resultDiv.innerHTML = generateDiffHtml(userCode, refCode);
+      resultDiv.innerHTML = `<div class="answer">${generateDiffHtml(userCode, refCode)}</div>`;
+
+      // Show flip container and trigger animation
+      const flipContainer = document.getElementById(`fillFlipContainer-${idx}`);
+      const flipCard = document.getElementById(`fillFlipCard-${idx}`);
+      flipContainer.style.display = 'block';
+      
+      setTimeout(() => {
+        flipCard.classList.add('flipped');
+      }, 50);
 
       answers[idx] = true;
       stopTimer(idx);
       renderStepper();
 
-      // Show self-rating
-      showRating(idx, 'fill');
+      // Show self-rating after flip
+      setTimeout(() => {
+        showRating(idx, 'fill');
+      }, 450);
     }
 
     function generateDiffHtml(userCode, refCode) {
@@ -2813,9 +2865,9 @@
         ? `<div style="color:var(--green);padding:12px;background:var(--green-soft);border-radius:8px;margin-top:12px">✅ 正确！你找到了 bug</div>`
         : `<div style="color:var(--red);padding:12px;background:var(--red-soft);border-radius:8px;margin-top:12px">❌ 不对，bug 在第 ${correctLineIdx + 1} 行</div>`;
 
-      // Show reveal button
-      const revealBtn = document.getElementById(`revealBtn-${idx}`);
-      if (revealBtn) revealBtn.style.display = 'inline-block';
+      // Show flip container with reveal button
+      const flipContainer = document.getElementById(`bugFlipContainer-${idx}`);
+      if (flipContainer) flipContainer.style.display = 'block';
 
       renderStepper();
 
@@ -2823,9 +2875,16 @@
       showRating(idx, 'bug');
     }
 
+    function flipBugReveal(idx) {
+      const card = document.getElementById(`bugFlipCard-${idx}`);
+      if (!card) return;
+      card.classList.add('flipped');
+    }
+
     function revealBug(idx) {
+      // Legacy function - kept for compatibility
       const el = document.getElementById(`ans-${idx}`);
-      el.classList.toggle('open');
+      if (el) el.classList.toggle('open');
     }
 
     function showScore() {

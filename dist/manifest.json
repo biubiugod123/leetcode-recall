@@ -1,7 +1,7 @@
 {
-  "name": "LeetCode Recall Trainer",
-  "short_name": "LC Recall",
-  "description": "Active recall training for LeetCode problems",
+  "name": "面试 Killer",
+  "short_name": "面试Killer",
+  "description": "LeetCode + 八股文 Active Recall Training",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

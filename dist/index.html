@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="LC Recall" />
-  <title>LeetCode Recall Trainer 🧠</title>
+  <title>面试 Killer 🔥</title>
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1433,10 +1433,257 @@
         padding: 10px 14px !important;
       }
     }
+
+    /* ============ 首页样式 ============ */
+    .home-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .home-title {
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .home-subtitle {
+      color: var(--muted);
+      margin-bottom: 48px;
+      font-size: 15px;
+    }
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 360px;
+      width: 100%;
+    }
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .category-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(129,140,248,.15);
+    }
+    .category-card:active {
+      transform: translateY(-2px);
+    }
+    .category-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .category-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .category-count {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .category-due {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .home-back-hint {
+      margin-top: 48px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .home-back-hint:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    /* 返回首页按钮 */
+    .back-home-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: all 0.2s;
+    }
+    .back-home-btn:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+    
+    /* ============ 八股文卡片样式 ============ */
+    .bg-card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 32px 24px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .bg-category {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .bg-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+    .bg-question {
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.6;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: 12px;
+    }
+    .bg-answer {
+      margin-top: 24px;
+    }
+    .bg-section {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .bg-section.trap {
+      background: var(--orange-soft);
+      border: 1px solid rgba(251,146,60,.3);
+    }
+    .bg-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+    .bg-section-content {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .bg-keypoints {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .bg-keypoints li {
+      margin-bottom: 8px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .bg-trap {
+      margin-bottom: 12px;
+    }
+    .bg-trap:last-child {
+      margin-bottom: 0;
+    }
+    .trap-wrong {
+      color: var(--red);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .trap-right {
+      color: var(--green);
+      font-size: 14px;
+    }
+    .bg-rating {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .bg-rating-label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .bg-rating-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .rating-btn {
+      flex: 1;
+      max-width: 100px;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .rating-btn.red {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+    .rating-btn.orange {
+      background: var(--orange-soft);
+      color: var(--orange);
+    }
+    .rating-btn.green {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+    .rating-btn:hover {
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
-  <div class="app">
+  <!-- 首页分类选择 -->
+  <div id="homeScreen" class="home-screen">
+    <h1 class="home-title">🔥 面试 Killer</h1>
+    <p class="home-subtitle">选择复习类型</p>
+    
+    <div class="category-grid">
+      <div class="category-card" onclick="selectCategory('leetcode')">
+        <div class="category-icon">💻</div>
+        <div class="category-name">LeetCode</div>
+        <div class="category-count" id="lcCount">0 题</div>
+        <div class="category-due" id="lcDue">今日: 0</div>
+      </div>
+      
+      <div class="category-card" onclick="selectCategory('bagugu')">
+        <div class="category-icon">📚</div>
+        <div class="category-name">八股文</div>
+        <div class="category-count" id="bgCount">0 题</div>
+        <div class="category-due" id="bgDue">今日: 0</div>
+      </div>
+    </div>
+    
+    <button class="home-back-hint" onclick="location.reload()">
+      刷新数据
+    </button>
+  </div>
+
+  <div class="app" style="display:none;">
     <!-- Header -->
     <div class="header">
       <div class="logo">Active Recall</div>
@@ -1508,6 +1755,247 @@
   </div>
 
   <script>
+    // ---- 首页 & 分类 ----
+    let currentCategory = null;
+    let baguguData = [];
+    
+    async function loadBagugu() {
+      try {
+        const res = await fetch('./bagugu.json');
+        baguguData = await res.json();
+        document.getElementById('bgCount').textContent = baguguData.length + ' 题';
+        // 计算今日到期
+        const progress = loadProgressLocal();
+        const today = getTodayStr();
+        let bgDue = 0;
+        for (const item of baguguData) {
+          const p = progress[`bg-${item.id}`];
+          if (!p || p.nextReview <= today) bgDue++;
+        }
+        document.getElementById('bgDue').textContent = '今日: ' + bgDue;
+      } catch (e) {
+        console.log('No bagugu data:', e);
+      }
+    }
+    
+    function selectCategory(category) {
+      currentCategory = category;
+      document.getElementById('homeScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      
+      // 添加返回按钮
+      if (!document.querySelector('.back-home-btn')) {
+        const backBtn = document.createElement('button');
+        backBtn.className = 'back-home-btn';
+        backBtn.innerHTML = '←';
+        backBtn.onclick = backToHome;
+        document.body.appendChild(backBtn);
+      }
+      document.querySelector('.back-home-btn').style.display = 'flex';
+      
+      if (category === 'leetcode') {
+        // 更新标题
+        document.querySelector('.hero-gradient').textContent = 'LeetCode Recall Trainer';
+        initDailySession(loadProgress());
+      } else if (category === 'bagugu') {
+        document.querySelector('.hero-gradient').textContent = '八股文 Recall Trainer';
+        initBaguguSession();
+      }
+    }
+    
+    function backToHome() {
+      document.getElementById('homeScreen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      if (document.querySelector('.back-home-btn')) {
+        document.querySelector('.back-home-btn').style.display = 'none';
+      }
+      // 关闭全屏模式
+      if (document.getElementById('fullscreenOverlay')) {
+        document.getElementById('fullscreenOverlay').remove();
+      }
+      currentCategory = null;
+    }
+    
+    function initBaguguSession() {
+      // 简化版：先用概念回忆模式
+      const progress = loadProgressLocal();
+      const today = getTodayStr();
+      
+      // 找到期的八股文
+      const dueItems = baguguData.filter(item => {
+        const p = progress[`bg-${item.id}`];
+        return !p || p.nextReview <= today;
+      });
+      
+      // 随机选 10 个
+      const shuffled = dueItems.sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 10);
+      
+      if (selected.length === 0) {
+        document.getElementById('stats').innerHTML = `
+          <div style="text-align:center;padding:60px 20px;">
+            <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+            <div style="font-size:20px;font-weight:700;">今日八股文已完成！</div>
+            <div style="color:var(--muted);margin-top:8px;">明天再来复习</div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 生成练习
+      const exercises = selected.map(item => ({
+        type: 'concept-recall',
+        item: item,
+        question: item.question,
+        keyPoints: item.keyPoints,
+        concept: item.concept,
+        explanation: item.explanation
+      }));
+      
+      // 启动全屏模式
+      startBaguguFullscreen(exercises);
+    }
+    
+    function startBaguguFullscreen(exercises) {
+      let current = 0;
+      const total = exercises.length;
+      
+      const overlay = document.createElement('div');
+      overlay.id = 'fullscreenOverlay';
+      overlay.className = 'fullscreen-overlay';
+      overlay.innerHTML = `
+        <button class="fs-close" onclick="backToHome()">✕</button>
+        <div class="fs-progress">
+          ${exercises.map((_, i) => `<div class="fs-dot${i === 0 ? ' active' : ''}"></div>`).join('')}
+        </div>
+        <div class="fs-content" id="bgContent"></div>
+      `;
+      document.body.appendChild(overlay);
+      
+      function showExercise(idx) {
+        const ex = exercises[idx];
+        const container = document.getElementById('bgContent');
+        
+        // 更新进度点
+        document.querySelectorAll('.fs-dot').forEach((dot, i) => {
+          dot.className = 'fs-dot' + (i < idx ? ' done' : '') + (i === idx ? ' active' : '');
+        });
+        
+        container.innerHTML = `
+          <div class="bg-card">
+            <div class="bg-category">${ex.item.category}</div>
+            <div class="bg-title">${ex.item.title}</div>
+            <div class="bg-question">❓ ${ex.question}</div>
+            <button class="btn btn-primary" onclick="showBgAnswer(${idx})" style="margin-top:24px;">
+              显示答案
+            </button>
+          </div>
+        `;
+      }
+      
+      window.showBgAnswer = function(idx) {
+        const ex = exercises[idx];
+        const container = document.getElementById('bgContent');
+        
+        container.innerHTML = `
+          <div class="bg-card">
+            <div class="bg-category">${ex.item.category}</div>
+            <div class="bg-title">${ex.item.title}</div>
+            <div class="bg-question">❓ ${ex.question}</div>
+            
+            <div class="bg-answer">
+              <div class="bg-section">
+                <div class="bg-section-title">💡 概念</div>
+                <div class="bg-section-content">${ex.concept}</div>
+              </div>
+              
+              <div class="bg-section">
+                <div class="bg-section-title">📝 答案要点</div>
+                <ol class="bg-keypoints">
+                  ${ex.keyPoints.map(p => `<li>${p}</li>`).join('')}
+                </ol>
+              </div>
+              
+              ${ex.item.traps && ex.item.traps.length > 0 ? `
+              <div class="bg-section trap">
+                <div class="bg-section-title">⚠️ 常见陷阱</div>
+                ${ex.item.traps.map(t => `
+                  <div class="bg-trap">
+                    <div class="trap-wrong">❌ ${t.wrong}</div>
+                    <div class="trap-right">✅ ${t.right}</div>
+                  </div>
+                `).join('')}
+              </div>
+              ` : ''}
+            </div>
+            
+            <div class="bg-rating">
+              <div class="bg-rating-label">你记得多少？</div>
+              <div class="bg-rating-buttons">
+                <button class="rating-btn red" onclick="rateBg(${idx}, 1)">❌ 忘了</button>
+                <button class="rating-btn orange" onclick="rateBg(${idx}, 3)">🤔 部分</button>
+                <button class="rating-btn green" onclick="rateBg(${idx}, 5)">✅ 记得</button>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+      
+      window.rateBg = function(idx, rating) {
+        const ex = exercises[idx];
+        const progress = loadProgressLocal();
+        const key = `bg-${ex.item.id}`;
+        
+        // SM-2 简化版
+        const old = progress[key] || { ease: 2.5, interval: 1, reps: 0 };
+        let { ease, interval, reps } = old;
+        
+        if (rating >= 3) {
+          if (reps === 0) interval = 1;
+          else if (reps === 1) interval = 3;
+          else interval = Math.round(interval * ease);
+          reps++;
+          ease = Math.max(1.3, ease + 0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02));
+        } else {
+          reps = 0;
+          interval = 1;
+        }
+        
+        const next = new Date();
+        next.setDate(next.getDate() + interval);
+        
+        progress[key] = {
+          ease,
+          interval,
+          reps,
+          lastReview: getTodayStr(),
+          nextReview: next.toISOString().split('T')[0],
+          rating
+        };
+        
+        saveProgressLocal(progress);
+        
+        // 下一题
+        if (idx + 1 < total) {
+          showExercise(idx + 1);
+        } else {
+          // 完成
+          document.getElementById('bgContent').innerHTML = `
+            <div style="text-align:center;padding:40px;">
+              <div style="font-size:64px;margin-bottom:20px;">🎉</div>
+              <div style="font-size:24px;font-weight:700;">今日复习完成！</div>
+              <div style="color:var(--muted);margin-top:12px;">共复习 ${total} 个知识点</div>
+              <button class="btn btn-primary" onclick="backToHome()" style="margin-top:32px;">
+                返回首页
+              </button>
+            </div>
+          `;
+        }
+      };
+      
+      showExercise(0);
+    }
+
     // ---- State ----
     let problems = [];
     let quiz = null;
@@ -1560,19 +2048,25 @@
         problems = await probRes.json();
         console.log('Loaded', problems.length, 'problems');
         
+        // Load bagugu data
+        await loadBagugu();
+        
         // Load progress from localStorage
         progressData = { progress: loadProgressLocal() };
         
         // Compute review data locally
         reviewData = computeReviewData(progressData.progress);
         
-        // Initialize daily session
-        window.currentSession = await initDailySession(progressData.progress || {});
-        console.log('Session initialized:', window.currentSession);
+        // 更新首页 LeetCode 统计
+        document.getElementById('lcCount').textContent = problems.length + ' 题';
+        const lcDue = reviewData ? reviewData.dueToday : 0;
+        document.getElementById('lcDue').textContent = '今日: ' + lcDue;
         
-        renderStats();
-        renderProblems();
-        console.log('Init complete!');
+        // 显示首页，不自动开始复习
+        document.getElementById('homeScreen').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        
+        console.log('Init complete! Showing home screen.');
       } catch (err) {
         console.error('Init failed:', err);
         document.body.innerHTML = '<div style="color:red;padding:40px;text-align:center;"><h2>加载失败</h2><p>' + err.message + '</p><button onclick="location.reload()">刷新重试</button></div>';

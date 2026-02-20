@@ -2067,7 +2067,7 @@
         
         // 更新首页 LeetCode 统计
         document.getElementById('lcCount').textContent = problems.length + ' 题';
-        const lcDue = reviewData ? reviewData.dueToday : 0;
+        const lcDue = reviewData && reviewData.due ? reviewData.due.length : 0;
         document.getElementById('lcDue').textContent = '今日: ' + lcDue;
         
         // 显示首页，不自动开始复习

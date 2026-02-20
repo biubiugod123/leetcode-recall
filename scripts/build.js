@@ -6,8 +6,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseBaguguFile } = require('./parse-bagugu.js');
 
 const LEETCODE_DIR = '/Users/jiantanghuang/SecondBrain/LeetCode';
+const BAGUGU_DIR = '/Users/jiantanghuang/SecondBrain/八股文';
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 
 // Ensure dist exists
@@ -139,4 +141,39 @@ const buildInfo = {
 fs.writeFileSync(path.join(DIST_DIR, 'build-info.json'), JSON.stringify(buildInfo, null, 2));
 console.log(`📝 Written dist/build-info.json`);
 
-console.log('🎉 Build complete!');
+// Build 八股文
+console.log('\n🎓 Building 八股文...');
+console.log(`📂 Source: ${BAGUGU_DIR}`);
+
+try {
+  const baguguItems = [];
+  
+  // 遍历所有子目录
+  const categories = fs.readdirSync(BAGUGU_DIR, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+  
+  for (const category of categories) {
+    const categoryPath = path.join(BAGUGU_DIR, category);
+    const files = fs.readdirSync(categoryPath)
+      .filter(f => f.endsWith('.md'));
+    
+    for (const file of files) {
+      const filePath = path.join(categoryPath, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const items = parseBaguguFile(content, filePath);
+      baguguItems.push(...items);
+    }
+  }
+  
+  console.log(`✅ Found ${baguguItems.length} knowledge points`);
+  
+  // Write bagugu.json
+  const baguguJson = JSON.stringify(baguguItems, null, 2);
+  fs.writeFileSync(path.join(DIST_DIR, 'bagugu.json'), baguguJson);
+  console.log(`📝 Written dist/bagugu.json (${(baguguJson.length / 1024).toFixed(1)} KB)`);
+} catch (e) {
+  console.log('⚠️ Bagugu build skipped:', e.message);
+}
+
+console.log('\n🎉 Build complete!');

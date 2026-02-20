@@ -1,0 +1,158 @@
+[
+  {
+    "id": "ios-uikit核心-responder-chain",
+    "category": "iOS/UIKit核心",
+    "title": "Responder Chain",
+    "concept": "iOS 中处理触摸事件的链式传递机制",
+    "explanation": "当用户触摸屏幕时，系统需要找到应该响应这个触摸的视图。\n这个过程分两步：先从上往下找到被点击的视图（Hit Testing），\n再从下往上找到能处理事件的对象（Responder Chain）。",
+    "question": "解释 iOS 的 Responder Chain 机制",
+    "keyPoints": [
+      "Hit Testing：从根视图向下递归查找，使用 hitTest(_:with:) 方法",
+      "Action 传递：从 hit 视图向上查找响应者",
+      "顺序：View → ViewController → Window → AppDelegate"
+    ],
+    "compare": {
+      "vs": "Android 事件分发",
+      "diff": "iOS 先下后上，Android 是隧道+冒泡"
+    },
+    "traps": [
+      {
+        "wrong": "只说 hit testing，忘了 action 传递",
+        "right": "两部分都要说：先下（找视图）→ 再上（找响应者）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "如何让父视图响应而不是子视图？",
+        "a": "子视图设置 isUserInteractionEnabled = false 或重写 hitTest 返回 nil"
+      }
+    ]
+  },
+  {
+    "id": "ios-uikit核心-view-lifecycle",
+    "category": "iOS/UIKit核心",
+    "title": "View Lifecycle",
+    "concept": "UIViewController 从创建到销毁的一系列回调方法",
+    "explanation": "当 ViewController 被加载、显示、隐藏、销毁时，系统会调用一系列生命周期方法。\n理解这些方法的调用顺序对于正确初始化和清理资源至关重要。",
+    "question": "说一下 UIViewController 的生命周期方法",
+    "keyPoints": [
+      "loadView → viewDidLoad（只调用一次）",
+      "viewWillAppear → viewDidAppear（每次显示都调用）",
+      "viewWillDisappear → viewDidDisappear（每次消失都调用）"
+    ],
+    "compare": {
+      "vs": "viewDidLoad",
+      "diff": "viewWillAppear 每次显示都调用，viewDidLoad 只一次"
+    },
+    "traps": [
+      {
+        "wrong": "在 viewDidLoad 里做依赖屏幕尺寸的布局",
+        "right": "布局相关操作放 viewDidLayoutSubviews"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "viewDidLoad 和 viewWillAppear 应该分别做什么？",
+        "a": "viewDidLoad 做一次性初始化，viewWillAppear 做每次显示前的刷新（如数据更新）"
+      }
+    ]
+  },
+  {
+    "id": "ios-性能优化-retain-cycle",
+    "category": "iOS/性能优化",
+    "title": "Retain Cycle",
+    "concept": "两个或多个对象相互强引用导致无法释放的内存泄漏",
+    "explanation": "当对象 A 强引用对象 B，对象 B 又强引用对象 A 时，\n即使外部不再引用它们，它们的引用计数也不会变为 0，导致内存泄漏。",
+    "question": "什么是 Retain Cycle？如何避免？",
+    "keyPoints": [
+      "定义：相互强引用导致的内存泄漏",
+      "常见场景：closure 捕获 self、delegate 强引用",
+      "解决方案：[weak self]、[unowned self]、weak delegate"
+    ],
+    "compare": null,
+    "traps": [
+      {
+        "wrong": "所有 closure 都用 weak self（有时不需要）",
+        "right": "只在 closure 可能被 self 持有时才用 weak"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "weak 和 unowned 的区别？",
+        "a": "weak 是可选类型可为 nil，unowned 非可选假设永不为 nil，访问已释放对象会崩溃"
+      }
+    ]
+  },
+  {
+    "id": "ios-性能优化-内存泄漏调试",
+    "category": "iOS/性能优化",
+    "title": "内存泄漏调试",
+    "concept": "使用工具检测和定位内存泄漏问题",
+    "explanation": "Xcode 提供多种工具来检测内存问题：Instruments 的 Leaks 和 Allocations，\nMemory Graph Debugger 可视化对象关系，MetricKit 收集生产环境数据。",
+    "question": "如何调试内存泄漏？",
+    "keyPoints": [
+      "Instruments → Leaks：检测泄漏的对象",
+      "Memory Graph Debugger：可视化引用关系，找循环引用",
+      "MetricKit：生产环境监控内存峰值"
+    ],
+    "compare": null,
+    "traps": [
+      {
+        "wrong": "只依赖 Leaks 工具（不能检测所有问题）",
+        "right": "结合 Memory Graph 看引用关系更直观"
+      }
+    ],
+    "followUp": []
+  },
+  {
+    "id": "系统设计-app架构-mvvm",
+    "category": "系统设计/App架构",
+    "title": "MVVM",
+    "concept": "Model-View-ViewModel 架构模式，实现视图与业务逻辑分离",
+    "explanation": "View 负责 UI 展示，ViewModel 负责业务逻辑和数据转换，\nModel 负责数据模型。View 通过数据绑定监听 ViewModel 的变化。",
+    "question": "解释 MVVM 架构，为什么选择它？",
+    "keyPoints": [
+      "View：UI 展示，不包含业务逻辑",
+      "ViewModel：业务逻辑、数据转换、可测试",
+      "Model：数据模型",
+      "优点：可测试性高、关注点分离、适合 SwiftUI/Combine"
+    ],
+    "compare": {
+      "vs": "MVC",
+      "diff": "ViewModel 替代 Controller，更易测试，避免 Massive VC"
+    },
+    "traps": [
+      {
+        "wrong": "ViewModel 直接持有 View（应该反过来）",
+        "right": "View 持有 ViewModel，ViewModel 不知道 View 的存在"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "MVVM 的缺点是什么？",
+        "a": "数据绑定复杂、调试困难、小项目可能过度设计、学习曲线陡峭"
+      }
+    ]
+  },
+  {
+    "id": "系统设计-app架构-依赖注入",
+    "category": "系统设计/App架构",
+    "title": "依赖注入",
+    "concept": "将对象的依赖从内部创建改为外部传入",
+    "explanation": "不在类内部直接创建依赖对象，而是通过构造函数、属性或方法参数传入。\n这样可以轻松替换依赖（如用 Mock 测试），提高代码的可测试性和灵活性。",
+    "question": "什么是依赖注入？为什么要用？",
+    "keyPoints": [
+      "定义：依赖从外部传入而非内部创建",
+      "方式：构造函数注入、属性注入、方法注入",
+      "好处：可测试（注入 Mock）、解耦、灵活"
+    ],
+    "compare": null,
+    "traps": [
+      {
+        "wrong": "在 ViewModel 里直接创建 NetworkService()",
+        "right": "通过构造函数传入 protocol，方便测试时注入 Mock"
+      }
+    ],
+    "followUp": []
+  }
+]

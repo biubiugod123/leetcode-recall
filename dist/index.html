@@ -1880,62 +1880,266 @@
       currentCategory = null;
     }
     
+    // 八股文选中的主题
+    let selectedBaguguTopics = [];
+    
     function initBaguguSession() {
       console.log('initBaguguSession: baguguData.length=', baguguData.length);
       
-      // 如果数据为空，显示错误（使用全屏 overlay）
+      // 如果数据为空，显示错误
       if (!baguguData || baguguData.length === 0) {
-        const overlay = document.createElement('div');
-        overlay.id = 'fullscreenOverlay';
-        overlay.className = 'fullscreen-overlay';
-        overlay.innerHTML = `
-          <button class="fs-close" onclick="backToHome()">✕</button>
-          <div style="text-align:center;padding:60px 20px;">
-            <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
-            <div style="font-size:20px;font-weight:700;color:var(--red);">题库加载失败</div>
-            <div style="color:var(--muted);margin-top:8px;">baguguData.length = ${baguguData ? baguguData.length : 'null'}</div>
-            <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">刷新重试</button>
-          </div>
-        `;
-        document.body.appendChild(overlay);
+        showBaguguError('题库加载失败', `baguguData.length = ${baguguData ? baguguData.length : 'null'}`);
         return;
       }
       
-      // 简化版：先用概念回忆模式
+      // 显示主题选择界面
+      showBaguguTopicSelector();
+    }
+    
+    function showBaguguError(title, detail) {
+      const overlay = document.createElement('div');
+      overlay.id = 'fullscreenOverlay';
+      overlay.className = 'fullscreen-overlay';
+      overlay.innerHTML = `
+        <button class="fs-close" onclick="backToHome()">✕</button>
+        <div style="text-align:center;padding:60px 20px;">
+          <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+          <div style="font-size:20px;font-weight:700;color:var(--red);">${title}</div>
+          <div style="color:var(--muted);margin-top:8px;">${detail}</div>
+          <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">刷新重试</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    function showBaguguTopicSelector() {
+      // 获取所有主题及其题目数量
+      const topicCounts = {};
       const progress = loadProgressLocal();
       const today = getTodayStr();
       
-      // 找到期的八股文
-      console.log('initBaguguSession: filtering due items, today=', today);
-      const dueItems = baguguData.filter(item => {
+      baguguData.forEach(item => {
+        const cat = item.category || '未分类';
+        if (!topicCounts[cat]) {
+          topicCounts[cat] = { total: 0, due: 0 };
+        }
+        topicCounts[cat].total++;
         const p = progress[`bg-${item.id}`];
-        const isDue = !p || p.nextReview <= today;
-        console.log('  item:', item.id, 'progress:', p, 'isDue:', isDue);
-        return isDue;
+        if (!p || p.nextReview <= today) {
+          topicCounts[cat].due++;
+        }
       });
-      console.log('initBaguguSession: dueItems.length=', dueItems.length);
+      
+      const topics = Object.keys(topicCounts).sort();
+      
+      // 默认全选
+      selectedBaguguTopics = [...topics];
+      
+      const overlay = document.createElement('div');
+      overlay.id = 'fullscreenOverlay';
+      overlay.className = 'fullscreen-overlay';
+      overlay.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+      
+      const topicCards = topics.map(topic => {
+        const icon = getTopicIcon(topic);
+        const count = topicCounts[topic];
+        return `
+          <div class="topic-card selected" data-topic="${topic}" onclick="toggleBaguguTopic(this, '${topic}')">
+            <div class="topic-icon">${icon}</div>
+            <div class="topic-info">
+              <div class="topic-name">${topic}</div>
+              <div class="topic-count">${count.total} 题 · ${count.due} 待复习</div>
+            </div>
+            <div class="topic-check">✓</div>
+          </div>
+        `;
+      }).join('');
+      
+      overlay.innerHTML = `
+        <button class="fs-close" onclick="backToHome()">✕</button>
+        <div style="width:100%;max-width:400px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:32px;margin-bottom:8px;">🎯</div>
+            <div style="font-size:20px;font-weight:700;">选择复习主题</div>
+            <div style="color:var(--muted);font-size:14px;margin-top:4px;">点击选择/取消，可多选</div>
+          </div>
+          
+          <div id="topicList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+            ${topicCards}
+          </div>
+          
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-ghost" onclick="toggleAllBaguguTopics()" style="flex:1;">
+              全选/取消
+            </button>
+            <button class="btn btn-primary" onclick="startBaguguWithTopics()" style="flex:2;">
+              开始复习
+            </button>
+          </div>
+        </div>
+        
+        <style>
+          .topic-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all .2s var(--ease);
+          }
+          .topic-card:hover {
+            border-color: var(--accent);
+          }
+          .topic-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+          }
+          .topic-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface2);
+            border-radius: 10px;
+          }
+          .topic-info {
+            flex: 1;
+          }
+          .topic-name {
+            font-weight: 600;
+            font-size: 15px;
+          }
+          .topic-count {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+          }
+          .topic-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all .2s var(--ease);
+          }
+          .topic-card.selected .topic-check {
+            opacity: 1;
+            transform: scale(1);
+          }
+        </style>
+      `;
+      
+      document.body.appendChild(overlay);
+    }
+    
+    function getTopicIcon(topic) {
+      const icons = {
+        'iOS/UIKit核心': '📱',
+        'iOS/性能优化': '⚡',
+        '系统设计/App架构': '🏗️',
+        '网络': '🌐',
+        '数据库': '💾',
+        '算法': '🧮',
+        '操作系统': '🖥️',
+        '默认': '📚'
+      };
+      return icons[topic] || icons['默认'];
+    }
+    
+    function toggleBaguguTopic(el, topic) {
+      el.classList.toggle('selected');
+      if (el.classList.contains('selected')) {
+        if (!selectedBaguguTopics.includes(topic)) {
+          selectedBaguguTopics.push(topic);
+        }
+      } else {
+        selectedBaguguTopics = selectedBaguguTopics.filter(t => t !== topic);
+      }
+    }
+    
+    function toggleAllBaguguTopics() {
+      const cards = document.querySelectorAll('.topic-card');
+      const allSelected = selectedBaguguTopics.length === cards.length;
+      
+      if (allSelected) {
+        // 取消全选
+        selectedBaguguTopics = [];
+        cards.forEach(card => card.classList.remove('selected'));
+      } else {
+        // 全选
+        selectedBaguguTopics = [];
+        cards.forEach(card => {
+          card.classList.add('selected');
+          selectedBaguguTopics.push(card.dataset.topic);
+        });
+      }
+    }
+    
+    function startBaguguWithTopics() {
+      if (selectedBaguguTopics.length === 0) {
+        alert('请至少选择一个主题！');
+        return;
+      }
+      
+      // 移除选择界面
+      const overlay = document.getElementById('fullscreenOverlay');
+      if (overlay) overlay.remove();
+      
+      // 根据选中的主题筛选题目
+      const progress = loadProgressLocal();
+      const today = getTodayStr();
+      
+      const filteredItems = baguguData.filter(item => {
+        const cat = item.category || '未分类';
+        return selectedBaguguTopics.includes(cat);
+      });
+      
+      // 找到期的八股文
+      const dueItems = filteredItems.filter(item => {
+        const p = progress[`bg-${item.id}`];
+        return !p || p.nextReview <= today;
+      });
+      
+      console.log('startBaguguWithTopics: selectedTopics=', selectedBaguguTopics);
+      console.log('startBaguguWithTopics: filteredItems=', filteredItems.length);
+      console.log('startBaguguWithTopics: dueItems=', dueItems.length);
       
       // 随机选 10 个
       const shuffled = dueItems.sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 10);
-      console.log('initBaguguSession: selected.length=', selected.length);
       
       if (selected.length === 0) {
-        const overlay = document.createElement('div');
-        overlay.id = 'fullscreenOverlay';
-        overlay.className = 'fullscreen-overlay';
-        overlay.innerHTML = `
+        const msg = dueItems.length === 0 
+          ? `所选主题 (${selectedBaguguTopics.join(', ')}) 今日已复习完成！`
+          : '没有待复习的题目';
+        
+        const completeOverlay = document.createElement('div');
+        completeOverlay.id = 'fullscreenOverlay';
+        completeOverlay.className = 'fullscreen-overlay';
+        completeOverlay.innerHTML = `
           <button class="fs-close" onclick="backToHome()">✕</button>
           <div style="text-align:center;padding:60px 20px;">
             <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-            <div style="font-size:20px;font-weight:700;">今日八股文已完成！</div>
+            <div style="font-size:20px;font-weight:700;">${msg}</div>
             <div style="color:var(--muted);margin-top:8px;">
-              调试: baguguData=${baguguData.length}, dueItems=${dueItems.length}
+              总题数: ${filteredItems.length}, 待复习: ${dueItems.length}
             </div>
             <button class="btn btn-primary" onclick="backToHome()" style="margin-top:20px;">返回首页</button>
           </div>
         `;
-        document.body.appendChild(overlay);
+        document.body.appendChild(completeOverlay);
         return;
       }
       

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'lc-recall-v21';
+const CACHE_NAME = 'interview-killer-v1';
 const ASSETS = [
   './',
   './index.html',
   './problems.json',
+  './bagugu.json',
   './build-info.json',
   './manifest.json'
 ];

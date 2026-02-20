@@ -1826,7 +1826,6 @@
     async function selectCategory(category) {
       currentCategory = category;
       document.getElementById('homeScreen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
       
       // 添加返回按钮
       if (!document.querySelector('.back-home-btn')) {
@@ -1839,8 +1838,15 @@
       document.querySelector('.back-home-btn').style.display = 'flex';
       
       if (category === 'leetcode') {
-        // 更新标题
+        // LeetCode 使用 app 界面
+        document.getElementById('app').style.display = 'block';
         document.querySelector('.hero-gradient').textContent = 'LeetCode Recall Trainer';
+        
+        // 清空旧内容
+        document.getElementById('stats').innerHTML = '';
+        document.getElementById('problemGrid').innerHTML = '';
+        document.getElementById('quizArea').classList.remove('open');
+        
         window.currentSession = await initDailySession(loadProgressLocal());
         console.log('[DEBUG] currentSession set:', window.currentSession);
         
@@ -1853,8 +1859,10 @@
         }
         
         renderStats();
+        renderProblems();
       } else if (category === 'bagugu') {
-        document.querySelector('.hero-gradient').textContent = '八股文 Recall Trainer';
+        // 八股文直接进入全屏模式，不显示 app 界面
+        document.getElementById('app').style.display = 'none';
         initBaguguSession();
       }
     }
@@ -1875,9 +1883,13 @@
     function initBaguguSession() {
       console.log('initBaguguSession: baguguData.length=', baguguData.length);
       
-      // 如果数据为空，显示错误
+      // 如果数据为空，显示错误（使用全屏 overlay）
       if (!baguguData || baguguData.length === 0) {
-        document.getElementById('stats').innerHTML = `
+        const overlay = document.createElement('div');
+        overlay.id = 'fullscreenOverlay';
+        overlay.className = 'fullscreen-overlay';
+        overlay.innerHTML = `
+          <button class="fs-close" onclick="backToHome()">✕</button>
           <div style="text-align:center;padding:60px 20px;">
             <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
             <div style="font-size:20px;font-weight:700;color:var(--red);">题库加载失败</div>
@@ -1885,6 +1897,7 @@
             <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">刷新重试</button>
           </div>
         `;
+        document.body.appendChild(overlay);
         return;
       }
       
@@ -1908,7 +1921,11 @@
       console.log('initBaguguSession: selected.length=', selected.length);
       
       if (selected.length === 0) {
-        document.getElementById('stats').innerHTML = `
+        const overlay = document.createElement('div');
+        overlay.id = 'fullscreenOverlay';
+        overlay.className = 'fullscreen-overlay';
+        overlay.innerHTML = `
+          <button class="fs-close" onclick="backToHome()">✕</button>
           <div style="text-align:center;padding:60px 20px;">
             <div style="font-size:48px;margin-bottom:16px;">🎉</div>
             <div style="font-size:20px;font-weight:700;">今日八股文已完成！</div>
@@ -1918,6 +1935,7 @@
             <button class="btn btn-primary" onclick="backToHome()" style="margin-top:20px;">返回首页</button>
           </div>
         `;
+        document.body.appendChild(overlay);
         return;
       }
       
@@ -2227,6 +2245,16 @@
 
     // ---- Smart Recommend (use daily session queue) ----
     async function smartRecommend() {
+      // 检查当前类别
+      if (currentCategory !== 'leetcode') {
+        console.log('[DEBUG] smartRecommend called but category is:', currentCategory);
+        if (currentCategory === 'bagugu') {
+          // 八股文应该用全屏模式
+          initBaguguSession();
+        }
+        return;
+      }
+      
       let session = window.currentSession;
       
       console.log('[DEBUG] smartRecommend called, session:', session);

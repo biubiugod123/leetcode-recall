@@ -1823,7 +1823,7 @@
       }
     }
     
-    function selectCategory(category) {
+    async function selectCategory(category) {
       currentCategory = category;
       document.getElementById('homeScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
@@ -1841,7 +1841,18 @@
       if (category === 'leetcode') {
         // 更新标题
         document.querySelector('.hero-gradient').textContent = 'LeetCode Recall Trainer';
-        initDailySession(loadProgress());
+        window.currentSession = await initDailySession(loadProgress());
+        console.log('[DEBUG] currentSession set:', window.currentSession);
+        
+        // Safety check: if session is still empty but we have problems, force regenerate
+        if ((!window.currentSession || window.currentSession.total === 0) && problems.length > 0) {
+          console.log('[DEBUG] Session still empty, forcing regeneration');
+          clearSession();
+          window.currentSession = generateDailyQueue(loadProgress() || {});
+          saveSession(window.currentSession);
+        }
+        
+        renderStats();
       } else if (category === 'bagugu') {
         document.querySelector('.hero-gradient').textContent = '八股文 Recall Trainer';
         initBaguguSession();
@@ -2216,11 +2227,29 @@
 
     // ---- Smart Recommend (use daily session queue) ----
     async function smartRecommend() {
-      const session = window.currentSession;
+      let session = window.currentSession;
+      
+      console.log('[DEBUG] smartRecommend called, session:', session);
       
       if (!session || session.total === 0) {
-        alert('题库为空，请先添加题目！');
-        return;
+        console.log('[DEBUG] Session empty or total=0, attempting regeneration');
+        console.log('[DEBUG] problems.length:', problems.length);
+        
+        // Try to regenerate if we have problems but no session
+        if (problems.length > 0) {
+          console.log('[DEBUG] Regenerating daily queue...');
+          clearSession();
+          session = generateDailyQueue(loadProgress() || {});
+          saveSession(session);
+          window.currentSession = session;
+          renderStats();
+          console.log('[DEBUG] Regenerated session:', session);
+        }
+        
+        if (!session || session.total === 0) {
+          alert('题库为空，请先添加题目！\n\n调试信息:\n- problems.length: ' + problems.length + '\n- session: ' + JSON.stringify(session));
+          return;
+        }
       }
       
       if (session.current >= session.total) {
@@ -2856,8 +2885,22 @@
       let session = loadSession();
       const today = getTodayStr();
       
-      // Check if session is valid for today
-      if (!session || session.date !== today || !session.queue || session.queue.length === 0) {
+      console.log('[DEBUG] initDailySession called');
+      console.log('[DEBUG] loadSession result:', session);
+      console.log('[DEBUG] today:', today);
+      console.log('[DEBUG] problems.length at init:', problems.length);
+      
+      // ALWAYS regenerate if queue is empty or no problems loaded yet
+      const needsRegen = !session || 
+                         session.date !== today || 
+                         !session.queue || 
+                         session.queue.length === 0 ||
+                         session.total === 0;
+      
+      if (needsRegen) {
+        console.log('[DEBUG] Need to generate new session');
+        // Clear stale session first
+        clearSession();
         // Generate new daily session
         session = generateDailyQueue(progressData);
         saveSession(session);

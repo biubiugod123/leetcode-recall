@@ -1862,6 +1862,21 @@
     }
     
     function initBaguguSession() {
+      console.log('initBaguguSession: baguguData.length=', baguguData.length);
+      
+      // 如果数据为空，显示错误
+      if (!baguguData || baguguData.length === 0) {
+        document.getElementById('stats').innerHTML = `
+          <div style="text-align:center;padding:60px 20px;">
+            <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+            <div style="font-size:20px;font-weight:700;color:var(--red);">题库加载失败</div>
+            <div style="color:var(--muted);margin-top:8px;">baguguData.length = ${baguguData ? baguguData.length : 'null'}</div>
+            <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">刷新重试</button>
+          </div>
+        `;
+        return;
+      }
+      
       // 简化版：先用概念回忆模式
       const progress = loadProgressLocal();
       const today = getTodayStr();

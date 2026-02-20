@@ -1913,20 +1913,23 @@
     }
     
     function showBaguguTopicSelector() {
-      // 获取所有主题及其题目数量
+      // 获取所有大类及其题目数量（按 "/" 分割取第一部分）
       const topicCounts = {};
       const progress = loadProgressLocal();
       const today = getTodayStr();
       
       baguguData.forEach(item => {
-        const cat = item.category || '未分类';
-        if (!topicCounts[cat]) {
-          topicCounts[cat] = { total: 0, due: 0 };
+        const fullCat = item.category || '未分类';
+        // 取大类（"/" 前的部分）
+        const mainCat = fullCat.split('/')[0].trim();
+        if (!topicCounts[mainCat]) {
+          topicCounts[mainCat] = { total: 0, due: 0, subCategories: new Set() };
         }
-        topicCounts[cat].total++;
+        topicCounts[mainCat].total++;
+        topicCounts[mainCat].subCategories.add(fullCat);
         const p = progress[`bg-${item.id}`];
         if (!p || p.nextReview <= today) {
-          topicCounts[cat].due++;
+          topicCounts[mainCat].due++;
         }
       });
       
@@ -1943,11 +1946,13 @@
       const topicCards = topics.map(topic => {
         const icon = getTopicIcon(topic);
         const count = topicCounts[topic];
+        const subCats = [...count.subCategories].map(c => c.split('/')[1] || c).join('、');
         return `
           <div class="topic-card selected" data-topic="${topic}" onclick="toggleBaguguTopic(this, '${topic}')">
             <div class="topic-icon">${icon}</div>
             <div class="topic-info">
               <div class="topic-name">${topic}</div>
+              <div class="topic-sub">${subCats}</div>
               <div class="topic-count">${count.total} 题 · ${count.due} 待复习</div>
             </div>
             <div class="topic-check">✓</div>
@@ -2014,10 +2019,15 @@
             font-weight: 600;
             font-size: 15px;
           }
-          .topic-count {
+          .topic-sub {
             font-size: 12px;
-            color: var(--muted);
+            color: var(--accent);
             margin-top: 2px;
+          }
+          .topic-count {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
           }
           .topic-check {
             width: 24px;
@@ -2046,13 +2056,16 @@
     
     function getTopicIcon(topic) {
       const icons = {
-        'iOS/UIKit核心': '📱',
-        'iOS/性能优化': '⚡',
-        '系统设计/App架构': '🏗️',
+        'iOS': '📱',
+        '系统设计': '🏗️',
         '网络': '🌐',
         '数据库': '💾',
         '算法': '🧮',
         '操作系统': '🖥️',
+        'Java': '☕',
+        'Python': '🐍',
+        '前端': '🎨',
+        '后端': '⚙️',
         '默认': '📚'
       };
       return icons[topic] || icons['默认'];
@@ -2097,13 +2110,14 @@
       const overlay = document.getElementById('fullscreenOverlay');
       if (overlay) overlay.remove();
       
-      // 根据选中的主题筛选题目
+      // 根据选中的大类筛选题目
       const progress = loadProgressLocal();
       const today = getTodayStr();
       
       const filteredItems = baguguData.filter(item => {
-        const cat = item.category || '未分类';
-        return selectedBaguguTopics.includes(cat);
+        const fullCat = item.category || '未分类';
+        const mainCat = fullCat.split('/')[0].trim();
+        return selectedBaguguTopics.includes(mainCat);
       });
       
       // 找到期的八股文

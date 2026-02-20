@@ -1763,6 +1763,18 @@
       const day = String(now.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     }
+    
+    const PROGRESS_KEY = 'lc-recall-progress';
+    
+    function loadProgressLocal() {
+      try {
+        return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
+      } catch (e) { return {}; }
+    }
+    
+    function saveProgressLocal(data) {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+    }
 
     // ---- 首页 & 分类 ----
     let currentCategory = null;
@@ -2016,19 +2028,6 @@
     let progressData = {};
     let reviewData = null;
 
-    // ---- Local Storage Helpers ----
-    const PROGRESS_KEY = 'lc-recall-progress';
-    
-    function loadProgressLocal() {
-      try {
-        return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
-      } catch (e) { return {}; }
-    }
-    
-    function saveProgressLocal(data) {
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
-    }
-    
     function computeReviewData(progress) {
       const today = getTodayStr();
       const due = [];
@@ -2621,14 +2620,6 @@
     }
 
     // ========== Daily Session Management ==========
-
-    function getTodayStr() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
 
     function loadSession() {
       try {

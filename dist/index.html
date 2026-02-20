@@ -1700,16 +1700,46 @@
         answer: '常见错误：\n' + commonMistakes.map((m, i) => `${i+1}. ${m}`).join('\n')
       });
       
-      // 5. Transfer
+      // 5. Transfer - 更激进的变式追问
+      const transferQuestions = [
+        {
+          question: `如果要求 O(1) 额外空间，${prob.title} 该怎么改？`,
+          hint: '思考：能否原地操作？能否用位运算？'
+        },
+        {
+          question: `如果 ${prob.title} 的输入是流式数据（一次只能看一个元素），怎么处理？`,
+          hint: '思考：需要维护什么状态？能否一遍扫描？'
+        },
+        {
+          question: `面试官追问：为什么 ${prob.title} 不用暴力解法？什么情况下暴力解法更好？`,
+          hint: '思考：数据规模小时？代码可读性？'
+        },
+        {
+          question: `${prob.title} 的解法能处理有重复元素的情况吗？如果不能，怎么改？`,
+          hint: '思考：重复元素会影响什么？需要去重吗？'
+        },
+        {
+          question: `如果 ${prob.title} 要返回所有可能的解（而不是一个），复杂度会变成多少？`,
+          hint: '思考：解的数量级是多少？需要回溯吗？'
+        },
+        {
+          question: `${prob.title} 和哪道题的思路最像？能复用什么模式？`,
+          hint: '思考：双指针？滑动窗口？前缀和？'
+        },
+        {
+          question: `如果面试官说"假设输入已排序"，${prob.title} 能优化到什么复杂度？`,
+          hint: '思考：排序后能二分吗？能双指针吗？'
+        }
+      ];
+      const randomTransfer = transferQuestions[Math.floor(Math.random() * transferQuestions.length)];
       exercises.push({
-        type: 'transfer',
+        type: 'recall',
         emoji: '5️⃣',
-        title: '变式思考',
-        timeLimit: '60秒',
-        question: `如果 ${prob.title} 的输入规模从 10^4 变成 10^9，解法需要调整吗？`,
-        options: ['可以，不需要调整', '需要优化常数', '需要换算法', '无法完成'],
-        correctIndex: 0,
-        answer: '取决于当前时间复杂度'
+        title: '变式追问',
+        timeLimit: '90秒',
+        question: randomTransfer.question,
+        hint: randomTransfer.hint,
+        answer: '这是开放性问题，关键是展示你的思考过程和对算法的深入理解。'
       });
       
       // Build hints
@@ -2106,11 +2136,34 @@
         }
       }
       
-      // Shuffle for randomness
-      for (let i = selected.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [selected[i], selected[j]] = [selected[j], selected[i]];
+      // Interleaving: 交错排列，确保相邻题目 category 不同
+      const interleaved = [];
+      const remaining = [...selected];
+      
+      while (remaining.length > 0) {
+        if (interleaved.length === 0) {
+          // First item: pick randomly
+          const idx = Math.floor(Math.random() * remaining.length);
+          interleaved.push(remaining.splice(idx, 1)[0]);
+        } else {
+          // Find an item with different category than the last one
+          const lastCat = interleaved[interleaved.length - 1].category;
+          const diffCatIdx = remaining.findIndex(item => item.category !== lastCat);
+          
+          if (diffCatIdx !== -1) {
+            // Found different category - use it
+            interleaved.push(remaining.splice(diffCatIdx, 1)[0]);
+          } else {
+            // All remaining are same category - just pick randomly
+            const idx = Math.floor(Math.random() * remaining.length);
+            interleaved.push(remaining.splice(idx, 1)[0]);
+          }
+        }
       }
+      
+      // Replace selected with interleaved
+      selected.length = 0;
+      selected.push(...interleaved);
       
       // Handle empty result
       if (selected.length === 0) {

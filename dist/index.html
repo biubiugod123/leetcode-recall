@@ -726,40 +726,72 @@
     }
     .reveal:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
-    /* ---- Card Flip Animation ---- */
-    .flip-container {
-      perspective: 1000px;
-      margin-top: 16px;
-    }
-    .flip-card {
-      position: relative;
-      width: 100%;
-      min-height: 80px;
-      transform-style: preserve-3d;
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .flip-card.flipped {
-      transform: rotateX(180deg);
-    }
-    .flip-front, .flip-back {
-      width: 100%;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    .flip-front {
-      /* Front: reveal button */
-    }
-    .flip-back {
-      position: absolute;
+    /* ---- Answer Overlay (Floating Card) ---- */
+    .answer-overlay {
+      display: none;
+      position: fixed;
       top: 0;
       left: 0;
-      transform: rotateX(180deg);
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s ease;
     }
-    .flip-card.flipped .flip-front {
-      visibility: hidden;
+    .answer-overlay.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .flip-card.flipped .flip-back {
+    .answer-modal {
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       position: relative;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .answer-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .answer-modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .answer-modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .answer-modal-close:hover {
+      background: var(--red);
+      color: white;
+    }
+    .answer-modal-body {
+      padding: 20px;
     }
 
     .answer {
@@ -2553,43 +2585,27 @@
       // Hide input
       document.getElementById(`recallInput-${idx}`).style.display = 'none';
 
-      // Prepare comparison content
-      const resultDiv = document.getElementById(`recallResult-${idx}`);
-      resultDiv.innerHTML = `
-        <div class="answer">
-          <div class="compare-view">
-            <div class="compare-col">
-              <div class="compare-label user">📝 你的回答</div>
-              <div class="compare-content">${esc(userAnswer)}</div>
-            </div>
-            <div class="compare-col">
-              <div class="compare-label ref">✅ 参考思路</div>
-              <div class="compare-content">${formatMd(ex.answer)}</div>
-            </div>
+      // Show answer overlay
+      const content = `
+        <div class="compare-view">
+          <div class="compare-col">
+            <div class="compare-label user">📝 你的回答</div>
+            <div class="compare-content">${esc(userAnswer)}</div>
+          </div>
+          <div class="compare-col">
+            <div class="compare-label ref">✅ 参考思路</div>
+            <div class="compare-content">${formatMd(ex.answer)}</div>
           </div>
         </div>
       `;
-
-      // Show flip container and trigger animation
-      const flipContainer = document.getElementById(`recallFlipContainer-${idx}`);
-      const flipCard = document.getElementById(`recallFlipCard-${idx}`);
-      flipContainer.style.display = 'block';
-      
-      // Trigger flip after brief delay for DOM update
-      setTimeout(() => {
-        flipCard.classList.add('flipped');
-        // Scroll to show the result
-        flipContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
+      showAnswerOverlay('🎯 对比结果', content);
 
       answers[idx] = true;
       stopTimer(idx);
       renderStepper();
 
-      // Show self-rating after flip
-      setTimeout(() => {
-        showRating(idx, 'recall');
-      }, 450);
+      // Show self-rating
+      showRating(idx, 'recall');
     }
 
     // ---- Fill: Submit & Diff ----
@@ -2605,28 +2621,15 @@
       // Hide input
       document.getElementById(`fillInput-${idx}`).style.display = 'none';
 
-      // Generate diff content
-      const resultDiv = document.getElementById(`fillResult-${idx}`);
-      resultDiv.innerHTML = `<div class="answer">${generateDiffHtml(userCode, refCode)}</div>`;
-
-      // Show flip container and trigger animation
-      const flipContainer = document.getElementById(`fillFlipContainer-${idx}`);
-      const flipCard = document.getElementById(`fillFlipCard-${idx}`);
-      flipContainer.style.display = 'block';
-      
-      setTimeout(() => {
-        flipCard.classList.add('flipped');
-        flipContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
+      // Show answer overlay
+      showAnswerOverlay('✏️ 代码对比', generateDiffHtml(userCode, refCode));
 
       answers[idx] = true;
       stopTimer(idx);
       renderStepper();
 
-      // Show self-rating after flip
-      setTimeout(() => {
-        showRating(idx, 'fill');
-      }, 450);
+      // Show self-rating
+      showRating(idx, 'fill');
     }
 
     function generateDiffHtml(userCode, refCode) {
@@ -2817,22 +2820,19 @@
     }
 
     function flipReveal(idx) {
-      const card = document.getElementById(`flipCard-${idx}`);
-      if (!card) return;
+      const ex = quiz.exercises[idx];
+      if (!ex) return;
       
-      card.classList.add('flipped');
-      card.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Show answer in overlay
+      showAnswerOverlay('💡 解析', `<p style="color:var(--text2);line-height:1.8">${esc(ex.answer)}</p>`);
       
       if (answers[idx] === undefined) {
         answers[idx] = true;
         stopTimer(idx);
         renderStepper();
 
-        // Show self-rating after flip animation
-        setTimeout(() => {
-          const ex = quiz.exercises[idx];
-          showRating(idx, ex.type);
-        }, 400);
+        // Show self-rating
+        showRating(idx, ex.type);
       }
     }
 
@@ -2880,10 +2880,18 @@
     }
 
     function flipBugReveal(idx) {
-      const card = document.getElementById(`bugFlipCard-${idx}`);
-      if (!card) return;
-      card.classList.add('flipped');
-      card.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const ex = quiz.exercises[idx];
+      if (!ex) return;
+      
+      const content = `
+        <div style="color:var(--text2);line-height:1.8">
+          <strong>Bug 位置：</strong>第 ${(ex.bugLineIndex || 0) + 1} 行<br><br>
+          <strong>问题：</strong>${esc(ex.bugDescription || '代码逻辑有误')}<br><br>
+          <strong>正确代码：</strong>
+          <pre style="margin-top:8px;padding:12px;background:var(--surface3);border-radius:6px;overflow-x:auto"><code>${esc(ex.correctCode || '')}</code></pre>
+        </div>
+      `;
+      showAnswerOverlay('🐛 Bug 分析', content);
     }
 
     function revealBug(idx) {
@@ -3115,6 +3123,26 @@
 
     init();
 
+    // ---- Answer Overlay Functions ----
+    function showAnswerOverlay(title, content) {
+      const overlay = document.getElementById('answerOverlay');
+      const titleEl = document.getElementById('answerModalTitle');
+      const bodyEl = document.getElementById('answerModalBody');
+      
+      titleEl.textContent = title;
+      bodyEl.innerHTML = content;
+      overlay.classList.add('show');
+      
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeAnswerOverlay() {
+      const overlay = document.getElementById('answerOverlay');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js')
@@ -3122,5 +3150,16 @@
         .catch(err => console.log('SW registration failed:', err));
     }
   </script>
+  
+  <!-- Answer Overlay Modal -->
+  <div class="answer-overlay" id="answerOverlay" onclick="if(event.target === this) closeAnswerOverlay()">
+    <div class="answer-modal">
+      <div class="answer-modal-header">
+        <span class="answer-modal-title" id="answerModalTitle">💡 解析</span>
+        <button class="answer-modal-close" onclick="closeAnswerOverlay()">✕</button>
+      </div>
+      <div class="answer-modal-body" id="answerModalBody"></div>
+    </div>
+  </div>
 </body>
 </html>

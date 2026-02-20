@@ -1781,10 +1781,25 @@
     let baguguData = [];
     
     async function loadBagugu() {
+      console.log('loadBagugu: starting...');
       try {
         const res = await fetch('./bagugu.json');
+        console.log('loadBagugu: fetch response', res.status);
+        if (!res.ok) {
+          console.error('loadBagugu: fetch failed', res.status);
+          return;
+        }
         baguguData = await res.json();
-        document.getElementById('bgCount').textContent = baguguData.length + ' 题';
+        console.log('loadBagugu: loaded', baguguData.length, 'items');
+        
+        const bgCountEl = document.getElementById('bgCount');
+        const bgDueEl = document.getElementById('bgDue');
+        console.log('loadBagugu: elements', bgCountEl, bgDueEl);
+        
+        if (bgCountEl) {
+          bgCountEl.textContent = baguguData.length + ' 题';
+        }
+        
         // 计算今日到期
         const today = getTodayStr();
         const progress = loadProgressLocal();
@@ -1793,9 +1808,18 @@
           const p = progress[`bg-${item.id}`];
           if (!p || p.nextReview <= today) bgDue++;
         }
-        document.getElementById('bgDue').textContent = '今日: ' + bgDue;
+        
+        if (bgDueEl) {
+          bgDueEl.textContent = '今日: ' + bgDue;
+        }
+        console.log('loadBagugu: done, due=', bgDue);
       } catch (e) {
-        console.log('No bagugu data:', e);
+        console.error('loadBagugu error:', e);
+        const bgCountEl = document.getElementById('bgCount');
+        if (bgCountEl) {
+          bgCountEl.textContent = '加载失败';
+          bgCountEl.style.color = 'red';
+        }
       }
     }
     
@@ -2057,7 +2081,9 @@
         console.log('Loaded', problems.length, 'problems');
         
         // Load bagugu data
+        console.log('init: calling loadBagugu...');
         await loadBagugu();
+        console.log('init: loadBagugu done, baguguData.length=', baguguData.length);
         
         // Load progress from localStorage
         progressData = { progress: loadProgressLocal() };

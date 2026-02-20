@@ -1,4 +1,4 @@
-const CACHE_NAME = 'interview-killer-v2';
+const CACHE_NAME = 'interview-killer-v3';
 const ASSETS = [
   './',
   './index.html',

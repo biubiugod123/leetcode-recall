@@ -793,6 +793,62 @@
     .answer-modal-body {
       padding: 20px;
     }
+    
+    /* ---- Structured Answer Cards ---- */
+    .answer-section {
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+    }
+    .answer-section:last-child {
+      margin-bottom: 0;
+    }
+    .answer-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .answer-section-content {
+      color: var(--text2);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .answer-section-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .answer-section-content li {
+      margin-bottom: 6px;
+    }
+    .answer-section-content code {
+      background: var(--surface3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .answer-section-content pre {
+      background: var(--surface3);
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    .answer-section.algo { border-left-color: var(--blue); }
+    .answer-section.algo .answer-section-title { color: var(--blue); }
+    .answer-section.edge { border-left-color: var(--yellow); }
+    .answer-section.edge .answer-section-title { color: var(--yellow); }
+    .answer-section.impl { border-left-color: var(--green); }
+    .answer-section.impl .answer-section-title { color: var(--green); }
+    .answer-section.error { border-left-color: var(--red); }
+    .answer-section.error .answer-section-title { color: var(--red); }
 
     .answer {
       display: block;
@@ -2585,17 +2641,15 @@
       // Hide input
       document.getElementById(`recallInput-${idx}`).style.display = 'none';
 
-      // Show answer overlay
+      // Show answer overlay with structured content
       const content = `
-        <div class="compare-view">
-          <div class="compare-col">
-            <div class="compare-label user">📝 你的回答</div>
-            <div class="compare-content">${esc(userAnswer)}</div>
-          </div>
-          <div class="compare-col">
-            <div class="compare-label ref">✅ 参考思路</div>
-            <div class="compare-content">${formatMd(ex.answer)}</div>
-          </div>
+        <div class="answer-section" style="border-left-color: var(--blue);">
+          <div class="answer-section-title" style="color: var(--blue);">📝 你的回答</div>
+          <div class="answer-section-content">${esc(userAnswer).replace(/\n/g, '<br>')}</div>
+        </div>
+        <div style="margin-top: 16px;">
+          <div class="answer-section-title" style="color: var(--green); margin-bottom: 12px;">✅ 参考思路</div>
+          ${formatAnswerStructured(ex.answer)}
         </div>
       `;
       showAnswerOverlay('🎯 对比结果', content);
@@ -2823,8 +2877,8 @@
       const ex = quiz.exercises[idx];
       if (!ex) return;
       
-      // Show answer in overlay
-      showAnswerOverlay('💡 解析', `<p style="color:var(--text2);line-height:1.8">${esc(ex.answer)}</p>`);
+      // Show answer in overlay with structured format
+      showAnswerOverlay('💡 解析', formatAnswerStructured(ex.answer));
       
       if (answers[idx] === undefined) {
         answers[idx] = true;
@@ -3065,6 +3119,105 @@
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/`([^`]+)`/g, '<code class="icode">$1</code>')
         .replace(/\n/g, '<br>');
+    }
+    
+    function formatAnswerStructured(text) {
+      if (!text) return '<p style="color:var(--muted)">暂无解析</p>';
+      
+      // Split by ### headers
+      const sections = [];
+      const lines = text.split('\n');
+      let currentSection = { title: '', content: [] };
+      
+      for (const line of lines) {
+        if (line.startsWith('### ')) {
+          // Save previous section
+          if (currentSection.title || currentSection.content.length) {
+            sections.push({ ...currentSection });
+          }
+          currentSection = { title: line.replace('### ', '').trim(), content: [] };
+        } else if (line.trim()) {
+          currentSection.content.push(line);
+        }
+      }
+      // Save last section
+      if (currentSection.title || currentSection.content.length) {
+        sections.push(currentSection);
+      }
+      
+      // If no sections found, just format as simple text
+      if (sections.length === 0 || (sections.length === 1 && !sections[0].title)) {
+        return `<div class="answer-section"><div class="answer-section-content">${formatMdRich(text)}</div></div>`;
+      }
+      
+      // Render sections as cards
+      const iconMap = {
+        '算法': ['🧠', 'algo'],
+        '优化': ['⚡', 'algo'],
+        '关键': ['🔑', 'impl'],
+        '边界': ['⚠️', 'edge'],
+        '条件': ['⚠️', 'edge'],
+        '错误': ['❌', 'error'],
+        '陷阱': ['❌', 'error'],
+        '技巧': ['💡', 'impl'],
+        '实现': ['💻', 'impl'],
+        '为什么': ['🤔', 'algo'],
+        '模板': ['📝', 'impl'],
+        '默认': ['📌', '']
+      };
+      
+      function getIcon(title) {
+        for (const [key, val] of Object.entries(iconMap)) {
+          if (title.includes(key)) return val;
+        }
+        return iconMap['默认'];
+      }
+      
+      return sections.map(sec => {
+        const [icon, cls] = sec.title ? getIcon(sec.title) : ['📌', ''];
+        const content = formatMdRich(sec.content.join('\n'));
+        
+        if (!sec.title) {
+          return `<div class="answer-section ${cls}"><div class="answer-section-content">${content}</div></div>`;
+        }
+        
+        return `
+          <div class="answer-section ${cls}">
+            <div class="answer-section-title">${icon} ${esc(sec.title)}</div>
+            <div class="answer-section-content">${content}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function formatMdRich(text) {
+      if (!text) return '';
+      let html = esc(text);
+      
+      // Code blocks (```python ... ```)
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        return `<pre><code>${code.trim()}</code></pre>`;
+      });
+      
+      // Inline code
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      
+      // Bold
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      
+      // Lists
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+      
+      // Line breaks
+      html = html.replace(/\n/g, '<br>');
+      
+      // Clean up extra br in pre
+      html = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (_, code) => {
+        return `<pre><code>${code.replace(/<br>/g, '\n')}</code></pre>`;
+      });
+      
+      return html;
     }
 
     // Handle tab key in textareas

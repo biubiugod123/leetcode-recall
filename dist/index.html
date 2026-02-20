@@ -1882,21 +1882,29 @@
       const today = getTodayStr();
       
       // 找到期的八股文
+      console.log('initBaguguSession: filtering due items, today=', today);
       const dueItems = baguguData.filter(item => {
         const p = progress[`bg-${item.id}`];
-        return !p || p.nextReview <= today;
+        const isDue = !p || p.nextReview <= today;
+        console.log('  item:', item.id, 'progress:', p, 'isDue:', isDue);
+        return isDue;
       });
+      console.log('initBaguguSession: dueItems.length=', dueItems.length);
       
       // 随机选 10 个
       const shuffled = dueItems.sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 10);
+      console.log('initBaguguSession: selected.length=', selected.length);
       
       if (selected.length === 0) {
         document.getElementById('stats').innerHTML = `
           <div style="text-align:center;padding:60px 20px;">
             <div style="font-size:48px;margin-bottom:16px;">🎉</div>
             <div style="font-size:20px;font-weight:700;">今日八股文已完成！</div>
-            <div style="color:var(--muted);margin-top:8px;">明天再来复习</div>
+            <div style="color:var(--muted);margin-top:8px;">
+              调试: baguguData=${baguguData.length}, dueItems=${dueItems.length}
+            </div>
+            <button class="btn btn-primary" onclick="backToHome()" style="margin-top:20px;">返回首页</button>
           </div>
         `;
         return;

@@ -1755,6 +1755,15 @@
   </div>
 
   <script>
+    // ---- 工具函数（提前定义）----
+    function getTodayStr() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     // ---- 首页 & 分类 ----
     let currentCategory = null;
     let baguguData = [];
@@ -1765,8 +1774,8 @@
         baguguData = await res.json();
         document.getElementById('bgCount').textContent = baguguData.length + ' 题';
         // 计算今日到期
-        const progress = loadProgressLocal();
         const today = getTodayStr();
+        const progress = loadProgressLocal();
         let bgDue = 0;
         for (const item of baguguData) {
           const p = progress[`bg-${item.id}`];

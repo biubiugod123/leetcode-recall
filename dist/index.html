@@ -2578,6 +2578,8 @@
       // Trigger flip after brief delay for DOM update
       setTimeout(() => {
         flipCard.classList.add('flipped');
+        // Scroll to show the result
+        flipContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
 
       answers[idx] = true;
@@ -2614,6 +2616,7 @@
       
       setTimeout(() => {
         flipCard.classList.add('flipped');
+        flipContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
 
       answers[idx] = true;
@@ -2818,6 +2821,7 @@
       if (!card) return;
       
       card.classList.add('flipped');
+      card.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       
       if (answers[idx] === undefined) {
         answers[idx] = true;
@@ -2879,6 +2883,7 @@
       const card = document.getElementById(`bugFlipCard-${idx}`);
       if (!card) return;
       card.classList.add('flipped');
+      card.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function revealBug(idx) {

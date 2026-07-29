@@ -1,7 +1,7 @@
 {
   "name": "面试 Killer",
   "short_name": "面试Killer",
-  "description": "LeetCode + 八股文 Active Recall Training",
+  "description": "LeetCode、八股文与 LLM 工程学习路径",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

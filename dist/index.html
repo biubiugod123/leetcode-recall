@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="LC Recall" />
   <title>面试 Killer 🔥</title>
   <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./roadmap.css" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1458,9 +1459,9 @@
     }
     .category-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
-      max-width: 360px;
+      max-width: 560px;
       width: 100%;
     }
     .category-card {
@@ -1498,6 +1499,19 @@
       font-size: 13px;
       font-weight: 600;
       margin-top: 6px;
+    }
+    @media (max-width: 520px) {
+      .category-grid {
+        grid-template-columns: 1fr;
+        max-width: 320px;
+      }
+      .category-card {
+        padding: 20px;
+      }
+      .category-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+      }
     }
     .home-back-hint {
       margin-top: 48px;
@@ -1676,6 +1690,13 @@
         <div class="category-count" id="bgCount">加载中...</div>
         <div class="category-due" id="bgDue">今日: ?</div>
       </div>
+
+      <div class="category-card" onclick="selectCategory('llm-roadmap')">
+        <div class="category-icon">🧭</div>
+        <div class="category-name">LLM 学习</div>
+        <div class="category-count" id="llmCount">5 阶段 · 44 任务</div>
+        <div class="category-due" id="llmDue">进度: 0/44 · 0%</div>
+      </div>
     </div>
     
     <button class="home-back-hint" onclick="location.reload()">
@@ -1754,6 +1775,7 @@
     </div>
   </div>
 
+  <script src="./roadmap.js"></script>
   <script>
     // ---- 工具函数（提前定义）----
     function getTodayStr() {
@@ -1864,6 +1886,10 @@
         // 八股文直接进入全屏模式，不显示 app 界面
         document.getElementById('app').style.display = 'none';
         initBaguguSession();
+      } else if (category === 'llm-roadmap') {
+        // LLM 学习路线使用独立的全屏进度面板
+        document.getElementById('app').style.display = 'none';
+        initLlmRoadmap();
       }
     }
     
@@ -1877,6 +1903,7 @@
       if (document.getElementById('fullscreenOverlay')) {
         document.getElementById('fullscreenOverlay').remove();
       }
+      updateLlmRoadmapHomeSummary();
       currentCategory = null;
     }
     
@@ -2365,6 +2392,7 @@
         document.getElementById('lcCount').textContent = problems.length + ' 题';
         const lcDue = reviewData && reviewData.due ? reviewData.due.length : 0;
         document.getElementById('lcDue').textContent = '今日: ' + lcDue;
+        updateLlmRoadmapHomeSummary();
         
         // 显示首页，不自动开始复习
         document.getElementById('homeScreen').style.display = 'flex';

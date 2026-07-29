@@ -383,9 +383,9 @@ const LLM_ROADMAP_TYPE_LABELS = {
 
 const LLM_STUDY_CRITERIA = {
   course: [
-    '完成指定章节，并用自己的话写下至少 3 个核心概念',
-    '不看资料，解释这些概念之间的因果关系或数据流',
-    '完成本课对应的小实验；只看完视频不算完成'
+    '读完本页中文讲义，并能回答页面底部的快速自测',
+    '按“跟着做”完成最小实验或画出关键数据流',
+    '需要深挖时再打开原始课程；不要求一次看完整门课'
   ],
   practice: [
     '代码或系统能够运行，并保存可复现的启动命令与配置',
@@ -461,6 +461,31 @@ function escapeRoadmapHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
+function getLlmLessonContent(task) {
+  const curated = typeof LLM_LESSON_CONTENT !== 'undefined'
+    ? LLM_LESSON_CONTENT[task.id]
+    : null;
+
+  return curated || {
+    duration: '8 分钟',
+    summary: task.detail,
+    concepts: [
+      ['核心目标', task.detail],
+      ['工程视角', '先建立可运行、可测量的基线，再记录实现选择、失败方式与量化结果。']
+    ],
+    steps: [
+      '明确输入、输出与成功标准。',
+      '完成一个最小可运行版本，并保留命令与配置。',
+      '记录一个量化结果和一个失败案例。'
+    ],
+    check: `完成“${task.title}”后，你会用什么证据证明结果可复现？`,
+    answer: '至少保存代码版本、运行命令、环境与配置、输入数据、量化指标，以及一个可验证的输出或测试。',
+    sources: task.resource
+      ? [[task.resourceLabel || '原始学习资料', task.resource, '继续深入']]
+      : []
+  };
+}
+
 function initLlmRoadmap() {
   document.getElementById('fullscreenOverlay')?.remove();
   const initialStats = getLlmRoadmapStats();
@@ -472,20 +497,34 @@ function initLlmRoadmap() {
   overlay.innerHTML = `
     <main class="roadmap-shell">
       <div class="roadmap-topbar">
-        <div class="roadmap-brand">LLM Systems Roadmap</div>
+        <div class="roadmap-brand">
+          <span class="roadmap-brand-mark">L</span>
+          <span>LLM SYSTEMS LAB</span>
+        </div>
         <button class="roadmap-back" onclick="backToHome()" aria-label="返回首页">← 返回首页</button>
       </div>
 
       <section class="roadmap-hero">
-        <div>
-          <div class="roadmap-kicker">今天，只学下一件事</div>
-          <h1 class="roadmap-title">LLM 工程学习工作台</h1>
+        <div class="roadmap-hero-copy">
+          <div class="roadmap-kicker"><span></span> 14 周进阶路线</div>
+          <h1 class="roadmap-title">从模型原理，<br><em>走到生产系统。</em></h1>
+          <p class="roadmap-intro">
+            44 节可直接阅读的中文讲义，把课程、论文与工程实践串成一条路线。
+            <strong>先在这里学懂，再按步骤动手验证。</strong>
+          </p>
+          <div class="roadmap-hero-pills" aria-label="课程特点">
+            <span>中文核心讲义</span>
+            <span>官方原始资料</span>
+            <span>快速自测</span>
+          </div>
         </div>
-        <p class="roadmap-intro">
-          面向 <strong>LLM Systems / Applied AI Engineer</strong>：
-          每周 12–15 小时，按 60% 实践、25% 课程、15% 论文推进。
-          每一课都要留下自己的总结与可验证产出。
-        </p>
+        <div class="roadmap-hero-visual" aria-hidden="true">
+          <div class="roadmap-orbit orbit-one"></div>
+          <div class="roadmap-orbit orbit-two"></div>
+          <div class="roadmap-hero-code">01</div>
+          <div class="roadmap-hero-word">LEARN<br>BUILD<br>SHIP</div>
+          <div class="roadmap-hero-dot"></div>
+        </div>
       </section>
 
       <section class="roadmap-summary" aria-label="学习路线概览">
@@ -517,7 +556,7 @@ function initLlmRoadmap() {
           id="roadmapSearch"
           class="roadmap-search"
           type="search"
-          placeholder="搜索课程、技术或论文…"
+          placeholder="搜索 Transformer、vLLM、DPO…"
           oninput="setLlmRoadmapSearch(this.value)"
           aria-label="搜索学习任务"
         />
@@ -655,25 +694,35 @@ function renderLlmRoadmap(options = {}) {
 }
 
 function renderLlmRoadmapPhase(phase, index, tasks, progress) {
-  const taskRows = tasks.map(task => {
+  const taskRows = tasks.map((task, taskIndex) => {
     const done = Boolean(progress.completed?.[task.id]);
     const hasNote = Boolean(progress.notes?.[task.id]?.trim());
+    const lesson = getLlmLessonContent(task);
 
     return `
       <div class="roadmap-task ${done ? 'is-done' : ''}">
-        <input class="roadmap-check" type="checkbox" ${done ? 'checked' : ''}
-               onchange="toggleLlmRoadmapTask('${task.id}', this.checked)"
-               aria-label="标记 ${escapeRoadmapHtml(task.title)} 为完成" />
-        <span class="roadmap-type ${task.type}">${LLM_ROADMAP_TYPE_LABELS[task.type]}</span>
+        <div class="roadmap-task-index">${String(taskIndex + 1).padStart(2, '0')}</div>
         <div class="roadmap-task-copy">
+          <div class="roadmap-task-meta">
+            <span class="roadmap-type ${task.type}">${LLM_ROADMAP_TYPE_LABELS[task.type]}</span>
+            <span>${escapeRoadmapHtml(lesson.duration || '8 分钟')}阅读</span>
+            ${hasNote ? '<span class="roadmap-task-note">有笔记</span>' : ''}
+          </div>
           <div class="roadmap-task-title">${escapeRoadmapHtml(task.title)}</div>
           <div class="roadmap-task-detail">${escapeRoadmapHtml(task.detail)}</div>
-          ${hasNote ? '<div class="roadmap-task-note">● 已有学习笔记</div>' : ''}
         </div>
-        <button class="roadmap-resource" type="button"
-                onclick="openLlmStudyTask('${task.id}')">
-          ${done ? '复习' : '开始学习'} →
-        </button>
+        <div class="roadmap-task-actions">
+          <label class="roadmap-check-wrap" title="${done ? '取消完成' : '标记完成'}">
+            <input class="roadmap-check" type="checkbox" ${done ? 'checked' : ''}
+                   onchange="toggleLlmRoadmapTask('${task.id}', this.checked)"
+                   aria-label="标记 ${escapeRoadmapHtml(task.title)} 为完成" />
+            <span>${done ? '已完成' : '未完成'}</span>
+          </label>
+          <button class="roadmap-resource" type="button"
+                  onclick="openLlmStudyTask('${task.id}')">
+            ${done ? '重新学习' : '阅读本课'} <span>↗</span>
+          </button>
+        </div>
       </div>
     `;
   }).join('');
@@ -707,6 +756,10 @@ function openLlmStudyTask(taskId) {
   const tasks = getLlmRoadmapTasks();
   const position = tasks.findIndex(item => item.id === task.id) + 1;
   const criteria = LLM_STUDY_CRITERIA[task.type] || LLM_STUDY_CRITERIA.practice;
+  const lesson = getLlmLessonContent(task);
+  const concepts = lesson.concepts || [];
+  const steps = lesson.steps || [];
+  const sources = lesson.sources || [];
 
   const overlay = document.createElement('div');
   overlay.id = 'roadmapStudyOverlay';
@@ -717,61 +770,120 @@ function openLlmStudyTask(taskId) {
   overlay.innerHTML = `
     <article class="roadmap-study-panel" onclick="event.stopPropagation()">
       <header class="roadmap-study-head">
-        <div>
-          <div class="roadmap-study-step">
-            ${escapeRoadmapHtml(task.phase.title)} · 第 ${position}/${tasks.length} 课 ·
-            ${LLM_ROADMAP_TYPE_LABELS[task.type]}
-          </div>
-          <h2 class="roadmap-study-title">${escapeRoadmapHtml(task.title)}</h2>
+        <div class="roadmap-study-brand">
+          <span class="roadmap-study-brand-dot"></span>
+          LLM SYSTEMS LAB
         </div>
         <button class="roadmap-study-close" type="button" onclick="closeLlmStudyTask()"
-                aria-label="关闭学习页">✕</button>
+                aria-label="关闭学习页">关闭 ✕</button>
       </header>
 
       <div class="roadmap-study-body">
-        <section class="roadmap-study-section">
-          <div class="roadmap-study-label">01 · 本课目标</div>
-          <div class="roadmap-study-objective">${escapeRoadmapHtml(task.detail)}</div>
-        </section>
+        <aside class="roadmap-lesson-rail">
+          <div class="roadmap-study-step">
+            <span>${escapeRoadmapHtml(task.phase.weeks)}</span>
+            <span>第 ${position}/${tasks.length} 课</span>
+            <span>${LLM_ROADMAP_TYPE_LABELS[task.type]}</span>
+          </div>
+          <h2 class="roadmap-study-title">${escapeRoadmapHtml(task.title)}</h2>
+          <p class="roadmap-study-deck">${escapeRoadmapHtml(task.detail)}</p>
 
-        <section class="roadmap-study-section">
-          <div class="roadmap-study-label">02 · 学习材料</div>
-          <div class="roadmap-study-material">
-            <div class="roadmap-study-material-copy">
-              ${task.resource
-                ? '先带着“本课目标”阅读，不需要把整门课或整份文档一次看完。'
-                : '这是实践任务：在你的项目中完成它，并保留代码、命令、配置和实验结果。'}
+          <div class="roadmap-lesson-meta">
+            <div><span>预计阅读</span><strong>${escapeRoadmapHtml(lesson.duration || '8 分钟')}</strong></div>
+            <div><span>所在阶段</span><strong>Phase ${task.phaseIndex + 1}</strong></div>
+          </div>
+
+          ${sources.length ? `
+            <div class="roadmap-source-list">
+              <div class="roadmap-source-heading">核对过的原始资料</div>
+              ${sources.map((source, sourceIndex) => `
+                <a href="${escapeRoadmapHtml(source[1])}" target="_blank" rel="noopener noreferrer">
+                  <span>${String(sourceIndex + 1).padStart(2, '0')}</span>
+                  <span>
+                    <strong>${escapeRoadmapHtml(source[0])}</strong>
+                    <small>${escapeRoadmapHtml(source[2] || '继续深入')}</small>
+                  </span>
+                  <b>↗</b>
+                </a>
+              `).join('')}
             </div>
-            ${task.resource ? `
-              <a href="${escapeRoadmapHtml(task.resource)}" target="_blank" rel="noopener noreferrer">
-                ${escapeRoadmapHtml(task.resourceLabel || '打开学习资料')} ↗
-              </a>
-            ` : ''}
-          </div>
-        </section>
+          ` : ''}
+        </aside>
 
-        <section class="roadmap-study-section">
-          <div class="roadmap-study-label">03 · 完成标准</div>
-          <ul class="roadmap-study-criteria">
-            ${criteria.map(item => `<li>${escapeRoadmapHtml(item)}</li>`).join('')}
-          </ul>
-        </section>
+        <main class="roadmap-lesson-article">
+          <section class="roadmap-study-section roadmap-reading-lead">
+            <div class="roadmap-study-label">先读这里 · 3–5 分钟讲义</div>
+            <p>${escapeRoadmapHtml(lesson.summary || task.detail)}</p>
+          </section>
 
-        <section class="roadmap-study-section">
-          <div class="roadmap-study-label">04 · 用自己的话总结</div>
-          <textarea
-            class="roadmap-note"
-            id="roadmapNote"
-            placeholder="${task.type === 'paper'
-              ? '1. 论文解决了什么瓶颈？\\n2. 核心机制是什么？\\n3. 用什么证据证明？\\n4. 对我的系统有什么影响？'
-              : '写下关键概念、实验结果、踩过的坑，以及你现在还不能解释的问题…'}"
-            oninput="saveLlmRoadmapNote('${task.id}', this.value)"
-          >${escapeRoadmapHtml(note)}</textarea>
-          <div class="roadmap-note-hint">
-            <span>笔记自动保存在当前浏览器</span>
-            <span id="roadmapNoteCount">${note.length} 字</span>
-          </div>
-        </section>
+          <section class="roadmap-study-section">
+            <div class="roadmap-study-label">这节课要真正弄懂</div>
+            <div class="roadmap-concept-grid">
+              ${concepts.map((concept, conceptIndex) => `
+                <article class="roadmap-concept-card">
+                  <span>${String(conceptIndex + 1).padStart(2, '0')}</span>
+                  <h3>${escapeRoadmapHtml(concept[0])}</h3>
+                  <p>${escapeRoadmapHtml(concept[1])}</p>
+                </article>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="roadmap-study-section">
+            <div class="roadmap-study-label">跟着做 · 不需要自己设计作业</div>
+            <ol class="roadmap-action-steps">
+              ${steps.map((step, stepIndex) => `
+                <li>
+                  <span>${String(stepIndex + 1).padStart(2, '0')}</span>
+                  <p>${escapeRoadmapHtml(step)}</p>
+                </li>
+              `).join('')}
+            </ol>
+          </section>
+
+          <section class="roadmap-study-section roadmap-quick-check" id="roadmapCheck-${task.id}">
+            <div class="roadmap-quick-check-top">
+              <div>
+                <div class="roadmap-study-label">快速自测</div>
+                <h3>${escapeRoadmapHtml(lesson.check || '你能解释本课的核心取舍吗？')}</h3>
+              </div>
+              <div class="roadmap-check-mark">?</div>
+            </div>
+            <button type="button" onclick="revealLlmLessonAnswer('${task.id}')">
+              想好后查看答案
+            </button>
+            <div class="roadmap-check-answer">
+              <span>参考答案</span>
+              <p>${escapeRoadmapHtml(lesson.answer || task.detail)}</p>
+            </div>
+          </section>
+
+          <section class="roadmap-study-section">
+            <div class="roadmap-study-label">完成这课前，确认三件事</div>
+            <ul class="roadmap-study-criteria">
+              ${criteria.map(item => `<li>${escapeRoadmapHtml(item)}</li>`).join('')}
+            </ul>
+          </section>
+
+          <details class="roadmap-note-details" ${note ? 'open' : ''}>
+            <summary>
+              <span>可选笔记</span>
+              <small>记录实验结果或还没想通的问题，不再强制总结</small>
+            </summary>
+            <div class="roadmap-note-wrap">
+              <textarea
+                class="roadmap-note"
+                id="roadmapNote"
+                placeholder="例如：实验结果、踩过的坑、需要回看的概念…"
+                oninput="saveLlmRoadmapNote('${task.id}', this.value)"
+              >${escapeRoadmapHtml(note)}</textarea>
+              <div class="roadmap-note-hint">
+                <span>自动保存在当前浏览器</span>
+                <span id="roadmapNoteCount">${note.length} 字</span>
+              </div>
+            </div>
+          </details>
+        </main>
       </div>
 
       <footer class="roadmap-study-footer">
@@ -780,14 +892,25 @@ function openLlmStudyTask(taskId) {
         </button>
         <button class="roadmap-study-complete" type="button"
                 onclick="completeAndOpenNextLlmTask('${task.id}')">
-          ${progress.completed?.[task.id] ? '进入下一课 →' : '完成自检，进入下一课 →'}
+          ${progress.completed?.[task.id] ? '进入下一课 →' : '标记完成，进入下一课 →'}
         </button>
       </footer>
     </article>
   `;
 
   document.body.appendChild(overlay);
-  document.getElementById('roadmapNote')?.focus();
+}
+
+function revealLlmLessonAnswer(taskId) {
+  const card = document.getElementById(`roadmapCheck-${taskId}`);
+  if (!card) return;
+  card.classList.toggle('is-revealed');
+  const button = card.querySelector('button');
+  if (button) {
+    button.textContent = card.classList.contains('is-revealed')
+      ? '收起参考答案'
+      : '想好后查看答案';
+  }
 }
 
 function saveLlmRoadmapNote(taskId, value) {

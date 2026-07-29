@@ -1,8 +1,9 @@
-const CACHE_NAME = 'interview-killer-v7';
+const CACHE_NAME = 'interview-killer-v8';
 const ASSETS = [
   './',
   './index.html',
   './roadmap.css',
+  './roadmap-content.js',
   './roadmap.js',
   './problems.json',
   './bagugu.json',

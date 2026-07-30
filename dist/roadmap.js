@@ -11,8 +11,8 @@ const LLM_ROADMAP = [
       {
         id: 'foundation-cs336',
         type: 'course',
-        title: '浏览 CS336 总览并完成环境准备',
-        detail: '重点锁定 Assignment 1 Basics；Assignment 2 先做 profiling 与 memory 部分。',
+        title: '学习 CS336 完整课程（17 讲）',
+        detail: 'Stanford Spring 2026 官方课件的站内中文讲义，从 Tokenization 学到系统、数据、对齐与多模态。',
         resource: 'https://cs336.stanford.edu/',
         resourceLabel: '打开 CS336'
       },
@@ -414,9 +414,15 @@ function getLlmRoadmapTasks() {
 function loadLlmRoadmapProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem(LLM_ROADMAP_PROGRESS_KEY) || '{}');
-    return saved.completed ? saved : { completed: saved, notes: {} };
+    return saved.completed
+      ? {
+          completed: saved.completed || {},
+          notes: saved.notes || {},
+          courseChapters: saved.courseChapters || {}
+        }
+      : { completed: saved, notes: {}, courseChapters: {} };
   } catch (error) {
-    return { completed: {}, notes: {} };
+    return { completed: {}, notes: {}, courseChapters: {} };
   }
 }
 
@@ -426,6 +432,7 @@ function saveLlmRoadmapProgress(progress) {
     JSON.stringify({
       completed: progress.completed || {},
       notes: progress.notes || {},
+      courseChapters: progress.courseChapters || {},
       updatedAt: new Date().toISOString()
     })
   );
@@ -509,8 +516,8 @@ function initLlmRoadmap() {
           <div class="roadmap-kicker"><span></span> 14 周进阶路线</div>
           <h1 class="roadmap-title">从模型原理，<br><em>走到生产系统。</em></h1>
           <p class="roadmap-intro">
-            44 节可直接阅读的中文讲义，把课程、论文与工程实践串成一条路线。
-            <strong>先在这里学懂，再按步骤动手验证。</strong>
+            44 个学习模块，把课程、论文与工程实践串成一条路线。
+            <strong>课程型模块已拆成站内章节，先在这里学懂，再按步骤动手验证。</strong>
           </p>
           <div class="roadmap-hero-pills" aria-label="课程特点">
             <span>中文核心讲义</span>
@@ -746,9 +753,280 @@ function findLlmRoadmapTask(taskId) {
   return getLlmRoadmapTasks().find(task => task.id === taskId) || null;
 }
 
+function getLlmCourse(courseId) {
+  if (typeof LLM_COURSES === 'undefined') return null;
+  return LLM_COURSES[courseId] || null;
+}
+
+function formatRoadmapInline(value) {
+  return escapeRoadmapHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function getLlmCourseStats(course, progress = loadLlmRoadmapProgress()) {
+  const completedMap = progress.courseChapters?.[course.id] || {};
+  const completed = course.chapters.filter(chapter => completedMap[chapter.id]).length;
+  const percent = course.chapters.length
+    ? Math.round((completed / course.chapters.length) * 100)
+    : 0;
+  return { completedMap, completed, percent };
+}
+
+function openLlmCourseReader(taskId, courseId, requestedChapterId = '') {
+  const task = findLlmRoadmapTask(taskId);
+  const course = getLlmCourse(courseId);
+  if (!task || !course || !course.chapters?.length) return;
+
+  document.getElementById('roadmapStudyOverlay')?.remove();
+
+  const progress = loadLlmRoadmapProgress();
+  const stats = getLlmCourseStats(course, progress);
+  const chapter = course.chapters.find(item => item.id === requestedChapterId)
+    || course.chapters.find(item => !stats.completedMap[item.id])
+    || course.chapters[course.chapters.length - 1];
+  const chapterIndex = course.chapters.findIndex(item => item.id === chapter.id);
+  const previousChapter = course.chapters[chapterIndex - 1] || null;
+  const nextChapter = course.chapters[chapterIndex + 1] || null;
+  const noteKey = `${task.id}:${chapter.id}`;
+  const note = progress.notes?.[noteKey] || '';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'roadmapStudyOverlay';
+  overlay.className = 'roadmap-study-overlay';
+  overlay.onclick = event => {
+    if (event.target === overlay) closeLlmStudyTask();
+  };
+
+  overlay.innerHTML = `
+    <article class="roadmap-course-panel" onclick="event.stopPropagation()">
+      <header class="roadmap-study-head roadmap-course-head">
+        <div class="roadmap-study-brand">
+          <span class="roadmap-study-brand-dot"></span>
+          LLM SYSTEMS LAB
+          <span class="roadmap-course-head-divider">/</span>
+          <strong>${escapeRoadmapHtml(course.title)}</strong>
+        </div>
+        <button class="roadmap-study-close" type="button" onclick="closeLlmStudyTask()"
+                aria-label="关闭课程页">返回路线 ✕</button>
+      </header>
+
+      <div class="roadmap-course-layout">
+        <aside class="roadmap-course-nav">
+          <div class="roadmap-course-nav-top">
+            <span>${escapeRoadmapHtml(course.edition)}</span>
+            <strong>${stats.completed}/${course.chapters.length}</strong>
+          </div>
+          <h2>${escapeRoadmapHtml(course.title)}</h2>
+          <p>${escapeRoadmapHtml(course.description)}</p>
+          <div class="roadmap-course-progress" aria-label="课程进度 ${stats.percent}%">
+            <span style="width:${stats.percent}%"></span>
+          </div>
+          <div class="roadmap-course-progress-label">
+            <span>课程进度</span>
+            <strong>${stats.percent}%</strong>
+          </div>
+
+          <nav class="roadmap-course-chapters" aria-label="${escapeRoadmapHtml(course.title)}章节">
+            ${course.chapters.map(item => `
+              <button
+                class="${item.id === chapter.id ? 'is-active' : ''} ${stats.completedMap[item.id] ? 'is-complete' : ''}"
+                type="button"
+                onclick="openLlmCourseReader('${task.id}', '${course.id}', '${item.id}')"
+              >
+                <span>${escapeRoadmapHtml(item.number)}</span>
+                <span>
+                  <strong>${escapeRoadmapHtml(item.title)}</strong>
+                  <small>${stats.completedMap[item.id] ? '已完成' : escapeRoadmapHtml(item.materialType)}</small>
+                </span>
+                <b>${stats.completedMap[item.id] ? '✓' : '›'}</b>
+              </button>
+            `).join('')}
+          </nav>
+        </aside>
+
+        <main class="roadmap-course-article">
+          <div class="roadmap-course-breadcrumb">
+            <span>${escapeRoadmapHtml(course.title)} · ${escapeRoadmapHtml(course.edition)}</span>
+            <span>Lecture ${escapeRoadmapHtml(chapter.number)} / ${course.chapters.length}</span>
+          </div>
+
+          <header class="roadmap-course-titleblock">
+            <div class="roadmap-course-lecture-number">${escapeRoadmapHtml(chapter.number)}</div>
+            <div>
+              <div class="roadmap-study-label">${escapeRoadmapHtml(chapter.materialType)}整理 · 预计 ${escapeRoadmapHtml(chapter.duration)}</div>
+              <h1>${escapeRoadmapHtml(chapter.title)}</h1>
+              <p>${escapeRoadmapHtml(chapter.subtitle)}</p>
+            </div>
+          </header>
+
+          <section class="roadmap-course-reading">
+            <div class="roadmap-study-label">本讲核心讲义</div>
+            ${(chapter.summary || []).map(paragraph => `
+              <p>${formatRoadmapInline(paragraph)}</p>
+            `).join('')}
+          </section>
+
+          <section class="roadmap-course-section">
+            <div class="roadmap-study-label">关键概念</div>
+            <div class="roadmap-course-concepts">
+              ${(chapter.concepts || []).map((concept, conceptIndex) => `
+                <article>
+                  <span>${String(conceptIndex + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h3>${escapeRoadmapHtml(concept[0])}</h3>
+                    <p>${formatRoadmapInline(concept[1])}</p>
+                  </div>
+                </article>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="roadmap-course-section">
+            <div class="roadmap-study-label">学完立即验证</div>
+            <ol class="roadmap-course-practice">
+              ${(chapter.practice || []).map((item, itemIndex) => `
+                <li>
+                  <span>${String(itemIndex + 1).padStart(2, '0')}</span>
+                  <p>${formatRoadmapInline(item)}</p>
+                </li>
+              `).join('')}
+            </ol>
+          </section>
+
+          <section class="roadmap-study-section roadmap-quick-check roadmap-course-check"
+                   id="roadmapCourseCheck-${chapter.id}">
+            <div class="roadmap-quick-check-top">
+              <div>
+                <div class="roadmap-study-label">快速自测</div>
+                <h3>${escapeRoadmapHtml(chapter.check)}</h3>
+              </div>
+              <div class="roadmap-check-mark">?</div>
+            </div>
+            <button type="button" onclick="revealLlmCourseAnswer('${chapter.id}')">
+              想好后查看答案
+            </button>
+            <div class="roadmap-check-answer">
+              <span>参考答案</span>
+              <p>${formatRoadmapInline(chapter.answer)}</p>
+            </div>
+          </section>
+
+          <section class="roadmap-course-sources">
+            <div class="roadmap-study-label">原始课程资料</div>
+            <div>
+              <a href="${escapeRoadmapHtml(chapter.materialUrl)}" target="_blank" rel="noopener noreferrer">
+                <span>01</span>
+                <span>
+                  <strong>${escapeRoadmapHtml(chapter.sourceLabel)}</strong>
+                  <small>需要看图、推导或完整代码时打开</small>
+                </span>
+                <b>↗</b>
+              </a>
+              <a href="${escapeRoadmapHtml(course.videoUrl)}" target="_blank" rel="noopener noreferrer">
+                <span>02</span>
+                <span>
+                  <strong>Stanford 官方录像合集</strong>
+                  <small>想听完整课堂讲解时打开</small>
+                </span>
+                <b>↗</b>
+              </a>
+            </div>
+            <p>${escapeRoadmapHtml(course.sourceNote)}</p>
+          </section>
+
+          <details class="roadmap-note-details roadmap-course-note" ${note ? 'open' : ''}>
+            <summary>
+              <span>本讲可选笔记</span>
+              <small>只记录实验结果或还没想通的问题</small>
+            </summary>
+            <div class="roadmap-note-wrap">
+              <textarea
+                class="roadmap-note"
+                id="roadmapNote"
+                placeholder="例如：需要重看的公式、实验结果、仍不清楚的地方…"
+                oninput="saveLlmRoadmapNote('${noteKey}', this.value)"
+              >${escapeRoadmapHtml(note)}</textarea>
+              <div class="roadmap-note-hint">
+                <span>自动保存在当前浏览器</span>
+                <span id="roadmapNoteCount">${note.length} 字</span>
+              </div>
+            </div>
+          </details>
+        </main>
+      </div>
+
+      <footer class="roadmap-study-footer roadmap-course-footer">
+        <button class="roadmap-study-secondary" type="button"
+                ${previousChapter
+                  ? `onclick="openLlmCourseReader('${task.id}', '${course.id}', '${previousChapter.id}')"`
+                  : 'disabled'}>
+          ${previousChapter ? `← 上一讲 · ${escapeRoadmapHtml(previousChapter.number)}` : '已经是第一讲'}
+        </button>
+        <div class="roadmap-course-footer-position">
+          Lecture ${escapeRoadmapHtml(chapter.number)} · ${stats.completedMap[chapter.id] ? '已完成 ✓' : '学习中'}
+        </div>
+        <button class="roadmap-study-complete" type="button"
+                onclick="completeLlmCourseChapter('${task.id}', '${course.id}', '${chapter.id}')">
+          ${nextChapter ? `完成本讲，进入 ${escapeRoadmapHtml(nextChapter.number)} →` : '完成课程，进入路线下一项 →'}
+        </button>
+      </footer>
+    </article>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('.roadmap-course-article')?.scrollTo(0, 0);
+}
+
+function revealLlmCourseAnswer(chapterId) {
+  const card = document.getElementById(`roadmapCourseCheck-${chapterId}`);
+  if (!card) return;
+  card.classList.toggle('is-revealed');
+  const button = card.querySelector('button');
+  if (button) {
+    button.textContent = card.classList.contains('is-revealed')
+      ? '收起参考答案'
+      : '想好后查看答案';
+  }
+}
+
+function completeLlmCourseChapter(taskId, courseId, chapterId) {
+  const course = getLlmCourse(courseId);
+  if (!course) return;
+
+  const progress = loadLlmRoadmapProgress();
+  progress.courseChapters = progress.courseChapters || {};
+  progress.courseChapters[courseId] = progress.courseChapters[courseId] || {};
+  progress.courseChapters[courseId][chapterId] = true;
+
+  const chapterIndex = course.chapters.findIndex(chapter => chapter.id === chapterId);
+  const nextChapter = course.chapters[chapterIndex + 1] || null;
+  const courseComplete = course.chapters.every(
+    chapter => progress.courseChapters[courseId][chapter.id]
+  );
+
+  if (courseComplete) {
+    progress.completed = progress.completed || {};
+    progress.completed[taskId] = true;
+  }
+
+  saveLlmRoadmapProgress(progress);
+  updateLlmRoadmapHomeSummary();
+
+  if (nextChapter) {
+    openLlmCourseReader(taskId, courseId, nextChapter.id);
+  } else {
+    completeAndOpenNextLlmTask(taskId);
+  }
+}
+
 function openLlmStudyTask(taskId) {
   const task = findLlmRoadmapTask(taskId);
   if (!task) return;
+
+  const lesson = getLlmLessonContent(task);
+  if (lesson.courseId && getLlmCourse(lesson.courseId)) {
+    openLlmCourseReader(taskId, lesson.courseId);
+    return;
+  }
 
   document.getElementById('roadmapStudyOverlay')?.remove();
   const progress = loadLlmRoadmapProgress();
@@ -756,7 +1034,6 @@ function openLlmStudyTask(taskId) {
   const tasks = getLlmRoadmapTasks();
   const position = tasks.findIndex(item => item.id === task.id) + 1;
   const criteria = LLM_STUDY_CRITERIA[task.type] || LLM_STUDY_CRITERIA.practice;
-  const lesson = getLlmLessonContent(task);
   const concepts = lesson.concepts || [];
   const steps = lesson.steps || [];
   const sources = lesson.sources || [];

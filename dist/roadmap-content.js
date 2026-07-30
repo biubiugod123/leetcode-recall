@@ -6,10 +6,484 @@
  * `roadmap.js` renders this data as a reading-first lesson instead of asking
  * learners to create the lesson by writing a summary themselves.
  */
+const LLM_COURSES = {
+  'cs336-2026': {
+    id: 'cs336-2026',
+    title: 'Stanford CS336',
+    edition: 'Spring 2026',
+    description: 'Language Modeling from Scratch · 从 tokenizer 一路构建到训练系统、数据与对齐',
+    courseUrl: 'https://cs336.stanford.edu/',
+    videoUrl: 'https://www.youtube.com/playlist?list=PLoROMvodv4rMqXOcazWaTUHhq-yembLCV',
+    sourceNote: '以下内容依据 Stanford 2026 官方课程页、可执行讲义与 slides 整理为中文学习笔记；原材料保留在每讲底部。',
+    chapters: [
+      {
+        id: 'lecture-01',
+        number: '01',
+        title: '总览与 Tokenization',
+        subtitle: '从“会调用模型”回到底层：语言模型完整生产链与 BPE',
+        duration: '18 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_01',
+        summary: [
+          'CS336 把语言模型看成一个端到端系统：原始数据先经过 tokenizer 变成 token，Transformer 根据前缀预测下一个 token，训练系统用数据和计算资源优化参数，最后再经过评测与对齐进入真实应用。课程的重点不是记住 API，而是能解释每一层抽象泄漏时发生了什么。',
+          'Tokenization 决定模型看到的最小单位。直接使用 Unicode 字符会产生巨大而稀疏的词表；只使用 UTF-8 byte 虽然完全可逆，但序列太长。Byte-Pair Encoding 从 256 个 byte 出发，反复合并语料中高频相邻 pair，在词表大小与序列长度之间取得折中。'
+        ],
+        concepts: [
+          ['理解来自构建', '调用高级框架能提高生产力，但性能、数值与数据问题会穿透抽象层。亲手实现是为了建立可调试的心智模型。'],
+          ['Tokenizer 的正式接口', '`encode` 把 bytes/string 映射为整数序列，`decode` 做逆变换；同一词表与 merge 顺序必须在训练和推理中完全一致。'],
+          ['BPE 训练', '统计相邻 token pair，选择最高频 pair 分配新 ID，再更新语料；特殊 token 与预分词规则要显式处理。'],
+          ['效率主线', '课程所有模块都在平衡表达能力、训练稳定性与硬件效率。token 数更少意味着同样上下文能承载更多信息。']
+        ],
+        practice: [
+          '用 UTF-8 bytes 编码并还原一段包含中文和 emoji 的文本，确认 round-trip。',
+          '在一个 20–50 行小语料上手算两轮 BPE merge，并记录并列频次如何稳定决策。',
+          '解释为什么只保存最终 vocab、不保存 merge ranks，通常不能复现编码结果。'
+        ],
+        check: 'Byte-level tokenizer 已经能表示任意文本，为什么还要训练 BPE？',
+        answer: 'byte 方案的词表小且无 OOV，但常见文本会被拆成很长的序列，增加 attention 与训练成本。BPE 把高频 byte 组合成较长 token，用更大的词表换取更短序列，同时仍以 byte 为后备保证覆盖。',
+        sourceLabel: 'Lecture 1 官方可执行讲义'
+      },
+      {
+        id: 'lecture-02',
+        number: '02',
+        title: 'PyTorch 与资源核算',
+        subtitle: '张量表达、einops、FLOPs、显存和 arithmetic intensity',
+        duration: '20 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_02',
+        summary: [
+          '写模型前先学会为每个张量标注 shape，并把运算翻译成资源账单。PyTorch 的核心抽象是张量、自动微分和 `nn.Module`；einops 让 reshape、transpose 与 einsum 的意图更清楚，能显著减少“维度对上了但语义错了”的 bug。',
+          '性能不能只看 FLOPs。每个算子还要从 HBM 读取输入并写回输出。Arithmetic intensity = FLOPs / bytes moved；当强度低于硬件的计算/带宽比时，算子受内存带宽限制，增加计算单元也不会变快。Transformer 训练显存还包括参数、梯度、optimizer state、activation 和临时 buffer。'
+        ],
+        concepts: [
+          ['Shape 是第一语言', '为 `B` batch、`T` sequence、`D` hidden、`H` heads 写清每一步 shape，比只看代码更容易发现广播与转置错误。'],
+          ['FLOPs 估算', '矩阵乘 `m×k` 与 `k×n` 约需 `2mkn` FLOPs；训练还包含 forward、backward 与参数梯度计算。'],
+          ['显存构成', '混合精度并不意味着只有 bf16 参数；Adam 常保留 fp32 master weights 与两份 momentum state。'],
+          ['Roofline 模型', '性能上限是计算峰值与带宽上限中的较小者；优化前先判断 compute-bound 还是 memory-bound。']
+        ],
+        practice: [
+          '为多头注意力写出 Q、K、V、score 和 output 的完整 shape。',
+          '估算一个线性层 forward 的 FLOPs 与最少读取字节数，再计算 arithmetic intensity。',
+          '分别列出 100M 参数模型在 bf16 SGD 与 AdamW 下参数、梯度和 optimizer state 的近似显存。'
+        ],
+        check: '两个实现 FLOPs 相同，为什么运行时间仍可能差很多？',
+        answer: '真实时间还受数据移动、kernel launch、内存访问连续性、并行度和硬件利用率影响。低 arithmetic intensity 的实现通常受带宽限制；同样 FLOPs 下，减少 HBM 往返或融合 kernel 会明显更快。',
+        sourceLabel: 'Lecture 2 官方可执行讲义'
+      },
+      {
+        id: 'lecture-03',
+        number: '03',
+        title: '架构与超参数',
+        subtitle: '现代 Decoder-only Transformer 的稳定、高效配方',
+        duration: '20 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_03.pdf',
+        summary: [
+          '现代 LLM 大多收敛到 pre-norm decoder-only Transformer，但具体组件仍决定稳定性和效率。典型 block 是 `x + Attention(Norm(x))`，再接 `x + MLP(Norm(x))`。RMSNorm、RoPE、SwiGLU、合理初始化与 residual scaling 共同维持激活和梯度处在可训练范围。',
+          '超参数不是孤立旋钮。隐藏维度、层数、head 数、MLP expansion、学习率、batch size 与 token 数共同决定参数量、FLOPs、显存和优化动态。有效比较必须固定计算预算或数据预算，并通过 ablation 一次只改变一个关键因素。'
+        ],
+        concepts: [
+          ['Pre-norm', '先归一化再进入子层，为 residual 提供更直接的梯度通路，深层训练通常比 post-norm 稳定。'],
+          ['RMSNorm 与 SwiGLU', 'RMSNorm 省去均值中心化；SwiGLU 用门控分支提高 MLP 表达能力，但会改变参数量与中间维度。'],
+          ['RoPE', '对 Q/K 的通道对施加与位置相关的旋转，使内积自然携带相对位置信息。'],
+          ['可比实验', '改变 architecture 时要重新核算参数量、训练 FLOPs 与最优学习率，不能只比较单次 loss。']
+        ],
+        practice: [
+          '画出一个 pre-norm Transformer block，并标出每条 residual 路径。',
+          '给定 `D=768, H=12`，写出每个 head 的维度和 QKV 投影参数量。',
+          '设计一个只比较 ReLU MLP 与 SwiGLU 的公平 ablation：明确固定哪些预算。'
+        ],
+        check: '为什么把 LayerNorm 换成 RMSNorm 后，不能只看“代码少了一步”就判断模型更快？',
+        answer: '端到端性能还取决于 kernel 是否融合、内存访问、MLP/attention 占比和硬件。组件变化也可能需要不同 hidden size 才保持参数量公平，因此必须重新核算并 benchmark。',
+        sourceLabel: 'Lecture 3 官方 slides'
+      },
+      {
+        id: 'lecture-04',
+        number: '04',
+        title: 'Attention 替代方案与 MoE',
+        subtitle: '从 O(T²) 瓶颈到稀疏计算、线性注意力和专家路由',
+        duration: '22 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_04.pdf',
+        summary: [
+          '标准 self-attention 让任意 token 两两交互，表达力强但计算和中间矩阵随序列长度呈 O(T²)。常见改造包括局部/稀疏 attention、GQA/MLA、线性 attention 和状态空间/递归模型。它们不是“全面更好”，而是在训练并行性、长上下文、decode 状态大小与表达能力之间交换成本。',
+          'Mixture of Experts 把 dense MLP 替换成多个 expert，router 为每个 token 只选择少量 expert。总参数量可以很大，而单 token 激活参数较少；代价是路由不均衡、跨设备 all-to-all 通信、expert capacity 和训练稳定性。'
+        ],
+        concepts: [
+          ['稀疏注意力', '限制可见位置能降低复杂度，但全局信息需要多层传播或额外 global token。'],
+          ['GQA', '多个 query heads 共享更少的 K/V heads，主要减少 KV Cache 和 decode 带宽。'],
+          ['MoE 路由', 'router logits 决定 top-k experts；训练需要防止少数 expert 过载、其余 expert 学不到。'],
+          ['参数量不等于 FLOPs', 'MoE 的总参数很多，但每个 token 只激活一部分；部署时仍要存储并分布全部 expert。']
+        ],
+        practice: [
+          '比较 full attention、window attention 和 recurrent state 在训练/推理时需要保存的状态。',
+          '假设 8 个 experts、top-2 路由，说明单 token 激活比例与总参数存储的区别。',
+          '解释 expert imbalance 为什么既影响模型质量，也影响分布式吞吐。'
+        ],
+        check: 'MoE 为什么能增加模型容量，却不按总参数量同比增加每个 token 的计算？',
+        answer: 'router 只让每个 token 经过 top-k 个 experts，因此实际激活计算取决于 k，而不是 expert 总数；但所有 expert 的权重仍需存储和分布，并引入路由与通信成本。',
+        sourceLabel: 'Lecture 4 官方 slides'
+      },
+      {
+        id: 'lecture-05',
+        number: '05',
+        title: 'GPU 与 TPU',
+        subtitle: '理解硬件层级，才能解释模型为什么快或慢',
+        duration: '20 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_05.pdf',
+        summary: [
+          'GPU 以吞吐优先：大量简单执行单元通过线程、warp 和 block 并行工作，用并发隐藏访存延迟。数据从 HBM 进入片上 cache/shared memory/register 越频繁，性能越受带宽限制。TPU 同样围绕大规模矩阵计算设计，但编程模型、互联与编译栈不同。',
+          '高性能代码的核心不是“多做计算”，而是让已有计算持续喂饱硬件。连续访问、coalescing、共享内存复用、足够 occupancy 和减少 host-device 同步，往往比微小算术优化更重要。'
+        ],
+        concepts: [
+          ['内存层级', 'HBM 容量大但远，register/shared memory 小但近；优秀 kernel 尽量复用搬到片上的数据。'],
+          ['SIMT', 'warp 中线程执行同一指令；分支发散会让不同路径串行执行。'],
+          ['Tensor Core', '专门加速小块矩阵乘累加，对 dtype、tile shape 与对齐有要求。'],
+          ['互联拓扑', '单卡快不等于多卡快；NVLink/PCIe/网络带宽与拓扑会决定 collective 的代价。']
+        ],
+        practice: [
+          '画出 CPU → HBM → L2 → shared memory/register 的数据路径。',
+          '解释不连续读取和 warp divergence 各自浪费了什么硬件资源。',
+          '对一个 elementwise op 与大矩阵乘，判断谁更可能 memory-bound。'
+        ],
+        check: '为什么 GPU 有极高 FLOPs，elementwise 激活函数仍可能跑不满计算单元？',
+        answer: 'elementwise 运算对每个元素只做少量计算，却要读取并写回数据，arithmetic intensity 很低，瓶颈通常是 HBM 带宽而不是算术峰值。',
+        sourceLabel: 'Lecture 5 官方 slides'
+      },
+      {
+        id: 'lecture-06',
+        number: '06',
+        title: 'Kernel、Profiling 与 Triton',
+        subtitle: '用 measurement 找瓶颈，再用 fusion 和 tiling 减少数据移动',
+        duration: '24 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_06',
+        summary: [
+          '优化顺序应是 benchmark → profile → 定位瓶颈 → 改实现 → 再测。GPU 操作异步执行，直接用 CPU wall clock 会得到错误结果；需要 warm-up、显式同步或 CUDA events，并同时记录输入 shape、dtype 与硬件。',
+          'Triton 用 program instance 处理一个数据 tile。elementwise kernel 关注连续 load/store，reduction 关注一个 block 能否容纳一行，matmul 则通过 tiling 把 A/B 子块搬到片上重复使用。Fusion 把多个 PyTorch op 合并，避免中间张量反复写回 HBM。'
+        ],
+        concepts: [
+          ['正确 benchmark', 'warm-up 排除编译和 cache 冷启动；同步确保计时覆盖真实 GPU 工作。'],
+          ['Profiler', '先看耗时 kernel、launch 数量、memory throughput 与 occupancy，不凭直觉改代码。'],
+          ['Program ID', 'Triton 中每个 program 负责一个 tile，通过 offsets 与 mask 安全处理边界。'],
+          ['Tiling', '块内复用能提高 arithmetic intensity；tile 太大又会增加 register/shared memory 压力。']
+        ],
+        practice: [
+          '分别用未同步计时和 CUDA event 测一个矩阵乘，观察差异。',
+          '写出 fused bias + GELU 相比两个独立 kernel 少了哪些 HBM 读写。',
+          '为长度不是 block size 整数倍的向量说明 Triton mask 的作用。'
+        ],
+        check: '为什么一个自定义 fused kernel FLOPs 没变，却可能明显加速？',
+        answer: '它把多个运算放在一次读取后完成，减少中间张量写回和再次读取 HBM，也减少 kernel launch。对 memory-bound 运算，数据移动下降会直接提高速度。',
+        sourceLabel: 'Lecture 6 官方可执行讲义'
+      },
+      {
+        id: 'lecture-07',
+        number: '07',
+        title: '并行训练 I',
+        subtitle: 'Collective、DDP 与通信/计算重叠',
+        duration: '22 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_07',
+        summary: [
+          '多 GPU 训练延续同一个原则：计算离数据很远，必须减少并隐藏数据传输。Data Parallel 在每张卡复制模型，处理不同 micro-batch，再用 all-reduce 聚合梯度。数学上它等价于更大的 batch，但通信量、同步点与 batch size 会改变效率和优化动态。',
+          'Collective 是分布式算法的积木：broadcast、reduce、all-reduce、all-gather 和 reduce-scatter。Ring all-reduce 能让每张卡只传递分块数据；bucketed gradients 则在后层反向仍在计算时，提前同步已经完成的梯度。'
+        ],
+        concepts: [
+          ['DDP', '参数复制、数据切分、梯度平均；单卡放得下模型时最简单可靠。'],
+          ['All-reduce', '每个 rank 最终得到所有 rank 数据的归约结果，常用于梯度求和/平均。'],
+          ['通信成本', '延迟项与消息次数有关，带宽项与总字节数有关；小张量过多会被 latency 主导。'],
+          ['Overlap', '把梯度分 bucket，backward 产生一桶就异步通信，以计算遮盖通信时间。']
+        ],
+        practice: [
+          '画出 4 卡 DDP 一步中 forward、backward、all-reduce 与 optimizer step 的顺序。',
+          '说明 batch size、micro-batch、gradient accumulation 和 world size 的关系。',
+          '解释为什么把所有梯度等 backward 完成后一次同步，会失去 overlap 机会。'
+        ],
+        check: 'DDP 为什么节省训练时间，却通常不节省单卡参数/optimizer 显存？',
+        answer: 'DDP 在每张卡完整复制模型、梯度与 optimizer state，只把 batch 分开；它扩展吞吐但没有 shard 状态。要节省每卡显存，需要 FSDP/ZeRO 等切分方案。',
+        sourceLabel: 'Lecture 7 官方可执行讲义'
+      },
+      {
+        id: 'lecture-08',
+        number: '08',
+        title: '并行训练 II',
+        subtitle: 'FSDP、Tensor/Pipeline/Sequence Parallel 与 3D 并行',
+        duration: '24 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_08.pdf',
+        summary: [
+          '当模型状态放不进单卡，必须把参数、梯度或 optimizer state 分片。FSDP/ZeRO 用 all-gather 临时重建当前层参数，再用 reduce-scatter 分发梯度；显存下降的代价是更多通信。Tensor Parallel 把层内矩阵乘拆到多卡，Pipeline Parallel 把层分段并用 micro-batch 填充流水线。',
+          '实际大模型往往组合 data、tensor、pipeline、sequence 与 expert parallel。最优方案取决于模型 shape、网络拓扑、batch、序列长度和是否 MoE；目标是让高频大流量通信尽量走最快互联，并控制 bubble 与重算。'
+        ],
+        concepts: [
+          ['FSDP/ZeRO', '通过 shard 参数、梯度、optimizer state 降低每卡模型状态；计算某层前再通信恢复所需权重。'],
+          ['Tensor Parallel', '拆分单层矩阵乘，通信频繁但能处理单层也放不下的模型，通常放在高速节点内。'],
+          ['Pipeline Parallel', '不同卡负责不同层；micro-batch 太少会产生 pipeline bubble。'],
+          ['Activation/Sequence Parallel', '沿序列或非 tensor-parallel 维切 activation，降低长上下文的激活显存。']
+        ],
+        practice: [
+          '比较 DDP 与 FSDP 在参数、梯度和 optimizer state 上是复制还是分片。',
+          '画一个 4-stage pipeline 处理 4 个 micro-batches 的时间格子，标出 bubble。',
+          '给定节点内 NVLink、节点间较慢网络，说明 TP 与 DP 通常如何映射到拓扑。'
+        ],
+        check: '为什么“把所有维度都切得更碎”不一定更快？',
+        answer: '分片降低单卡显存和计算，但会增加 collective 次数、同步与小消息开销；过细切分还降低 kernel 效率。并行方案必须平衡显存、计算粒度、网络拓扑和通信重叠。',
+        sourceLabel: 'Lecture 8 官方 slides'
+      },
+      {
+        id: 'lecture-09',
+        number: '09',
+        title: 'Scaling Laws I',
+        subtitle: '用小实验预测大训练：power law、ISOFLOP 与 compute-optimal',
+        duration: '20 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_09.pdf',
+        summary: [
+          'Scaling law 的价值不是一句“越大越好”，而是把昂贵训练变成可预测的规划问题。验证损失常随参数量 N、数据量 D 或计算量 C 呈平滑幂律下降。团队先在多个小规模预算上运行实验、拟合曲线，再外推目标训练的 loss 与合理配置。',
+          '训练计算常近似 `C ≈ 6ND`。固定 C 时，模型过大会因 token 不足而 under-trained，模型过小则容量不足。ISOFLOP 方法在每个计算预算上寻找最优 N/D，再拟合最优配置随 C 的变化。'
+        ],
+        concepts: [
+          ['Scaling recipe', '不是只预测一条曲线，而是定义计算预算如何映射到 model shape、tokens、batch 与学习率。'],
+          ['Power law', '在 log-log 坐标中近似直线，便于拟合指数；但不可盲目跨越 regime 外推。'],
+          ['Compute-optimal', '固定训练 FLOPs 下选择 N 与 D，使验证 loss 最低；还未考虑后续推理成本。'],
+          ['可预测性', '稳定复现与低方差往往比单个小规模点上的最优结果更重要。']
+        ],
+        practice: [
+          '用 `C=6ND` 比较两个同计算量、不同 N/D 的训练配置。',
+          '画出三个 compute budgets 下的 ISOFLOP 曲线，并标出每条曲线最低点。',
+          '列出至少三个会让小规模曲线不能可靠外推的 regime change。'
+        ],
+        check: '为什么只在一个模型规模上调出最好超参数，不能直接决定 100 倍规模的训练？',
+        answer: '最优学习率、batch、深宽比和 token/parameter 比例会随规模变化，硬件和数值 regime 也可能改变。需要一组跨规模、遵循同一 recipe 的实验来拟合趋势。',
+        sourceLabel: 'Lecture 9 官方 slides'
+      },
+      {
+        id: 'lecture-10',
+        number: '10',
+        title: 'LLM Inference',
+        subtitle: 'Prefill、Decode、KV Cache、Batching 与延迟/吞吐权衡',
+        duration: '24 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_10',
+        summary: [
+          '推理包含性质不同的两阶段。Prefill 一次处理全部 prompt token，矩阵较大、并行度高，通常更 compute-bound；decode 每步只生成一个 token，需要读取全模型权重和历史 KV，常受内存带宽限制。TTFT 衡量首 token 体验，TPOT/ITL 衡量后续流式速度。',
+          'KV Cache 保存每层历史 K/V，避免每步重新编码整个前缀，但显存随 batch、层数、KV heads、序列长度和 head dimension 线性增长。Continuous batching、paged KV、prefix cache、量化与 speculative decoding 分别从调度、内存、复用和计算路径优化服务。'
+        ],
+        concepts: [
+          ['Prefill vs Decode', '同一模型在两阶段的 shape 与瓶颈不同，不能只报告一个平均 tokens/s。'],
+          ['KV Cache', '省去历史 K/V 计算，用显存换 decode FLOPs；GQA/MLA 直接减少每 token KV 大小。'],
+          ['Continuous Batching', '请求完成后立刻补入新请求，避免 static batch 被最长序列拖住。'],
+          ['Speculative Decoding', '小 draft model 先提议多个 token，大模型并行验证；正确实现保持目标分布不变。']
+        ],
+        practice: [
+          '根据 layer、KV heads、head_dim、dtype 与 sequence length 写出单请求 KV Cache 公式。',
+          '分别设计测 TTFT、TPOT、P95 latency 和 throughput 的负载。',
+          '解释 batch 增大为什么通常提高吞吐，却可能伤害单请求延迟。'
+        ],
+        check: '为什么 decode 往往是 memory-bound，即使 Transformer 本身包含大量矩阵乘？',
+        answer: 'decode 每步只有很少 token，矩阵的 batch 维小；模型权重却要反复从 HBM 读取，单次读取对应的计算复用有限，因此 arithmetic intensity 低，带宽常先饱和。',
+        sourceLabel: 'Lecture 10 官方可执行讲义'
+      },
+      {
+        id: 'lecture-11',
+        number: '11',
+        title: 'Scaling Laws II',
+        subtitle: '从漂亮曲线走向真实训练决策与稳健外推',
+        duration: '20 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_11.pdf',
+        summary: [
+          '真实 scaling 实验最难的部分是让不同规模“可比”：数据配比、tokenizer、architecture family、optimizer、训练稳定性和测量噪声都可能让曲线折断。要预先定义 recipe、预算与拟合方法，保留失败 run，避免只挑符合预期的数据点。',
+          '拟合不仅要给点预测，还要检查残差与不确定性。小模型过度正则、未进入渐近区，或大模型遇到数值不稳定时，统一 power law 会产生系统偏差。Hyperparameter transfer（例如 μP 思路）试图让一组超参数在宽度扩展时保持行为一致。'
+        ],
+        concepts: [
+          ['实验设计', '规模点要覆盖足够范围并有重复 run；每个点都记录数据、seed、硬件与训练状态。'],
+          ['拟合稳健性', '比较 log-space/linear-space 目标、加权方式与 outlier 处理，查看 residual 而不只看 R²。'],
+          ['Hyperparameter Transfer', '通过参数化让宽度变化时 activation/update scale 保持一致，减少每个规模重新调参。'],
+          ['预测与决策', '外推 loss 只是中间结果，最终还要权衡训练成本、推理成本、风险与时间。']
+        ],
+        practice: [
+          '为 6 个规模点设计 train/validation 记录表，包含失败与异常字段。',
+          '画一组有系统弯曲残差的 log-log 数据，解释单一幂律为何不可信。',
+          '说明“最优训练 loss”与“总生命周期成本最优”为什么可能选择不同模型大小。'
+        ],
+        check: '为什么 scaling law 的预测很准，也不代表训练决策已经完成？',
+        answer: '曲线通常预测固定 recipe 下的 loss，但产品还关心推理流量、延迟、显存、数据许可、可靠性与训练失败风险。最优决策是多目标问题。',
+        sourceLabel: 'Lecture 11 官方 slides'
+      },
+      {
+        id: 'lecture-12',
+        number: '12',
+        title: 'Evaluation',
+        subtitle: 'Perplexity、能力评测、LLM Judge 与有效性',
+        duration: '22 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_12',
+        summary: [
+          '“模型有多好”没有唯一答案。Perplexity 测 next-token prediction，适合比较同 tokenizer/数据分布的 base model；考试、chat、agent、reasoning 与 safety benchmark 测的是不同构念。评测必须先明确目标用户、任务、规则和允许的资源。',
+          '好评测要同时考虑 realism 与 validity：任务是否代表真实使用？分数是否真的测到目标能力？污染、prompt 格式、答案抽取、judge 偏差和模型版本都可能改变结果，因此发布分数必须带完整 protocol 与置信区间。'
+        ],
+        concepts: [
+          ['Perplexity', '平均 token NLL 的指数；tokenizer 不同会改变 token 粒度，数字通常不能直接横比。'],
+          ['Benchmark Protocol', '同一题集在 zero-shot、few-shot、CoT、工具允许与否下是不同游戏。'],
+          ['LLM-as-a-Judge', '可扩展但会受位置、长度、自我偏好与 rubric 模糊影响，需要校准。'],
+          ['污染与过拟合', '公开题反复用于模型选择后，测试集就不再是独立估计。']
+        ],
+        practice: [
+          '为一个代码 Agent 定义 task success、工具正确率、成本、延迟和安全失败五类指标。',
+          '说明为什么两个不同 tokenizer 的模型不能只用 token perplexity 排名。',
+          '设计一个检测 pairwise judge 位置偏差的 A/B 交换实验。'
+        ],
+        check: '一个 benchmark 分数提升，为什么不一定表示真实用户体验变好？',
+        answer: '模型可能只适应了题型、prompt 或答案抽取规则，benchmark 也可能缺乏真实任务分布、成本和失败后果。需要验证构念有效性，并用贴近使用场景的端到端评测补充。',
+        sourceLabel: 'Lecture 12 官方可执行讲义'
+      },
+      {
+        id: 'lecture-13',
+        number: '13',
+        title: 'Pre-training Data I',
+        subtitle: '数据从哪里来：Web、Wikipedia、代码、论文与许可边界',
+        duration: '22 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_13',
+        summary: [
+          '模型行为由训练数据塑造。大规模预训练数据通常来自 Common Crawl、Wikipedia、GitHub、arXiv、书籍与其他专门语料；原始服务、公开 dump、抓取结果和最终可训练 dataset 是不同层级，每层都有格式、许可、去标识和质量问题。',
+          '数据选择不只是“越多越好”。语种、代码、数学、时效性和领域比例会改变能力；版权、Terms of Service、隐私与安全要求决定哪些数据可以被收集和保留。高质量数据管线必须保存 provenance，能够追踪某条样本来自哪里、经历过哪些变换。'
+        ],
+        concepts: [
+          ['Common Crawl', '规模大但噪声、重复、模板和垃圾页面很多，是原料而不是可直接训练的数据集。'],
+          ['Dataset Provenance', '记录 source、时间、license、hash 与处理版本，支持审计、删除和复现。'],
+          ['能力配比', '代码/数学/多语比例会系统性改变模型能力，数据 mixture 是模型设计的一部分。'],
+          ['法律与伦理', '“公开可访问”不自动等于可任意训练；许可、隐私与司法辖区需要单独判断。']
+        ],
+        practice: [
+          '为网页、GitHub 代码和 arXiv 三类来源列出格式、许可与质量风险。',
+          '设计一条样本 provenance 记录，确保之后能按 source 删除。',
+          '解释为什么随机抽 100 条人工查看，仍是大规模数据管线的重要步骤。'
+        ],
+        check: '为什么下载 Common Crawl 后不能直接 tokenize 并训练？',
+        answer: '原始 crawl 包含导航模板、广告、乱码、重复、低质量/有害内容和许可风险。它需要解析、语言/质量过滤、去重、PII 与安全处理，以及数据配比。',
+        sourceLabel: 'Lecture 13 官方可执行讲义'
+      },
+      {
+        id: 'lecture-14',
+        number: '14',
+        title: 'Pre-training Data II',
+        subtitle: 'Transformation、Filtering、Dedup、Mixing 与合成数据',
+        duration: '24 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_14',
+        summary: [
+          '数据管线把原始文档转成可训练样本：先解析与规范化，再做语言、质量、毒性等过滤，随后进行 exact/near dedup，最后按目标 mixture 采样。每一步都可能误删有价值数据或保留系统性偏差，因此阈值必须通过样本审计与下游 ablation 决定。',
+          '去重既减少浪费，也降低 benchmark contamination 和 memorization。Exact hash 只能发现完全相同文档；MinHash/LSH 等近似方法用 shingles 估计 Jaccard 相似度。数据 mixing 决定各 domain 在固定 token budget 中占比，合成数据则通过模型生成补齐任务，但会继承 teacher 偏差。'
+        ],
+        concepts: [
+          ['Filtering', '规则或分类器定义“什么像好数据”；precision/recall 取舍会改变语料分布。'],
+          ['Near Dedup', '把文档表示为 n-gram/shingle 集合，用 MinHash 近似相似度并通过 LSH 找候选。'],
+          ['Data Mixing', '不是按原始体量自然采样；小而重要的 domain 常需上采样。'],
+          ['Synthetic Data', '可产生可控格式与难度，但需要验证正确性、多样性和与真实数据的比例。']
+        ],
+        practice: [
+          '为一个网页数据 pipeline 写出从 raw HTML 到 token shard 的 7 个阶段。',
+          '比较 exact hash、URL dedup 与 MinHash 各能发现什么重复。',
+          '设计一个过滤阈值 ablation：既看保留率，也看小模型 validation loss。'
+        ],
+        check: '为什么“质量分类器分数越高，数据越好”不能无限成立？',
+        answer: '过高阈值会把风格多样、少数语言或专业内容误删，使数据趋同并放大分类器偏见。最佳阈值要结合保留率、分布覆盖和下游训练结果。',
+        sourceLabel: 'Lecture 14 官方可执行讲义'
+      },
+      {
+        id: 'lecture-15',
+        number: '15',
+        title: 'Mid/Post-training：SFT 与 RLHF',
+        subtitle: '把 base model 变成能遵循指令、适合交互的模型',
+        duration: '22 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_15.pdf',
+        summary: [
+          'Pre-training 学到广泛分布，但 next-token objective 并不直接等价于“按用户意图回答”。Mid-training 常用高质量领域或长上下文数据改变能力分布；SFT 用 instruction-response/chat trajectory 做 teacher forcing，让模型学会格式、角色与任务行为。',
+          'RLHF 收集人类对候选回答的偏好，训练 reward model，再优化 policy。Preference optimization 也可以使用 DPO 等直接目标。关键风险是 reward hacking、过优化、模式坍缩和偏好数据代表性不足，因此必须保留 reference、KL 约束与独立评测。'
+        ],
+        concepts: [
+          ['Chat Template', 'system/user/assistant 与特殊 token 的序列化必须和训练一致；格式错误会直接破坏行为。'],
+          ['SFT Loss Mask', '通常只对 assistant response 计算 loss，避免把用户输入也当作待模仿输出。'],
+          ['Reward Model', '从偏好对学习标量排序信号；它是人类偏好的近似代理，不是真实目标。'],
+          ['DPO', '用 chosen/rejected 对直接调整 policy 相对 reference 的 log-ratio，避免显式在线 RL 环。']
+        ],
+        practice: [
+          '把两轮对话写成 token 序列，并标出哪些位置参与 response-only loss。',
+          '设计一条 preference pair，说明 chosen 比 rejected 好在哪里，避免只写“更自然”。',
+          '列出 reward 提高但真实质量下降的三个可能迹象。'
+        ],
+        check: '为什么 SFT 数据量通常远小于 pre-training，仍能显著改变模型行为？',
+        answer: 'Base model 已学到大量知识和语言能力；SFT 主要重新塑造条件分布与交互格式，告诉模型在 instruction/chat 上应调用哪些已有能力，而不是从头学习世界知识。',
+        sourceLabel: 'Lecture 15 官方 slides'
+      },
+      {
+        id: 'lecture-16',
+        number: '16',
+        title: 'Post-training：RLVR',
+        subtitle: '可验证奖励、Policy Gradient、PPO/GRPO 与推理能力',
+        duration: '24 分钟',
+        materialType: 'Slides',
+        materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_16.pdf',
+        summary: [
+          'RL from Verifiable Rewards 用可程序判断的结果作为奖励，例如数学最终答案、代码单元测试或形式证明检查。它减少主观 reward model 的噪声，并允许模型通过采样探索新的 reasoning trajectory；但稀疏奖励、错误 verifier、训练不稳定和长度投机仍然存在。',
+          'Policy gradient 用采样回报加权 log-prob gradient。PPO 通过 clipped ratio 和 value/advantage 控制更新；GRPO 使用同一 prompt 的一组回答做相对归一化，省去显式 value model。无论算法名称，核心都是估计 advantage、限制 policy 漂移，并持续检测 reward 与真实能力是否分离。'
+        ],
+        concepts: [
+          ['Verifier', '奖励必须可靠、难被投机，并验证过程所需的关键约束，而不只是表面格式。'],
+          ['Advantage', '表示某个 action/trajectory 相对 baseline 好多少，降低 policy-gradient 方差。'],
+          ['On-policy Sampling', '训练数据由当前 policy 产生；policy 改变后旧 trajectory 会逐渐失配。'],
+          ['KL/Clipping', '限制单次更新，避免模型为追逐稀疏奖励而迅速偏离可读、通用的 reference 行为。']
+        ],
+        practice: [
+          '为数学、代码和 Agent 三类任务各设计一个可验证 reward，并写出漏洞。',
+          '用 4 个同 prompt 回答的 reward 手算 group-normalized advantage。',
+          '设计同时监控 reward、准确率、长度、格式错误和 diversity 的训练面板。'
+        ],
+        check: 'Verifier 是确定性的，为什么 RLVR 仍可能 reward hacking？',
+        answer: '确定性只表示相同输出得到相同分数，不保证规则等于真实目标。模型可能利用测试缺口、格式解析、答案泄漏或只优化最终结果而产生不可取过程。',
+        sourceLabel: 'Lecture 16 官方 slides'
+      },
+      {
+        id: 'lecture-17',
+        number: '17',
+        title: 'Multimodal Models',
+        subtitle: '把图像、音频和视频变成 Transformer 能处理的 token',
+        duration: '20 分钟',
+        materialType: '可执行讲义',
+        materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_17',
+        summary: [
+          'Transformer 的统一接口是 token，因此多模态系统首先要把图像、音频、视频等连续信号映射为离散或连续 token。图像可切 patch 并经 encoder 投影到 LLM hidden space，音频可按时间窗口编码；生成任务还需要 decoder 把 token 还原为像素或波形。',
+          '常见设计包括独立 modality encoder + projector + LLM、cross-attention 融合，以及统一 token space。训练可以先对齐表示，再做多模态 instruction tuning。瓶颈来自 token 数巨大、时间/空间位置结构、模态不平衡与成对数据有限。'
+        ],
+        concepts: [
+          ['Modality Encoder', '把原始信号压缩成语义表示；压缩太强会丢细节，太弱会产生过长序列。'],
+          ['Projector/Adapter', '把视觉或音频特征映射到 LLM hidden dimension，使其能与文本 token 联合处理。'],
+          ['Fusion', 'Early fusion 统一处理但昂贵；cross-attention/late fusion 更模块化但交互受限。'],
+          ['Any-to-any', '理解与生成是两个方向：输入 encoder 之外，还需要输出 tokenizer/decoder 与相应训练目标。']
+        ],
+        practice: [
+          '比较一张 224×224 图像使用 16×16 patch 与 14×14 patch 时 token 数。',
+          '画出 vision encoder → projector → LLM → text decoder 的 shape 流。',
+          '解释 10 秒视频为何会迅速产生比文本更长的 token sequence，并提出一种压缩方法。'
+        ],
+        check: '为什么不能简单把原始 RGB 数值直接当作普通文本 token 输入 LLM？',
+        answer: '原始像素序列极长、局部结构强且数值分布与文本 embedding 不同。需要 encoder/patching 提取并压缩空间语义，再投影到模型可处理的表示空间。',
+        sourceLabel: 'Lecture 17 官方可执行讲义'
+      }
+    ]
+  }
+};
+
 const LLM_LESSON_CONTENT = {
   'foundation-cs336': {
-    duration: '12 分钟',
-    summary: 'CS336 的主线不是“调用一个模型”，而是亲手走完 tokenizer、Transformer、训练循环、系统优化、数据与对齐。当前阶段先聚焦 Basics：建立一个小而完整的语言模型闭环，再用 profiling 判断时间和显存花在哪里。',
+    duration: '17 讲',
+    courseId: 'cs336-2026',
+    summary: 'CS336 的主线不是“调用一个模型”，而是亲手走完 tokenizer、Transformer、训练循环、系统优化、数据与对齐。已按 Stanford Spring 2026 官方课件整理为 17 讲站内中文课程。',
     concepts: [
       ['课程地图', 'Basics 负责模型与训练闭环；Systems 解释 kernel、并行与性能；后续作业再进入 scaling、data 和 alignment。'],
       ['学习顺序', '先让单卡小模型正确运行，再优化吞吐。没有正确性基线，性能数字没有意义。'],

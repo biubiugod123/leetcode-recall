@@ -1288,6 +1288,426 @@
   background: #2446d2;
 }
 
+/* Full in-site course reader */
+.roadmap-course-panel {
+  min-height: 100%;
+}
+
+.roadmap-course-head {
+  padding-right: 28px;
+  padding-left: 28px;
+}
+
+.roadmap-course-head-divider {
+  color: var(--lesson-muted);
+  font-weight: 500;
+}
+
+.roadmap-course-head strong {
+  color: var(--lesson-blue);
+}
+
+.roadmap-course-layout {
+  width: min(1440px, 100%);
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  margin: 0 auto;
+}
+
+.roadmap-course-nav {
+  max-height: calc(100vh - 146px);
+  align-self: start;
+  position: sticky;
+  top: 70px;
+  overflow-y: auto;
+  padding: 38px 24px 52px;
+  border-right: 1px solid var(--lesson-line);
+}
+
+.roadmap-course-nav-top,
+.roadmap-course-progress-label,
+.roadmap-course-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.roadmap-course-nav-top {
+  color: var(--lesson-muted);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.roadmap-course-nav-top strong {
+  color: var(--lesson-blue);
+}
+
+.roadmap-course-nav > h2 {
+  margin: 17px 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.roadmap-course-nav > p {
+  margin: 0;
+  color: var(--lesson-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.roadmap-course-progress {
+  height: 5px;
+  overflow: hidden;
+  margin-top: 21px;
+  border-radius: 999px;
+  background: rgba(24, 35, 31, 0.1);
+}
+
+.roadmap-course-progress span {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: var(--lesson-blue);
+  transition: width 220ms ease;
+}
+
+.roadmap-course-progress-label {
+  margin-top: 7px;
+  color: var(--lesson-muted);
+  font-size: 9px;
+}
+
+.roadmap-course-progress-label strong {
+  color: var(--lesson-ink);
+}
+
+.roadmap-course-chapters {
+  display: grid;
+  gap: 5px;
+  margin-top: 24px;
+}
+
+.roadmap-course-chapters button {
+  width: 100%;
+  min-height: 57px;
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr) 16px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--lesson-ink);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.roadmap-course-chapters button:hover {
+  border-color: var(--lesson-line);
+  background: rgba(255, 253, 248, 0.66);
+  transform: translateX(2px);
+}
+
+.roadmap-course-chapters button.is-active {
+  border-color: rgba(49, 87, 246, 0.2);
+  background: rgba(49, 87, 246, 0.09);
+}
+
+.roadmap-course-chapters button > span:first-child {
+  color: var(--lesson-blue);
+  font: 800 9px/1 "JetBrains Mono", monospace;
+}
+
+.roadmap-course-chapters button span strong,
+.roadmap-course-chapters button span small {
+  display: block;
+}
+
+.roadmap-course-chapters button span strong {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roadmap-course-chapters button span small {
+  margin-top: 2px;
+  color: var(--lesson-muted);
+  font-size: 8px;
+}
+
+.roadmap-course-chapters button > b {
+  color: var(--lesson-muted);
+  font-size: 13px;
+}
+
+.roadmap-course-chapters button.is-complete > b,
+.roadmap-course-chapters button.is-complete span small {
+  color: #177d55;
+}
+
+.roadmap-course-article {
+  width: min(850px, calc(100% - 64px));
+  min-width: 0;
+  margin: 0 auto;
+  padding: 52px 0 100px;
+}
+
+.roadmap-course-breadcrumb {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--lesson-line);
+  color: var(--lesson-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.roadmap-course-titleblock {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 45px 0 50px;
+}
+
+.roadmap-course-lecture-number {
+  color: var(--lesson-coral);
+  font: 500 clamp(46px, 6vw, 74px)/0.95 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.055em;
+}
+
+.roadmap-course-titleblock h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(39px, 5vw, 62px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+}
+
+.roadmap-course-titleblock p {
+  max-width: 650px;
+  margin: 17px 0 0;
+  color: var(--lesson-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.roadmap-course-reading {
+  padding: clamp(25px, 4vw, 40px);
+  border: 1px solid rgba(49, 87, 246, 0.12);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(201, 240, 107, 0.24), transparent 240px),
+    var(--lesson-paper);
+}
+
+.roadmap-course-reading p {
+  margin: 0;
+  color: var(--lesson-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(20px, 2.5vw, 27px);
+  letter-spacing: -0.018em;
+  line-height: 1.67;
+}
+
+.roadmap-course-reading p + p {
+  margin-top: 24px;
+  color: #3f4b46;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 1.9;
+}
+
+.roadmap-course-reading code,
+.roadmap-course-concepts code,
+.roadmap-course-practice code,
+.roadmap-course-check code {
+  padding: 0.1em 0.35em;
+  border: 1px solid rgba(49, 87, 246, 0.12);
+  border-radius: 5px;
+  color: #2446d2;
+  background: rgba(49, 87, 246, 0.06);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.84em;
+}
+
+.roadmap-course-section {
+  margin-top: 61px;
+}
+
+.roadmap-course-concepts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.roadmap-course-concepts article {
+  min-height: 170px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 11px;
+  padding: 21px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.72);
+}
+
+.roadmap-course-concepts article:nth-child(4n + 2),
+.roadmap-course-concepts article:nth-child(4n + 3) {
+  background: rgba(49, 87, 246, 0.055);
+}
+
+.roadmap-course-concepts article > span {
+  padding-top: 4px;
+  color: var(--lesson-coral);
+  font: 800 9px/1 "JetBrains Mono", monospace;
+}
+
+.roadmap-course-concepts h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.roadmap-course-concepts p {
+  margin: 0;
+  color: var(--lesson-muted);
+  font-size: 12px;
+  line-height: 1.78;
+}
+
+.roadmap-course-practice {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--lesson-line);
+}
+
+.roadmap-course-practice li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--lesson-line);
+}
+
+.roadmap-course-practice li > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--lesson-ink);
+  background: var(--lesson-lime);
+  font: 800 9px/1 "JetBrains Mono", monospace;
+}
+
+.roadmap-course-practice li p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.roadmap-course-check {
+  margin-top: 63px;
+}
+
+.roadmap-course-sources {
+  margin-top: 60px;
+}
+
+.roadmap-course-sources > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.roadmap-course-sources a {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 14px;
+  color: var(--lesson-ink);
+  background: rgba(255, 253, 248, 0.7);
+  text-decoration: none;
+}
+
+.roadmap-course-sources a > span:first-child {
+  color: var(--lesson-blue);
+  font: 800 9px/1 "JetBrains Mono", monospace;
+}
+
+.roadmap-course-sources a strong,
+.roadmap-course-sources a small {
+  display: block;
+}
+
+.roadmap-course-sources a strong {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.roadmap-course-sources a small {
+  margin-top: 3px;
+  color: var(--lesson-muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.roadmap-course-sources a b {
+  transition: transform 160ms ease;
+}
+
+.roadmap-course-sources a:hover b {
+  transform: translate(2px, -2px);
+}
+
+.roadmap-course-sources > p {
+  margin: 13px 0 0;
+  color: var(--lesson-muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.roadmap-course-note {
+  margin-top: 39px;
+}
+
+.roadmap-course-footer {
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 28px;
+  padding-left: 28px;
+}
+
+.roadmap-course-footer-position {
+  color: var(--lesson-muted);
+  font: 750 9px/1 "JetBrains Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.roadmap-study-secondary:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .roadmap-hero {
     grid-template-columns: minmax(0, 1fr) 240px;
@@ -1338,6 +1758,26 @@
 
   .roadmap-source-heading {
     grid-column: 1 / -1;
+  }
+
+  .roadmap-course-layout {
+    display: block;
+  }
+
+  .roadmap-course-nav {
+    max-height: none;
+    position: static;
+    padding: 31px 28px;
+    border-right: 0;
+    border-bottom: 1px solid var(--lesson-line);
+  }
+
+  .roadmap-course-chapters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roadmap-course-article {
+    width: min(760px, calc(100% - 50px));
   }
 }
 
@@ -1615,6 +2055,109 @@
     min-height: 45px;
     padding: 0 14px;
     font-size: 10px;
+  }
+
+  .roadmap-course-head-divider,
+  .roadmap-course-head strong {
+    display: none;
+  }
+
+  .roadmap-course-nav {
+    padding: 24px 14px 18px;
+  }
+
+  .roadmap-course-nav > h2 {
+    font-size: 29px;
+  }
+
+  .roadmap-course-nav > p {
+    font-size: 10px;
+  }
+
+  .roadmap-course-chapters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-right: -14px;
+    padding-right: 14px;
+    padding-bottom: 7px;
+    scroll-snap-type: x proximity;
+  }
+
+  .roadmap-course-chapters button {
+    min-width: 235px;
+    scroll-snap-align: start;
+    border-color: var(--lesson-line);
+    background: rgba(255, 253, 248, 0.58);
+  }
+
+  .roadmap-course-article {
+    width: calc(100% - 28px);
+    padding: 34px 0 84px;
+  }
+
+  .roadmap-course-titleblock {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 12px;
+    padding: 32px 0 37px;
+  }
+
+  .roadmap-course-lecture-number {
+    font-size: 45px;
+  }
+
+  .roadmap-course-titleblock h1 {
+    font-size: clamp(35px, 11vw, 49px);
+  }
+
+  .roadmap-course-reading {
+    padding: 24px 20px;
+    border-radius: 21px;
+  }
+
+  .roadmap-course-reading p {
+    font-size: 21px;
+  }
+
+  .roadmap-course-reading p + p {
+    font-size: 13px;
+  }
+
+  .roadmap-course-section,
+  .roadmap-course-check,
+  .roadmap-course-sources {
+    margin-top: 45px;
+  }
+
+  .roadmap-course-concepts {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmap-course-concepts article {
+    min-height: 0;
+  }
+
+  .roadmap-course-sources > div {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmap-course-footer {
+    gap: 8px;
+  }
+
+  .roadmap-course-footer-position {
+    display: none;
+  }
+
+  .roadmap-course-footer .roadmap-study-secondary {
+    max-width: 37%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .roadmap-course-footer .roadmap-study-complete {
+    flex: 1;
   }
 }
 

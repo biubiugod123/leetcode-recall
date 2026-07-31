@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#818CF8" />
+  <meta name="theme-color" content="#F2EFE6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="LC Recall" />
@@ -1669,47 +1669,106 @@
       transform: translateY(-2px);
     }
   </style>
+  <link rel="stylesheet" href="./shell.css" />
 </head>
 <body>
   <!-- 首页分类选择 -->
   <div id="homeScreen" class="home-screen">
-    <h1 class="home-title">🔥 面试 Killer</h1>
-    <p class="home-subtitle">选择复习类型</p>
-    
-    <div class="category-grid">
-      <div class="category-card" onclick="selectCategory('leetcode')">
-        <div class="category-icon">💻</div>
-        <div class="category-name">LeetCode</div>
-        <div class="category-count" id="lcCount">0 题</div>
-        <div class="category-due" id="lcDue">今日: 0</div>
-      </div>
-      
-      <div class="category-card" onclick="selectCategory('bagugu')">
-        <div class="category-icon">📚</div>
-        <div class="category-name">八股文</div>
-        <div class="category-count" id="bgCount">加载中...</div>
-        <div class="category-due" id="bgDue">今日: ?</div>
+    <div class="home-shell">
+      <div class="home-topbar">
+        <div class="home-brand">
+          <span class="home-brand-mark">K</span>
+          <span>INTERVIEW LAB</span>
+        </div>
+        <div class="home-status"><span></span> 本地进度已保存</div>
       </div>
 
-      <div class="category-card" onclick="selectCategory('llm-roadmap')">
-        <div class="category-icon">🧭</div>
-        <div class="category-name">LLM 学习</div>
-        <div class="category-count" id="llmCount">5 阶段 · 44 任务</div>
-        <div class="category-due" id="llmDue">进度: 0/44 · 0%</div>
+      <section class="home-hero">
+        <div class="home-hero-copy">
+          <div class="home-kicker"><span></span> Active learning workspace</div>
+          <h1 class="home-title">把面试准备，变成一套<br><em>真正能学进去的系统。</em></h1>
+          <p class="home-subtitle">算法主动回忆、计算机基础与 LLM 工程课程集中在一个学习空间。选择今天要推进的方向，系统会替你保留进度。</p>
+          <div class="home-pills">
+            <span>主动回忆</span>
+            <span>间隔复习</span>
+            <span>站内课程</span>
+          </div>
+        </div>
+
+        <div class="home-hero-visual" aria-hidden="true">
+          <div class="home-orbit orbit-one"></div>
+          <div class="home-orbit orbit-two"></div>
+          <div class="home-visual-code">LEARN → RECALL</div>
+          <div class="home-visual-word">Build<br><em>memory.</em></div>
+          <div class="home-visual-note">read · practice · retain</div>
+        </div>
+      </section>
+
+      <div class="home-section-head">
+        <div>
+          <span class="home-section-index">01</span>
+          <h2>今天学什么？</h2>
+        </div>
+        <p>三个入口，共享同一套学习节奏。</p>
+      </div>
+
+      <div class="category-grid">
+        <button class="category-card category-leetcode" onclick="selectCategory('leetcode')">
+          <span class="category-index">01</span>
+          <span class="category-card-top">
+            <span class="category-icon">LC</span>
+            <span class="category-arrow">↗</span>
+          </span>
+          <span class="category-name">LeetCode</span>
+          <span class="category-description">用主动回忆与间隔重复，真正记住算法思路和实现细节。</span>
+          <span class="category-meta">
+            <span class="category-count" id="lcCount">0 题</span>
+            <span class="category-due" id="lcDue">今日: 0</span>
+          </span>
+        </button>
+
+        <button class="category-card category-bagugu" onclick="selectCategory('bagugu')">
+          <span class="category-index">02</span>
+          <span class="category-card-top">
+            <span class="category-icon">CS</span>
+            <span class="category-arrow">↗</span>
+          </span>
+          <span class="category-name">八股文</span>
+          <span class="category-description">按主题抽取知识点，先回答、再对照，形成可复述的面试表达。</span>
+          <span class="category-meta">
+            <span class="category-count" id="bgCount">加载中...</span>
+            <span class="category-due" id="bgDue">今日: ?</span>
+          </span>
+        </button>
+
+        <button class="category-card category-llm" onclick="selectCategory('llm-roadmap')">
+          <span class="category-index">03</span>
+          <span class="category-card-top">
+            <span class="category-icon">AI</span>
+            <span class="category-arrow">↗</span>
+          </span>
+          <span class="category-name">LLM 学习</span>
+          <span class="category-description">从基础到生产系统，直接在站内阅读课程、实践并记录进度。</span>
+          <span class="category-meta">
+            <span class="category-count" id="llmCount">5 阶段 · 44 任务</span>
+            <span class="category-due" id="llmDue">进度: 0/44 · 0%</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="home-footer">
+        <span>持续学习，比一次学完更重要。</span>
+        <button class="home-back-hint" onclick="location.reload()">↻ 刷新数据</button>
       </div>
     </div>
-    
-    <button class="home-back-hint" onclick="location.reload()">
-      刷新数据
-    </button>
   </div>
 
   <div id="app" class="app" style="display:none;">
     <!-- Header -->
     <div class="header">
-      <div class="logo">Active Recall</div>
-      <h1 class="hero"><span class="hero-gradient">LeetCode Recall Trainer</span></h1>
-      <p class="subtitle">不看答案，不看代码，只靠大脑检索 ✨</p>
+      <div class="logo"><span></span> Active Recall Studio</div>
+      <h1 class="hero"><span class="hero-gradient">LeetCode 主动回忆</span></h1>
+      <p class="subtitle">先从记忆中检索，再用答案校准；每一轮都比“重看一遍”更有效。</p>
     </div>
 
     <!-- Stats -->
@@ -1855,7 +1914,7 @@
       if (!document.querySelector('.back-home-btn')) {
         const backBtn = document.createElement('button');
         backBtn.className = 'back-home-btn';
-        backBtn.innerHTML = '←';
+        backBtn.innerHTML = '<span aria-hidden="true">←</span><span class="back-home-label">学习首页</span>';
         backBtn.onclick = backToHome;
         document.body.appendChild(backBtn);
       }
@@ -1864,7 +1923,7 @@
       if (category === 'leetcode') {
         // LeetCode 使用 app 界面
         document.getElementById('app').style.display = 'block';
-        document.querySelector('.hero-gradient').textContent = 'LeetCode Recall Trainer';
+        document.querySelector('.hero-gradient').textContent = 'LeetCode 主动回忆';
         
         // 清空旧内容
         document.getElementById('stats').innerHTML = '';

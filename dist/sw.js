@@ -1,7 +1,8 @@
-const CACHE_NAME = 'interview-killer-v10';
+const CACHE_NAME = 'interview-killer-v11';
 const ASSETS = [
   './',
   './index.html',
+  './shell.css',
   './roadmap.css',
   './roadmap-content.js',
   './cs336-course.js',

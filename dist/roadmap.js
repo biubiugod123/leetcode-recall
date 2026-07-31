@@ -762,6 +762,167 @@ function formatRoadmapInline(value) {
   return escapeRoadmapHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
 }
 
+function getCs336StudyGuide(chapterId) {
+  return window.CS336_STUDY_GUIDES?.[chapterId] || null;
+}
+
+function renderLlmCourseFlow(flow) {
+  if (!flow?.length) return '';
+  return `
+    <div class="roadmap-course-flow" aria-label="概念流程">
+      ${flow.map((item, index) => `
+        <div class="roadmap-course-flow-step">
+          <span>${String(index + 1).padStart(2, '0')}</span>
+          <strong>${escapeRoadmapHtml(item[0])}</strong>
+          <small>${formatRoadmapInline(item[1])}</small>
+        </div>
+        ${index < flow.length - 1 ? '<b aria-hidden="true">→</b>' : ''}
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderLlmCourseTable(table) {
+  if (!table?.headers?.length || !table?.rows?.length) return '';
+  return `
+    <div class="roadmap-course-table-wrap">
+      <table class="roadmap-course-table">
+        <thead>
+          <tr>${table.headers.map(header => `<th>${escapeRoadmapHtml(header)}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${table.rows.map(row => `
+            <tr>${row.map(cell => `<td>${formatRoadmapInline(cell)}</td>`).join('')}</tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderLlmCourseSection(section, chapterId, sectionIndex) {
+  const sectionId = `course-${chapterId}-section-${sectionIndex + 1}`;
+  const calloutType = section.callout?.type === 'warning' ? 'is-warning' : 'is-insight';
+  return `
+    <section class="roadmap-course-chapter-section" id="${sectionId}">
+      <header>
+        <div class="roadmap-study-label">${escapeRoadmapHtml(section.tag || `Part ${sectionIndex + 1}`)}</div>
+        <h2>${escapeRoadmapHtml(section.title)}</h2>
+      </header>
+
+      <div class="roadmap-course-prose">
+        ${(section.body || []).map(paragraph => `<p>${formatRoadmapInline(paragraph)}</p>`).join('')}
+      </div>
+
+      ${section.flow ? renderLlmCourseFlow(section.flow) : ''}
+
+      ${section.formula ? `
+        <div class="roadmap-course-formula">
+          <span>${escapeRoadmapHtml(section.formula.label)}</span>
+          <strong>${escapeRoadmapHtml(section.formula.expression)}</strong>
+          <p>${formatRoadmapInline(section.formula.note)}</p>
+        </div>
+      ` : ''}
+
+      ${section.example ? `
+        <div class="roadmap-course-example">
+          <div class="roadmap-course-block-title">
+            <span>EXAMPLE</span>
+            <h3>${formatRoadmapInline(section.example.title)}</h3>
+          </div>
+          <div class="roadmap-course-example-steps">
+            ${(section.example.steps || []).map((step, index) => `
+              <div>
+                <span>${String(index + 1).padStart(2, '0')}</span>
+                <strong>${escapeRoadmapHtml(step[0])}</strong>
+                <p>${formatRoadmapInline(step[1])}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${section.code ? `
+        <div class="roadmap-course-code">
+          <div class="roadmap-course-code-head">
+            <span>${escapeRoadmapHtml(section.code.title)}</span>
+            <small>${escapeRoadmapHtml(section.code.language || 'text')}</small>
+          </div>
+          <pre><code>${escapeRoadmapHtml(section.code.content)}</code></pre>
+        </div>
+      ` : ''}
+
+      ${section.compare ? renderLlmCourseTable(section.compare) : ''}
+
+      ${section.callout ? `
+        <aside class="roadmap-course-callout ${calloutType}">
+          <span>${section.callout.type === 'warning' ? '注意' : '关键理解'}</span>
+          <div>
+            <h3>${escapeRoadmapHtml(section.callout.title)}</h3>
+            <p>${formatRoadmapInline(section.callout.text)}</p>
+          </div>
+        </aside>
+      ` : ''}
+    </section>
+  `;
+}
+
+function renderLlmCourseGuide(chapter, guide) {
+  if (!guide) {
+    return `
+      <section class="roadmap-course-reading">
+        <div class="roadmap-study-label">本讲核心讲义</div>
+        ${(chapter.summary || []).map(paragraph => `<p>${formatRoadmapInline(paragraph)}</p>`).join('')}
+      </section>
+    `;
+  }
+
+  return `
+    <section class="roadmap-course-overview">
+      <div class="roadmap-course-lead">
+        <div class="roadmap-study-label">先抓住本讲主线</div>
+        <p>${formatRoadmapInline(chapter.summary?.[0] || chapter.subtitle)}</p>
+        ${chapter.summary?.[1] ? `<p>${formatRoadmapInline(chapter.summary[1])}</p>` : ''}
+      </div>
+
+      <div class="roadmap-course-outcomes">
+        <div class="roadmap-study-label">学完你应该能</div>
+        <ul>
+          ${(guide.outcomes || []).map(item => `<li><span>✓</span><p>${formatRoadmapInline(item)}</p></li>`).join('')}
+        </ul>
+      </div>
+    </section>
+
+    <nav class="roadmap-course-page-nav" aria-label="本讲目录">
+      <span>本讲目录</span>
+      ${(guide.sections || []).map((section, index) => `
+        <button type="button" onclick="scrollLlmCourseSection('course-${chapter.id}-section-${index + 1}')">
+          <b>${String(index + 1).padStart(2, '0')}</b>
+          ${escapeRoadmapHtml(section.title)}
+        </button>
+      `).join('')}
+    </nav>
+
+    <div class="roadmap-course-chapter-body">
+      ${(guide.sections || []).map((section, index) => (
+        renderLlmCourseSection(section, chapter.id, index)
+      )).join('')}
+    </div>
+
+    <section class="roadmap-course-takeaway">
+      <span>ONE THING TO REMEMBER</span>
+      <p>${formatRoadmapInline(guide.takeaway)}</p>
+    </section>
+  `;
+}
+
+function scrollLlmCourseSection(sectionId) {
+  document.getElementById(sectionId)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
+
 function getLlmCourseStats(course, progress = loadLlmRoadmapProgress()) {
   const completedMap = progress.courseChapters?.[course.id] || {};
   const completed = course.chapters.filter(chapter => completedMap[chapter.id]).length;
@@ -788,6 +949,7 @@ function openLlmCourseReader(taskId, courseId, requestedChapterId = '') {
   const nextChapter = course.chapters[chapterIndex + 1] || null;
   const noteKey = `${task.id}:${chapter.id}`;
   const note = progress.notes?.[noteKey] || '';
+  const studyGuide = getCs336StudyGuide(chapter.id);
 
   const overlay = document.createElement('div');
   overlay.id = 'roadmapStudyOverlay';
@@ -858,15 +1020,16 @@ function openLlmCourseReader(taskId, courseId, requestedChapterId = '') {
             </div>
           </header>
 
-          <section class="roadmap-course-reading">
-            <div class="roadmap-study-label">本讲核心讲义</div>
-            ${(chapter.summary || []).map(paragraph => `
-              <p>${formatRoadmapInline(paragraph)}</p>
-            `).join('')}
-          </section>
+          ${renderLlmCourseGuide(chapter, studyGuide)}
 
-          <section class="roadmap-course-section">
-            <div class="roadmap-study-label">关键概念</div>
+          <details class="roadmap-course-section roadmap-course-glossary">
+            <summary>
+              <div>
+                <div class="roadmap-study-label">本讲概念速查</div>
+                <strong>${(chapter.concepts || []).length} 个术语，学习后用于复习</strong>
+              </div>
+              <span>展开 / 收起</span>
+            </summary>
             <div class="roadmap-course-concepts">
               ${(chapter.concepts || []).map((concept, conceptIndex) => `
                 <article>
@@ -878,7 +1041,7 @@ function openLlmCourseReader(taskId, courseId, requestedChapterId = '') {
                 </article>
               `).join('')}
             </div>
-          </section>
+          </details>
 
           <section class="roadmap-course-section">
             <div class="roadmap-study-label">学完立即验证</div>

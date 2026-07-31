@@ -1,10 +1,9 @@
 /*
  * Curated Chinese lesson notes for the LLM Systems roadmap.
  *
- * The notes are intentionally concise: they explain the lesson in-place, then
- * point to the official course, documentation, or original paper for depth.
- * `roadmap.js` renders this data as a reading-first lesson instead of asking
- * learners to create the lesson by writing a summary themselves.
+ * The roadmap notes explain each lesson in-place, then point to the official
+ * course, documentation, or original paper as a source. CS336 uses an
+ * additional structured study guide with formulas, examples, and comparisons.
  */
 const LLM_COURSES = {
   'cs336-2026': {
@@ -21,7 +20,7 @@ const LLM_COURSES = {
         number: '01',
         title: '总览与 Tokenization',
         subtitle: '从“会调用模型”回到底层：语言模型完整生产链与 BPE',
-        duration: '18 分钟',
+        duration: '28 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_01',
         summary: [
@@ -48,7 +47,7 @@ const LLM_COURSES = {
         number: '02',
         title: 'PyTorch 与资源核算',
         subtitle: '张量表达、einops、FLOPs、显存和 arithmetic intensity',
-        duration: '20 分钟',
+        duration: '30 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_02',
         summary: [
@@ -75,7 +74,7 @@ const LLM_COURSES = {
         number: '03',
         title: '架构与超参数',
         subtitle: '现代 Decoder-only Transformer 的稳定、高效配方',
-        duration: '20 分钟',
+        duration: '28 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_03.pdf',
         summary: [
@@ -102,7 +101,7 @@ const LLM_COURSES = {
         number: '04',
         title: 'Attention 替代方案与 MoE',
         subtitle: '从 O(T²) 瓶颈到稀疏计算、线性注意力和专家路由',
-        duration: '22 分钟',
+        duration: '30 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_04.pdf',
         summary: [
@@ -129,7 +128,7 @@ const LLM_COURSES = {
         number: '05',
         title: 'GPU 与 TPU',
         subtitle: '理解硬件层级，才能解释模型为什么快或慢',
-        duration: '20 分钟',
+        duration: '27 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_05.pdf',
         summary: [
@@ -156,7 +155,7 @@ const LLM_COURSES = {
         number: '06',
         title: 'Kernel、Profiling 与 Triton',
         subtitle: '用 measurement 找瓶颈，再用 fusion 和 tiling 减少数据移动',
-        duration: '24 分钟',
+        duration: '30 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_06',
         summary: [
@@ -183,7 +182,7 @@ const LLM_COURSES = {
         number: '07',
         title: '并行训练 I',
         subtitle: 'Collective、DDP 与通信/计算重叠',
-        duration: '22 分钟',
+        duration: '28 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_07',
         summary: [
@@ -210,7 +209,7 @@ const LLM_COURSES = {
         number: '08',
         title: '并行训练 II',
         subtitle: 'FSDP、Tensor/Pipeline/Sequence Parallel 与 3D 并行',
-        duration: '24 分钟',
+        duration: '32 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_08.pdf',
         summary: [
@@ -237,7 +236,7 @@ const LLM_COURSES = {
         number: '09',
         title: 'Scaling Laws I',
         subtitle: '用小实验预测大训练：power law、ISOFLOP 与 compute-optimal',
-        duration: '20 分钟',
+        duration: '28 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_09.pdf',
         summary: [
@@ -264,7 +263,7 @@ const LLM_COURSES = {
         number: '10',
         title: 'LLM Inference',
         subtitle: 'Prefill、Decode、KV Cache、Batching 与延迟/吞吐权衡',
-        duration: '24 分钟',
+        duration: '30 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_10',
         summary: [
@@ -291,7 +290,7 @@ const LLM_COURSES = {
         number: '11',
         title: 'Scaling Laws II',
         subtitle: '从漂亮曲线走向真实训练决策与稳健外推',
-        duration: '20 分钟',
+        duration: '28 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_11.pdf',
         summary: [
@@ -318,7 +317,7 @@ const LLM_COURSES = {
         number: '12',
         title: 'Evaluation',
         subtitle: 'Perplexity、能力评测、LLM Judge 与有效性',
-        duration: '22 分钟',
+        duration: '28 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_12',
         summary: [
@@ -345,7 +344,7 @@ const LLM_COURSES = {
         number: '13',
         title: 'Pre-training Data I',
         subtitle: '数据从哪里来：Web、Wikipedia、代码、论文与许可边界',
-        duration: '22 分钟',
+        duration: '27 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_13',
         summary: [
@@ -372,7 +371,7 @@ const LLM_COURSES = {
         number: '14',
         title: 'Pre-training Data II',
         subtitle: 'Transformation、Filtering、Dedup、Mixing 与合成数据',
-        duration: '24 分钟',
+        duration: '30 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_14',
         summary: [
@@ -399,7 +398,7 @@ const LLM_COURSES = {
         number: '15',
         title: 'Mid/Post-training：SFT 与 RLHF',
         subtitle: '把 base model 变成能遵循指令、适合交互的模型',
-        duration: '22 分钟',
+        duration: '30 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_15.pdf',
         summary: [
@@ -426,7 +425,7 @@ const LLM_COURSES = {
         number: '16',
         title: 'Post-training：RLVR',
         subtitle: '可验证奖励、Policy Gradient、PPO/GRPO 与推理能力',
-        duration: '24 分钟',
+        duration: '30 分钟',
         materialType: 'Slides',
         materialUrl: 'https://github.com/stanford-cs336/lectures/blob/main/lecture_16.pdf',
         summary: [
@@ -453,7 +452,7 @@ const LLM_COURSES = {
         number: '17',
         title: 'Multimodal Models',
         subtitle: '把图像、音频和视频变成 Transformer 能处理的 token',
-        duration: '20 分钟',
+        duration: '27 分钟',
         materialType: '可执行讲义',
         materialUrl: 'https://cs336.stanford.edu/lectures/?trace=lecture_17',
         summary: [

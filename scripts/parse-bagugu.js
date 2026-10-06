@@ -35,12 +35,16 @@ function parseSection(section, category) {
     category,
     title,
     concept: extractField(content, /\*\*概念\*\*[：:]\s*(.+)/),
+    oneLiner: extractField(content, /\*\*一句话\*\*[：:]\s*(.+)/),
     explanation: extractBlock(content, /\*\*详细解释\*\*[：:]\s*\n([\s\S]+?)(?=\n\*\*|$)/),
     question: extractField(content, /\*\*问题\*\*[：:]\s*(.+)/),
     keyPoints: extractList(content, /\*\*答案要点\*\*[：:]\s*\n([\s\S]+?)(?=\n\*\*|$)/),
     compare: extractCompare(content),
+    compareTable: extractCompareTable(content),
     traps: extractTraps(content),
-    followUp: extractFollowUp(content)
+    followUp: extractFollowUp(content),
+    codeQuiz: extractCodeQuiz(content),
+    judge: extractJudge(content)
   };
 }
 
@@ -119,8 +123,68 @@ function extractFollowUp(content) {
     }
   }
   if (current) followUps.push(current);
-  
+
   return followUps;
+}
+
+// **对比** 块里的 markdown 表格 → { headers, rows }
+function extractCompareTable(content) {
+  const match = content.match(/\*\*对比\*\*[：:]\s*\n([\s\S]+?)(?=\n\*\*|$)/);
+  if (!match) return null;
+
+  const rows = match[1].split('\n')
+    .filter(line => line.trim().startsWith('|'))
+    .filter(line => !/^\|[\s|:-]+\|$/.test(line.trim()))
+    .map(line => line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
+  if (rows.length < 2) return null;
+
+  return { headers: rows[0], rows: rows.slice(1) };
+}
+
+// **代码题**：提示 + ```代码``` + - [ ] / - [x] 选项 + 解析：...
+function extractCodeQuiz(content) {
+  const quizzes = [];
+  const blockRegex = /\*\*代码题\*\*[：:]\s*(.*)\n([\s\S]+?)(?=\n\*\*|$)/g;
+  let m;
+
+  while ((m = blockRegex.exec(content)) !== null) {
+    const body = m[2];
+    const code = body.match(/```\w*\n([\s\S]*?)```/);
+    const options = [];
+    let answer = -1;
+    const optRegex = /^- \[([ xX])\] (.+)$/gm;
+    let om;
+    while ((om = optRegex.exec(body)) !== null) {
+      if (om[1] !== ' ') answer = options.length;
+      options.push(om[2].trim());
+    }
+    const why = body.match(/^解析[：:]\s*([\s\S]+)$/m);
+
+    if (code && options.length >= 2 && answer >= 0) {
+      quizzes.push({
+        prompt: m[1].trim() || '下面代码输出什么？',
+        code: code[1].replace(/\s+$/, ''),
+        options,
+        answer,
+        why: why ? why[1].trim() : ''
+      });
+    }
+  }
+  return quizzes;
+}
+
+// **判断题**：- ✅ 正确说法 —— 理由 / - ❌ 错误说法 —— 理由
+function extractJudge(content) {
+  const match = content.match(/\*\*判断题\*\*[：:]\s*\n([\s\S]+?)(?=\n\*\*|$)/);
+  if (!match) return [];
+
+  return match[1].split('\n')
+    .map(line => line.trim().match(/^- (✅|❌)\s*(.+)$/))
+    .filter(Boolean)
+    .map(([, mark, text]) => {
+      const [statement, ...why] = text.split('——');
+      return { statement: statement.trim(), correct: mark === '✅', why: why.join('——').trim() };
+    });
 }
 
 module.exports = { parseBaguguFile };

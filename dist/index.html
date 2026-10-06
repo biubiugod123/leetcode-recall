@@ -1668,6 +1668,175 @@
     .rating-btn:hover {
       transform: translateY(-2px);
     }
+    .rating-btn.suggested {
+      box-shadow: 0 0 0 2px currentColor;
+    }
+    .rating-btn:disabled {
+      opacity: .5;
+      cursor: default;
+      transform: none;
+    }
+
+    /* 八股文：题型、代码、要点勾选、追问 */
+    .bg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .bg-meta .bg-category {
+      margin-bottom: 0;
+    }
+    .bg-type {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 2px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+    .bg-draft {
+      min-height: 110px;
+      margin-top: 16px;
+      font-family: var(--sans);
+      font-size: 15px;
+    }
+    .bg-code {
+      margin: 16px 0 0;
+      padding: 14px 16px;
+      background: #18231f;
+      color: #f8faf9;
+      border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .bg-section-content .bg-code {
+      margin: 10px 0;
+    }
+    .bg-card :not(.bg-code) > code {
+      font-family: var(--mono);
+      font-size: .9em;
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: var(--surface3);
+    }
+    .bg-opt-text {
+      min-width: 0;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .bg-statement {
+      margin: 14px 0 20px;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .bg-hint {
+      margin-left: 6px;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+    .bg-checks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bg-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 15px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .bg-check input {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      margin-top: 4px;
+      accent-color: var(--accent);
+    }
+    .bg-more summary {
+      cursor: pointer;
+      margin-bottom: 0;
+    }
+    .bg-more[open] summary {
+      margin-bottom: 10px;
+    }
+    .bg-table-wrap {
+      overflow-x: auto;
+    }
+    .bg-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .bg-table th,
+    .bg-table td {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    .bg-table th {
+      background: var(--surface3);
+      font-weight: 600;
+    }
+    .bg-fu {
+      padding: 10px 0;
+      border-top: 1px dashed var(--border);
+    }
+    .bg-section-title + .bg-fu {
+      padding-top: 0;
+      border-top: none;
+    }
+    .bg-fu-q {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .bg-fu-q::before {
+      content: 'Q ';
+      color: var(--accent);
+    }
+    .bg-fu-a {
+      margin-top: 6px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text2);
+    }
+    .bg-fu-a::before {
+      content: 'A ';
+      font-weight: 600;
+      color: var(--green);
+    }
+    .bg-fu-btn {
+      margin-top: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: var(--accent);
+      background: transparent;
+      border: 1px dashed var(--accent);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .bg-section.bg-ok {
+      background: var(--green-soft);
+      border: 1px solid rgba(23, 125, 85, .25);
+    }
+    #bgFeedback {
+      margin-top: 16px;
+    }
+    #bgFeedback .btn {
+      width: 100%;
+      justify-content: center;
+    }
   </style>
   <link rel="stylesheet" href="./shell.css" />
 </head>
@@ -1862,7 +2031,43 @@
     // ---- 首页 & 分类 ----
     let currentCategory = null;
     let baguguData = [];
-    
+
+    // 每个知识点拆成多张卡：概念回忆 + 代码题 + 判断题，各自独立排期
+    // 概念卡沿用 bg-<id>，旧进度不丢；题目卡的 key 用内容哈希，改题目后自动重新出题
+    function bgHash(s) {
+      let h = 5381;
+      for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+      return (h >>> 0).toString(36);
+    }
+
+    function bgCards(item) {
+      const cards = [{ type: 'concept', key: `bg-${item.id}`, item }];
+      (item.codeQuiz || []).forEach(quiz => {
+        cards.push({ type: 'code', key: `bg-${item.id}::code-${bgHash(quiz.code)}`, item, quiz });
+      });
+      (item.judge || []).forEach(judge => {
+        cards.push({ type: 'judge', key: `bg-${item.id}::judge-${bgHash(judge.statement)}`, item, judge });
+      });
+      return cards;
+    }
+
+    function bgIsDue(progress, key, today) {
+      const p = progress[key];
+      return !p || p.nextReview <= today;
+    }
+
+    // 转义 + 轻量 markdown：```代码块```、`行内代码`、**粗体**、换行
+    function bgRich(s) {
+      if (!s) return '';
+      return String(s).split(/```\w*\n?([\s\S]*?)```/g).map((part, i) => {
+        if (i % 2) return `<div class="bg-code"><code>${esc(part.replace(/\n+$/, ''))}</code></div>`;
+        return esc(part.replace(/^\n+|\n+$/g, ''))
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>');
+      }).join('');
+    }
+
     async function loadBagugu() {
       console.log('loadBagugu: starting...');
       try {
@@ -1888,8 +2093,7 @@
         const progress = loadProgressLocal();
         let bgDue = 0;
         for (const item of baguguData) {
-          const p = progress[`bg-${item.id}`];
-          if (!p || p.nextReview <= today) bgDue++;
+          bgDue += bgCards(item).filter(c => bgIsDue(progress, c.key, today)).length;
         }
         
         if (bgDueEl) {
@@ -2015,10 +2219,7 @@
         }
         topicCounts[mainCat].total++;
         topicCounts[mainCat].subCategories.add(fullCat);
-        const p = progress[`bg-${item.id}`];
-        if (!p || p.nextReview <= today) {
-          topicCounts[mainCat].due++;
-        }
+        topicCounts[mainCat].due += bgCards(item).filter(c => bgIsDue(progress, c.key, today)).length;
       });
       
       const topics = Object.keys(topicCounts).sort();
@@ -2041,7 +2242,7 @@
             <div class="topic-info">
               <div class="topic-name">${topic}</div>
               <div class="topic-sub">${subCats}</div>
-              <div class="topic-count">${count.total} 题 · ${count.due} 待复习</div>
+              <div class="topic-count">${count.total} 题 · ${count.due} 张卡待复习</div>
             </div>
             <div class="topic-check">✓</div>
           </div>
@@ -2208,19 +2409,15 @@
         return selectedBaguguTopics.includes(mainCat);
       });
       
-      // 找到期的八股文
-      const dueItems = filteredItems.filter(item => {
-        const p = progress[`bg-${item.id}`];
-        return !p || p.nextReview <= today;
-      });
-      
+      // 找到期的卡片（概念 / 代码题 / 判断题混在一起）
+      const dueItems = filteredItems.flatMap(bgCards).filter(c => bgIsDue(progress, c.key, today));
+
       console.log('startBaguguWithTopics: selectedTopics=', selectedBaguguTopics);
       console.log('startBaguguWithTopics: filteredItems=', filteredItems.length);
       console.log('startBaguguWithTopics: dueItems=', dueItems.length);
-      
-      // 随机选 10 个
-      const shuffled = dueItems.sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 10);
+
+      // 随机选 15 张
+      const selected = bgShuffle(dueItems).slice(0, 15);
       
       if (selected.length === 0) {
         const msg = dueItems.length === 0 
@@ -2236,7 +2433,7 @@
             <div style="font-size:48px;margin-bottom:16px;">🎉</div>
             <div style="font-size:20px;font-weight:700;">${msg}</div>
             <div style="color:var(--muted);margin-top:8px;">
-              总题数: ${filteredItems.length}, 待复习: ${dueItems.length}
+              总题数: ${filteredItems.length}, 待复习卡片: ${dueItems.length}
             </div>
             <button class="btn btn-primary" onclick="backToHome()" style="margin-top:20px;">返回首页</button>
           </div>
@@ -2245,114 +2442,248 @@
         return;
       }
       
-      // 生成练习
-      const exercises = selected.map(item => ({
-        type: 'concept-recall',
-        item: item,
-        question: item.question,
-        keyPoints: item.keyPoints,
-        concept: item.concept,
-        explanation: item.explanation
-      }));
-      
       // 启动全屏模式
-      startBaguguFullscreen(exercises);
+      startBaguguFullscreen(selected);
     }
-    
-    function startBaguguFullscreen(exercises) {
-      let current = 0;
-      const total = exercises.length;
-      
+
+    function bgShuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const BG_TYPE_LABEL = { concept: '概念回忆', code: '代码题', judge: '判断对错' };
+
+    function startBaguguFullscreen(cards) {
+      const total = cards.length;
+
       const overlay = document.createElement('div');
       overlay.id = 'fullscreenOverlay';
       overlay.className = 'fullscreen-overlay';
       overlay.innerHTML = `
         <button class="fs-close" onclick="backToHome()">✕</button>
         <div class="fs-progress">
-          ${exercises.map((_, i) => `<div class="fs-dot${i === 0 ? ' active' : ''}"></div>`).join('')}
+          ${cards.map((_, i) => `<div class="fs-dot${i === 0 ? ' active' : ''}"></div>`).join('')}
         </div>
         <div class="fs-content" id="bgContent"></div>
       `;
       document.body.appendChild(overlay);
-      
+
+      function cardHead(card) {
+        return `
+          <div class="bg-meta">
+            <span class="bg-category">${esc(card.item.category)}</span>
+            <span class="bg-type">${BG_TYPE_LABEL[card.type]}</span>
+          </div>
+          <div class="bg-title">${esc(card.item.title)}</div>
+        `;
+      }
+
+      function section(title, body, extraClass = '') {
+        return `
+          <div class="bg-section ${extraClass}">
+            <div class="bg-section-title">${title}</div>
+            <div class="bg-section-content">${body}</div>
+          </div>
+        `;
+      }
+
       function showExercise(idx) {
-        const ex = exercises[idx];
+        const card = cards[idx];
         const container = document.getElementById('bgContent');
-        
+
         // 更新进度点
         document.querySelectorAll('.fs-dot').forEach((dot, i) => {
           dot.className = 'fs-dot' + (i < idx ? ' done' : '') + (i === idx ? ' active' : '');
         });
-        
-        container.innerHTML = `
-          <div class="bg-card">
-            <div class="bg-category">${ex.item.category}</div>
-            <div class="bg-title">${ex.item.title}</div>
-            <div class="bg-question">❓ ${ex.question}</div>
-            <button class="btn btn-primary" onclick="showBgAnswer(${idx})" style="margin-top:24px;">
-              显示答案
-            </button>
-          </div>
-        `;
+
+        if (card.type === 'code') {
+          // 打乱选项顺序，避免记住"答案是第几个"
+          card.order = bgShuffle(card.quiz.options.map((_, i) => i));
+          container.innerHTML = `
+            <div class="bg-card">
+              ${cardHead(card)}
+              <div class="bg-question">${esc(card.quiz.prompt)}</div>
+              <div class="bg-code"><code>${esc(card.quiz.code)}</code></div>
+              <div class="opts">
+                ${card.order.map((optIdx, pos) => `
+                  <div class="opt" id="bgOpt-${optIdx}" onclick="pickBgOption(${idx}, ${optIdx})">
+                    <div class="opt-letter">${'ABCDEF'[pos]}</div>
+                    <span class="bg-opt-text">${esc(card.quiz.options[optIdx])}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div id="bgFeedback"></div>
+            </div>
+          `;
+        } else if (card.type === 'judge') {
+          container.innerHTML = `
+            <div class="bg-card">
+              ${cardHead(card)}
+              <div class="bg-question">这句话对吗？</div>
+              <div class="bg-statement">${bgRich(card.judge.statement)}</div>
+              <div class="bg-rating-buttons" id="bgJudgeButtons">
+                <button class="rating-btn green" onclick="pickBgJudge(${idx}, true)">✅ 对</button>
+                <button class="rating-btn red" onclick="pickBgJudge(${idx}, false)">❌ 错</button>
+              </div>
+              <div id="bgFeedback"></div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="bg-card">
+              ${cardHead(card)}
+              <div class="bg-question">❓ ${esc(card.item.question)}</div>
+              <textarea class="input-area bg-draft" id="bgDraft" placeholder="先用自己的话答一遍，再看答案（不会保存）"></textarea>
+              <button class="btn btn-primary" onclick="showBgAnswer(${idx})" style="margin-top:16px;">
+                显示答案
+              </button>
+            </div>
+          `;
+        }
       }
-      
+
       window.showBgAnswer = function(idx) {
-        const ex = exercises[idx];
+        const card = cards[idx];
+        const item = card.item;
         const container = document.getElementById('bgContent');
-        
+        const draftEl = document.getElementById('bgDraft');
+        const draft = draftEl ? draftEl.value.trim() : '';
+
+        let compareHtml = '';
+        if (item.compareTable) {
+          const t = item.compareTable;
+          compareHtml = section('⚖️ 对比', `
+            <div class="bg-table-wrap"><table class="bg-table">
+              <thead><tr>${t.headers.map(h => `<th>${bgRich(h)}</th>`).join('')}</tr></thead>
+              <tbody>${t.rows.map(r => `<tr>${r.map(c => `<td>${bgRich(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table></div>
+          `);
+        } else if (item.compare) {
+          compareHtml = section('⚖️ 对比', `<strong>vs ${esc(item.compare.vs)}</strong>：${bgRich(item.compare.diff)}`);
+        }
+
         container.innerHTML = `
           <div class="bg-card">
-            <div class="bg-category">${ex.item.category}</div>
-            <div class="bg-title">${ex.item.title}</div>
-            <div class="bg-question">❓ ${ex.question}</div>
-            
+            ${cardHead(card)}
+            <div class="bg-question">❓ ${esc(item.question)}</div>
+
             <div class="bg-answer">
+              ${draft ? section('✍️ 你的回答', esc(draft).replace(/\n/g, '<br>'), 'bg-mine') : ''}
+
+              ${item.oneLiner
+                ? section('⚡ 一句话回答', bgRich(item.oneLiner))
+                : section('💡 概念', bgRich(item.concept))}
+
               <div class="bg-section">
-                <div class="bg-section-title">💡 概念</div>
-                <div class="bg-section-content">${ex.concept}</div>
+                <div class="bg-section-title">📝 答案要点 <span class="bg-hint">勾选你答到的</span></div>
+                <div class="bg-checks">
+                  ${item.keyPoints.map(p => `
+                    <label class="bg-check">
+                      <input type="checkbox" onchange="updateBgScore(${idx})">
+                      <span>${bgRich(p)}</span>
+                    </label>
+                  `).join('')}
+                </div>
               </div>
-              
-              <div class="bg-section">
-                <div class="bg-section-title">📝 答案要点</div>
-                <ol class="bg-keypoints">
-                  ${ex.keyPoints.map(p => `<li>${p}</li>`).join('')}
-                </ol>
-              </div>
-              
-              ${ex.item.traps && ex.item.traps.length > 0 ? `
+
+              ${item.explanation ? `
+              <details class="bg-section bg-more">
+                <summary class="bg-section-title">📖 展开讲：原理与细节</summary>
+                <div class="bg-section-content">${bgRich(item.explanation)}</div>
+              </details>
+              ` : ''}
+
+              ${compareHtml}
+
+              ${item.traps && item.traps.length > 0 ? `
               <div class="bg-section trap">
                 <div class="bg-section-title">⚠️ 常见陷阱</div>
-                ${ex.item.traps.map(t => `
+                ${item.traps.map(t => `
                   <div class="bg-trap">
-                    <div class="trap-wrong">❌ ${t.wrong}</div>
-                    <div class="trap-right">✅ ${t.right}</div>
+                    <div class="trap-wrong">❌ ${bgRich(t.wrong)}</div>
+                    ${t.right ? `<div class="trap-right">✅ ${bgRich(t.right)}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+              ` : ''}
+
+              ${item.followUp && item.followUp.length > 0 ? `
+              <div class="bg-section bg-followup">
+                <div class="bg-section-title">💬 面试官追问</div>
+                ${item.followUp.map(f => `
+                  <div class="bg-fu">
+                    <div class="bg-fu-q">${bgRich(f.q)}</div>
+                    <button class="bg-fu-btn" onclick="this.nextElementSibling.hidden = false; this.remove();">先想一想，再看参考答案</button>
+                    <div class="bg-fu-a" hidden>${bgRich(f.a)}</div>
                   </div>
                 `).join('')}
               </div>
               ` : ''}
             </div>
-            
+
             <div class="bg-rating">
-              <div class="bg-rating-label">你记得多少？</div>
+              <div class="bg-rating-label" id="bgScoreLabel"></div>
               <div class="bg-rating-buttons">
-                <button class="rating-btn red" onclick="rateBg(${idx}, 1)">❌ 忘了</button>
-                <button class="rating-btn orange" onclick="rateBg(${idx}, 3)">🤔 部分</button>
-                <button class="rating-btn green" onclick="rateBg(${idx}, 5)">✅ 记得</button>
+                <button class="rating-btn red" data-rating="1" onclick="rateBg(${idx}, 1)">❌ 忘了</button>
+                <button class="rating-btn orange" data-rating="3" onclick="rateBg(${idx}, 3)">🤔 部分</button>
+                <button class="rating-btn green" data-rating="5" onclick="rateBg(${idx}, 5)">✅ 记得</button>
               </div>
             </div>
           </div>
         `;
+        updateBgScore(idx);
       };
-      
+
+      // 按勾选的要点覆盖率给出建议评分，比凭感觉点"记得"更诚实
+      window.updateBgScore = function(idx) {
+        const boxes = document.querySelectorAll('.bg-check input');
+        const hit = [...boxes].filter(b => b.checked).length;
+        const ratio = boxes.length ? hit / boxes.length : 0;
+        const suggested = ratio >= 0.75 ? 5 : ratio >= 0.4 ? 3 : 1;
+        const names = { 1: '忘了', 3: '部分', 5: '记得' };
+        document.getElementById('bgScoreLabel').textContent =
+          `答到 ${hit} / ${boxes.length} 个要点 · 建议评「${names[suggested]}」`;
+        document.querySelectorAll('.bg-rating .rating-btn').forEach(btn => {
+          btn.classList.toggle('suggested', Number(btn.dataset.rating) === suggested);
+        });
+      };
+
+      function showFeedback(idx, ok, body) {
+        document.getElementById('bgFeedback').innerHTML = `
+          ${section(ok ? '✅ 答对了' : '❌ 答错了', body, ok ? 'bg-ok' : 'trap')}
+          <button class="btn btn-primary" onclick="rateBg(${idx}, ${ok ? 5 : 1})">下一题 →</button>
+        `;
+      }
+
+      window.pickBgOption = function(idx, optIdx) {
+        const quiz = cards[idx].quiz;
+        const ok = optIdx === quiz.answer;
+        document.querySelectorAll('#bgContent .opt').forEach(el => el.classList.add('disabled'));
+        document.getElementById(`bgOpt-${quiz.answer}`).classList.replace('disabled', 'correct');
+        if (!ok) document.getElementById(`bgOpt-${optIdx}`).classList.replace('disabled', 'wrong');
+        showFeedback(idx, ok, bgRich(quiz.why));
+      };
+
+      window.pickBgJudge = function(idx, choice) {
+        const judge = cards[idx].judge;
+        const ok = choice === judge.correct;
+        document.querySelectorAll('#bgJudgeButtons button').forEach(btn => { btn.disabled = true; });
+        showFeedback(idx, ok, `这句话是<strong>${judge.correct ? '对' : '错'}</strong>的。${judge.why ? '<br>' + bgRich(judge.why) : ''}`);
+      };
+
       window.rateBg = function(idx, rating) {
-        const ex = exercises[idx];
+        const card = cards[idx];
         const progress = loadProgressLocal();
-        const key = `bg-${ex.item.id}`;
-        
+        const key = card.key;
+
         // SM-2 简化版
         const old = progress[key] || { ease: 2.5, interval: 1, reps: 0 };
         let { ease, interval, reps } = old;
-        
+
         if (rating >= 3) {
           if (reps === 0) interval = 1;
           else if (reps === 1) interval = 3;
@@ -2363,10 +2694,10 @@
           reps = 0;
           interval = 1;
         }
-        
+
         const next = new Date();
         next.setDate(next.getDate() + interval);
-        
+
         progress[key] = {
           ease,
           interval,
@@ -2375,19 +2706,20 @@
           nextReview: next.toISOString().split('T')[0],
           rating
         };
-        
+
         saveProgressLocal(progress);
-        
+
         // 下一题
         if (idx + 1 < total) {
           showExercise(idx + 1);
+          document.getElementById('fullscreenOverlay').scrollTop = 0;
         } else {
           // 完成
           document.getElementById('bgContent').innerHTML = `
             <div style="text-align:center;padding:40px;">
               <div style="font-size:64px;margin-bottom:20px;">🎉</div>
               <div style="font-size:24px;font-weight:700;">今日复习完成！</div>
-              <div style="color:var(--muted);margin-top:12px;">共复习 ${total} 个知识点</div>
+              <div style="color:var(--muted);margin-top:12px;">共复习 ${total} 张卡</div>
               <button class="btn btn-primary" onclick="backToHome()" style="margin-top:32px;">
                 返回首页
               </button>
@@ -2395,7 +2727,7 @@
           `;
         }
       };
-      
+
       showExercise(0);
     }
 

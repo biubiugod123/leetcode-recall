@@ -38,7 +38,7 @@ Push to GitHub → GitHub Actions auto-deploys to GitHub Pages.
 
 ### Update 八股文
 
-Source lives in `content/八股文/<大类>/<小类>.md` (override with `BAGUGU_DIR`).
+Source lives in `content/八股文/<大类>/<小类>.md` (override with `BAGUGU_DIR`). Prefix a file name with `01-` to control its order; the number is dropped from the category name. In the app every 小类 can be selected on its own.
 
 1. Edit the markdown
 2. Run `npm run build:bagugu` (only touches `dist/bagugu.json`)

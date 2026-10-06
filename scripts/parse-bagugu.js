@@ -4,8 +4,9 @@ const path = require('path');
 
 function parseBaguguFile(content, filePath) {
   const items = [];
-  const category = path.basename(path.dirname(filePath)) + '/' + 
-                   path.basename(filePath, '.md');
+  // 文件名可以带 "01-" 这样的序号来控制顺序，序号不进入分类名
+  const category = path.basename(path.dirname(filePath)) + '/' +
+                   path.basename(filePath, '.md').replace(/^\d+-/, '');
   
   // 按 ### 分割知识点
   const sections = content.split(/(?=^### )/m).filter(s => s.trim() && s.startsWith('###'));
@@ -149,7 +150,7 @@ function extractCodeQuiz(content) {
 
   while ((m = blockRegex.exec(content)) !== null) {
     const body = m[2];
-    const code = body.match(/```\w*\n([\s\S]*?)```/);
+    const code = body.match(/```(\w*)\n([\s\S]*?)```/);
     const options = [];
     let answer = -1;
     const optRegex = /^- \[([ xX])\] (.+)$/gm;
@@ -163,7 +164,8 @@ function extractCodeQuiz(content) {
     if (code && options.length >= 2 && answer >= 0) {
       quizzes.push({
         prompt: m[1].trim() || '下面代码输出什么？',
-        code: code[1].replace(/\s+$/, ''),
+        lang: code[1],
+        code: code[2].replace(/\s+$/, ''),
         options,
         answer,
         why: why ? why[1].trim() : ''

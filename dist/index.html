@@ -2051,6 +2051,25 @@
       return cards;
     }
 
+    // 2026-10：Java基础 从 Java/Java基础 拆成 Java基础/<小类>，把旧 id 下的复习进度搬到新 id
+    function migrateJavaBasicsProgress() {
+      const progress = loadProgressLocal();
+      let moved = 0;
+      for (const item of baguguData) {
+        if (!item.category.startsWith('Java基础/')) continue;
+        const oldPrefix = 'bg-' + ('Java/Java基础-' + item.title).toLowerCase()
+          .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
+        for (const key of Object.keys(progress)) {
+          if (key !== oldPrefix && !key.startsWith(oldPrefix + '::')) continue;
+          const newKey = `bg-${item.id}` + key.slice(oldPrefix.length);
+          if (!progress[newKey]) progress[newKey] = progress[key];
+          delete progress[key];
+          moved++;
+        }
+      }
+      if (moved) saveProgressLocal(progress);
+    }
+
     function bgIsDue(progress, key, today) {
       const p = progress[key];
       return !p || p.nextReview <= today;
@@ -2078,6 +2097,7 @@
           return;
         }
         baguguData = await res.json();
+        migrateJavaBasicsProgress();
         console.log('loadBagugu: loaded', baguguData.length, 'items');
         
         const bgCountEl = document.getElementById('bgCount');
@@ -2204,64 +2224,81 @@
       document.body.appendChild(overlay);
     }
     
+    const BG_SELECTION_KEY = 'bg-selected-categories';
+    let bgCategoryDue = {};   // 完整分类 -> 待复习卡片数，给底部汇总用
+
+    // 选题：按大类分组，每个小类可以单独勾选；选择记在本机，下次打开沿用
     function showBaguguTopicSelector() {
-      // 获取所有大类及其题目数量（按 "/" 分割取第一部分）
-      const topicCounts = {};
       const progress = loadProgressLocal();
       const today = getTodayStr();
-      
+      const groups = {};   // 大类 -> { 完整分类: { total, due } }
+
       baguguData.forEach(item => {
         const fullCat = item.category || '未分类';
-        // 取大类（"/" 前的部分）
         const mainCat = fullCat.split('/')[0].trim();
-        if (!topicCounts[mainCat]) {
-          topicCounts[mainCat] = { total: 0, due: 0, subCategories: new Set() };
-        }
-        topicCounts[mainCat].total++;
-        topicCounts[mainCat].subCategories.add(fullCat);
-        topicCounts[mainCat].due += bgCards(item).filter(c => bgIsDue(progress, c.key, today)).length;
+        const subs = groups[mainCat] || (groups[mainCat] = {});
+        const s = subs[fullCat] || (subs[fullCat] = { total: 0, due: 0 });
+        s.total++;
+        s.due += bgCards(item).filter(c => bgIsDue(progress, c.key, today)).length;
       });
-      
-      const topics = Object.keys(topicCounts).sort();
-      
-      // 默认全选
-      selectedBaguguTopics = [...topics];
-      
+
+      bgCategoryDue = {};
+      Object.values(groups).forEach(subs => {
+        Object.entries(subs).forEach(([cat, s]) => { bgCategoryDue[cat] = s.due; });
+      });
+
+      const allCats = Object.keys(bgCategoryDue);
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem(BG_SELECTION_KEY)); } catch (e) {}
+      selectedBaguguTopics = Array.isArray(saved) ? saved.filter(c => allCats.includes(c)) : [];
+      if (selectedBaguguTopics.length === 0) selectedBaguguTopics = [...allCats];   // 第一次默认全选
+
       const overlay = document.createElement('div');
       overlay.id = 'fullscreenOverlay';
       overlay.className = 'fullscreen-overlay';
-      overlay.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
-      
-      const topicCards = topics.map(topic => {
-        const icon = getTopicIcon(topic);
-        const count = topicCounts[topic];
-        const subCats = [...count.subCategories].map(c => c.split('/')[1] || c).join('、');
+      overlay.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:20px;';
+
+      const groupHtml = Object.keys(groups).sort().map(main => {
+        const subs = groups[main];
+        const total = Object.values(subs).reduce((n, s) => n + s.total, 0);
+        const due = Object.values(subs).reduce((n, s) => n + s.due, 0);
         return `
-          <div class="topic-card selected" data-topic="${topic}" onclick="toggleBaguguTopic(this, '${topic}')">
-            <div class="topic-icon">${icon}</div>
-            <div class="topic-info">
-              <div class="topic-name">${topic}</div>
-              <div class="topic-sub">${subCats}</div>
-              <div class="topic-count">${count.total} 题 · ${count.due} 张卡待复习</div>
+          <div class="topic-group" data-main="${esc(main)}">
+            <div class="topic-card" onclick="toggleBaguguGroup(this.parentElement.dataset.main)">
+              <div class="topic-icon">${getTopicIcon(main)}</div>
+              <div class="topic-info">
+                <div class="topic-name">${esc(main)}</div>
+                <div class="topic-count">${total} 题 · ${due} 张卡待复习</div>
+              </div>
+              <div class="topic-check">✓</div>
             </div>
-            <div class="topic-check">✓</div>
+            <div class="topic-chips">
+              ${Object.entries(subs).map(([cat, s]) => `
+                <button class="topic-chip" data-cat="${esc(cat)}" onclick="toggleBaguguTopic(this.dataset.cat)">
+                  ${esc(cat.split('/')[1] || cat)}
+                  <span>${s.total} 题 · ${s.due} 待复习</span>
+                </button>
+              `).join('')}
+            </div>
           </div>
         `;
       }).join('');
-      
+
       overlay.innerHTML = `
         <button class="fs-close" onclick="backToHome()">✕</button>
-        <div style="width:100%;max-width:400px;">
+        <div style="width:100%;max-width:440px;margin:auto 0;">
           <div style="text-align:center;margin-bottom:24px;">
             <div style="font-size:32px;margin-bottom:8px;">🎯</div>
             <div style="font-size:20px;font-weight:700;">选择复习主题</div>
-            <div style="color:var(--muted);font-size:14px;margin-top:4px;">点击选择/取消，可多选</div>
+            <div style="color:var(--muted);font-size:14px;margin-top:4px;">点大类全选 / 取消，也可以单独选小类</div>
           </div>
-          
-          <div id="topicList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-            ${topicCards}
+
+          <div id="topicList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;">
+            ${groupHtml}
           </div>
-          
+
+          <div class="topic-summary" id="bgSelSummary"></div>
+
           <div style="display:flex;gap:10px;">
             <button class="btn btn-ghost" onclick="toggleAllBaguguTopics()" style="flex:1;">
               全选/取消
@@ -2271,7 +2308,7 @@
             </button>
           </div>
         </div>
-        
+
         <style>
           .topic-card {
             display: flex;
@@ -2291,6 +2328,9 @@
             border-color: var(--accent);
             background: var(--accent-glow);
           }
+          .topic-card.partial {
+            border-color: var(--accent);
+          }
           .topic-icon {
             font-size: 24px;
             width: 40px;
@@ -2307,11 +2347,6 @@
           .topic-name {
             font-weight: 600;
             font-size: 15px;
-          }
-          .topic-sub {
-            font-size: 12px;
-            color: var(--accent);
-            margin-top: 2px;
           }
           .topic-count {
             font-size: 11px;
@@ -2337,12 +2372,72 @@
             opacity: 1;
             transform: scale(1);
           }
+          .topic-card.partial .topic-check {
+            opacity: .4;
+            transform: scale(1);
+          }
+          .topic-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 2px 0;
+          }
+          .topic-chip {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            color: var(--text2);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all .2s var(--ease);
+          }
+          .topic-chip span {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+          }
+          .topic-chip.selected {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-glow);
+          }
+          .topic-summary {
+            margin-bottom: 12px;
+            font-size: 13px;
+            text-align: center;
+            color: var(--muted);
+          }
         </style>
       `;
-      
+
       document.body.appendChild(overlay);
+      renderBaguguSelection();
     }
-    
+
+    function renderBaguguSelection() {
+      document.querySelectorAll('.topic-chip').forEach(chip => {
+        chip.classList.toggle('selected', selectedBaguguTopics.includes(chip.dataset.cat));
+      });
+      document.querySelectorAll('.topic-group').forEach(group => {
+        const chips = [...group.querySelectorAll('.topic-chip')];
+        const on = chips.filter(c => c.classList.contains('selected')).length;
+        const card = group.querySelector('.topic-card');
+        card.classList.toggle('selected', on === chips.length);
+        card.classList.toggle('partial', on > 0 && on < chips.length);
+      });
+      const due = selectedBaguguTopics.reduce((n, c) => n + (bgCategoryDue[c] || 0), 0);
+      document.getElementById('bgSelSummary').textContent =
+        `已选 ${selectedBaguguTopics.length} 个小类 · ${due} 张卡待复习 · 每次随机 15 张`;
+      try { localStorage.setItem(BG_SELECTION_KEY, JSON.stringify(selectedBaguguTopics)); } catch (e) {}
+    }
+
     function getTopicIcon(topic) {
       const icons = {
         'iOS': '📱',
@@ -2352,6 +2447,7 @@
         '算法': '🧮',
         '操作系统': '🖥️',
         'Java': '☕',
+        'Java基础': '📘',
         'Python': '🐍',
         '前端': '🎨',
         '后端': '⚙️',
@@ -2359,36 +2455,29 @@
       };
       return icons[topic] || icons['默认'];
     }
-    
-    function toggleBaguguTopic(el, topic) {
-      el.classList.toggle('selected');
-      if (el.classList.contains('selected')) {
-        if (!selectedBaguguTopics.includes(topic)) {
-          selectedBaguguTopics.push(topic);
-        }
-      } else {
-        selectedBaguguTopics = selectedBaguguTopics.filter(t => t !== topic);
-      }
+
+    function toggleBaguguTopic(cat) {
+      selectedBaguguTopics = selectedBaguguTopics.includes(cat)
+        ? selectedBaguguTopics.filter(c => c !== cat)
+        : [...selectedBaguguTopics, cat];
+      renderBaguguSelection();
     }
-    
+
+    function toggleBaguguGroup(main) {
+      const group = [...document.querySelectorAll('.topic-group')].find(g => g.dataset.main === main);
+      const cats = [...group.querySelectorAll('.topic-chip')].map(c => c.dataset.cat);
+      const allOn = cats.every(c => selectedBaguguTopics.includes(c));
+      selectedBaguguTopics = selectedBaguguTopics.filter(c => !cats.includes(c));
+      if (!allOn) selectedBaguguTopics.push(...cats);
+      renderBaguguSelection();
+    }
+
     function toggleAllBaguguTopics() {
-      const cards = document.querySelectorAll('.topic-card');
-      const allSelected = selectedBaguguTopics.length === cards.length;
-      
-      if (allSelected) {
-        // 取消全选
-        selectedBaguguTopics = [];
-        cards.forEach(card => card.classList.remove('selected'));
-      } else {
-        // 全选
-        selectedBaguguTopics = [];
-        cards.forEach(card => {
-          card.classList.add('selected');
-          selectedBaguguTopics.push(card.dataset.topic);
-        });
-      }
+      const cats = [...document.querySelectorAll('.topic-chip')].map(c => c.dataset.cat);
+      selectedBaguguTopics = selectedBaguguTopics.length === cats.length ? [] : cats;
+      renderBaguguSelection();
     }
-    
+
     function startBaguguWithTopics() {
       if (selectedBaguguTopics.length === 0) {
         alert('请至少选择一个主题！');
@@ -2399,15 +2488,11 @@
       const overlay = document.getElementById('fullscreenOverlay');
       if (overlay) overlay.remove();
       
-      // 根据选中的大类筛选题目
+      // 根据选中的小类筛选题目
       const progress = loadProgressLocal();
       const today = getTodayStr();
       
-      const filteredItems = baguguData.filter(item => {
-        const fullCat = item.category || '未分类';
-        const mainCat = fullCat.split('/')[0].trim();
-        return selectedBaguguTopics.includes(mainCat);
-      });
+      const filteredItems = baguguData.filter(item => selectedBaguguTopics.includes(item.category || '未分类'));
       
       // 找到期的卡片（概念 / 代码题 / 判断题混在一起）
       const dueItems = filteredItems.flatMap(bgCards).filter(c => bgIsDue(progress, c.key, today));
@@ -2421,7 +2506,7 @@
       
       if (selected.length === 0) {
         const msg = dueItems.length === 0 
-          ? `所选主题 (${selectedBaguguTopics.join(', ')}) 今日已复习完成！`
+          ? `所选的 ${selectedBaguguTopics.length} 个小类今日已复习完成！`
           : '没有待复习的题目';
         
         const completeOverlay = document.createElement('div');

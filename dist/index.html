@@ -2130,8 +2130,11 @@
       }
     }
     
+    const LAST_CATEGORY_KEY = 'last-category';
+
     async function selectCategory(category) {
       currentCategory = category;
+      try { localStorage.setItem(LAST_CATEGORY_KEY, category); } catch (e) {}
       document.getElementById('homeScreen').style.display = 'none';
       
       // 添加返回按钮
@@ -2872,11 +2875,17 @@
         document.getElementById('lcDue').textContent = '今日: ' + lcDue;
         updateLlmRoadmapHomeSummary();
         
-        // 显示首页，不自动开始复习
-        document.getElementById('homeScreen').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
-        
-        console.log('Init complete! Showing home screen.');
+        // 直接打开上次用的板块（比如八股文的选题页），没有记录时才显示首页
+        let lastCategory = null;
+        try { lastCategory = localStorage.getItem(LAST_CATEGORY_KEY); } catch (e) {}
+        if (lastCategory) {
+          selectCategory(lastCategory);
+        } else {
+          document.getElementById('homeScreen').style.display = 'flex';
+          document.getElementById('app').style.display = 'none';
+        }
+
+        console.log('Init complete! Showing', lastCategory || 'home screen');
       } catch (err) {
         console.error('Init failed:', err);
         document.body.innerHTML = '<div style="color:red;padding:40px;text-align:center;"><h2>加载失败</h2><p>' + err.message + '</p><button onclick="location.reload()">刷新重试</button></div>';

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'interview-killer-v13';
+const CACHE_NAME = 'interview-killer-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -13,11 +13,11 @@ const ASSETS = [
   './manifest.json'
 ];
 
-// Install - cache core assets
+// Install - cache core assets; bypass the HTTP cache (Pages sends max-age=600) so a new version never stores stale files
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
+      return cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' })));
     })
   );
   self.skipWaiting();
@@ -35,22 +35,18 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch - cache first for assets, network first for data
+// Fetch - network first so a new deploy shows up on the next open; the cache is only the offline fallback
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      // Return cached if available, otherwise fetch and cache
-      const fetchPromise = fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
-      
-      return cached || fetchPromise;
-    })
+    fetch(new Request(event.request.url, { cache: 'no-cache' })).then(response => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });

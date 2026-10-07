@@ -42,7 +42,8 @@ Source lives in `content/八股文/<大类>/<小类>.md` (override with `BAGUGU_
 
 1. Edit the markdown
 2. Run `npm run build:bagugu` (only touches `dist/bagugu.json`)
-3. Bump `CACHE_NAME` in `dist/sw.js`, commit and push
+3. Run `JAVA=/path/to/jdk11+/bin/java node scripts/verify-quiz.js` — executes every ```java 代码题 and checks the marked answer
+4. Bump `CACHE_NAME` in `dist/sw.js`, commit and push
 
 Each `### 标题` is one knowledge point. Besides the original fields (`概念` / `详细解释` / `问题` / `答案要点` / `对比` / `常见陷阱` / `追问`), it supports:
 

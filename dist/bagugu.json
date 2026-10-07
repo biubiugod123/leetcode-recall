@@ -352,6 +352,1423 @@
     "judge": []
   },
   {
+    "id": "java-oop-继承与object类-oop-与四大特性",
+    "category": "Java OOP/继承与Object类",
+    "title": "OOP 与四大特性",
+    "concept": "OOP（Object-Oriented Programming）是一种编程范式，把一切都当作对象来处理；它有四大特性：封装、继承、多态、抽象",
+    "oneLiner": "OOP 用对象（数据 + 操作）来组织程序，四大特性可以用 A PIE 记：Abstraction 抽象（隐藏实现）、Polymorphism 多态（同一动作不同实现）、Inheritance 继承（复用父类）、Encapsulation 封装（把数据和方法打包并控制访问）。",
+    "explanation": "对象 = data（fields）+ operations（methods），class 是创建对象的 blueprint。\n四大特性各自的关键词：\nInheritance → Sharing of information（子类共享父类的属性和行为）\nEncapsulation → Grouping of information（把字段和方法放进一个 class，用访问修饰符隐藏数据）\nAbstraction → Hiding of information（只暴露\"做什么\"，隐藏\"怎么做\"）\nPolymorphism → Redefining of information（同一个方法在不同对象上有不同表现）\n记忆口诀：A PIE —— Abstraction、Polymorphism、Inheritance、Encapsulation。",
+    "question": "什么是面向对象编程？OOP 的四大特性分别是什么？",
+    "keyPoints": [
+      "OOP 是一种编程范式，把程序看作一组对象的协作",
+      "对象 = 数据（字段）+ 操作（方法），class 是对象的模板",
+      "封装：把数据和方法打包，隐藏内部数据",
+      "继承：子类复用父类，表达 IS-A 关系",
+      "多态：同一个调用在不同对象上有不同实现；抽象：隐藏实现细节，只暴露功能"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "特性",
+        "一句话",
+        "Java 里怎么实现"
+      ],
+      "rows": [
+        [
+          "Abstraction",
+          "隐藏实现，只暴露功能",
+          "abstract class、interface"
+        ],
+        [
+          "Polymorphism",
+          "同一动作，多种形态",
+          "overloading、overriding"
+        ],
+        [
+          "Inheritance",
+          "从通用派生出具体",
+          "extends"
+        ],
+        [
+          "Encapsulation",
+          "打包数据并控制访问",
+          "private 字段 + public 方法"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把抽象和封装说成同一个东西",
+        "right": "抽象关注\"暴露什么功能\"，封装关注\"把数据藏起来、控制访问\""
+      }
+    ],
+    "followUp": [
+      {
+        "q": "四大特性里你觉得哪个最重要？",
+        "a": "没有标准答案，可以说多态：它让代码依赖抽象而不是具体实现，扩展新类型时调用方不用改"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "OOP 四大特性可以用 A PIE 来记",
+        "correct": true,
+        "why": "Abstraction、Polymorphism、Inheritance、Encapsulation"
+      },
+      {
+        "statement": "封装的英文关键词是 Sharing of information",
+        "correct": false,
+        "why": "Sharing 是继承；封装是 Grouping of information"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-继承与object类-继承-extends-与-is-a",
+    "category": "Java OOP/继承与Object类",
+    "title": "继承：extends 与 IS-A",
+    "concept": "继承（Inheritance）是从一个通用的类派生出更具体的类的能力，子类用 extends 继承父类，二者是 IS-A 关系",
+    "oneLiner": "子类用 extends 继承父类，复用父类的 public 和 protected 成员（同一个包里还包括默认访问的成员），不继承 private 成员和构造器；继承表达 IS-A 关系，比如 Dog is an Animal。",
+    "explanation": "语法：`class MySubClass extends MySuperClass`。Dog 是 Subclass / Child class，Animal 是 Superclass / Parent class。\n子类继承父类全部 public 和 protected 的属性和行为；如果子类和父类在同一个 package，还继承 package-private（默认访问）的成员；private 成员不继承。\n\"private 不继承\"指子类代码不能直接访问它，但子类对象里仍然有这份数据，可以通过父类的 public getter 间接访问。\n构造器不会被继承；子类构造器第一行会隐式调用 super()，父类没有无参构造器时必须显式写 super(参数)。\n用继承之前先确认 IS-A 关系成立：A dog is an Animal。",
+    "question": "什么是继承？子类能继承父类的哪些成员？",
+    "keyPoints": [
+      "用 extends 从通用类派生具体类，主要作用是复用代码",
+      "继承表达 IS-A 关系",
+      "子类继承父类的 public、protected 成员",
+      "同一个包里还继承默认访问（package-private）的成员",
+      "private 成员和构造器不继承，private 字段可以通过父类的 getter 访问"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "父类成员",
+        "子类能否直接使用"
+      ],
+      "rows": [
+        [
+          "public",
+          "能"
+        ],
+        [
+          "protected",
+          "能"
+        ],
+        [
+          "默认（package-private）",
+          "同一个包才能"
+        ],
+        [
+          "private",
+          "不能"
+        ],
+        [
+          "构造器",
+          "不继承，只能通过 super(...) 调用"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为子类对象里完全没有父类的 private 字段",
+        "right": "字段仍然存在于子类对象中，只是子类代码不能直接访问"
+      },
+      {
+        "wrong": "认为父类的构造器会被子类继承",
+        "right": "构造器不继承，子类要通过 super(...) 调用父类构造器"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "什么时候不应该用继承？",
+        "a": "IS-A 关系不成立、或者不能在对象整个生命周期里一直成立时，应该用组合 / 聚合（HAS-A）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class Animal {\n    private String name = \"animal\";\n    public String getName() { return name; }\n}\nclass Dog extends Animal {\n    String info() { return name; }\n}\nSystem.out.println(new Dog().info());",
+        "options": [
+          "animal",
+          "null",
+          "编译错误",
+          "抛出 NullPointerException"
+        ],
+        "answer": 2,
+        "why": "name 是 Animal 的 private 字段，子类 Dog 不能直接访问它，编译报错；应该通过继承来的 getName() 访问。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    private String name = \"animal\";\n    public String getName() { return name; }\n}\nclass Dog extends Animal { }\nDog d = new Dog();\nSystem.out.println(d.getName() + \" \" + (d instanceof Animal));",
+        "options": [
+          "animal true",
+          "null true",
+          "animal false",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "getName() 是 public 方法，被 Dog 继承，能读到父类里的 private 字段；Dog 继承 Animal，所以 d instanceof Animal 为 true。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class Animal {\n    Animal(String name) { }\n}\nclass Dog extends Animal { }\nSystem.out.println(new Dog());",
+        "options": [
+          "打印出 Dog 对象",
+          "null",
+          "编译错误",
+          "抛出 NullPointerException"
+        ],
+        "answer": 2,
+        "why": "Dog 没写构造器，编译器生成的默认构造器会调用 super()，但 Animal 只有带参构造器，找不到无参的 super()，编译报错；构造器不会被继承。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "子类和父类在同一个包里时，子类也能使用父类的默认访问成员",
+        "correct": true,
+        "why": "默认访问就是包访问权限"
+      },
+      {
+        "statement": "子类会继承父类的构造器",
+        "correct": false,
+        "why": "构造器不继承，只能在子类构造器里用 super(...) 调用"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-继承与object类-继承的类型与菱形问题",
+    "category": "Java OOP/继承与Object类",
+    "title": "继承的类型与菱形问题",
+    "concept": "继承可以分为单继承、多继承、多层继承、层次继承和混合继承；Java 的 class 不支持多继承，原因是菱形问题（Diamond Problem）",
+    "oneLiner": "Java 的类只能 extends 一个父类，但可以多层继承（C extends B extends A），也可以多个子类继承同一个父类；不支持类的多继承是为了避免菱形问题——两个父类有同名方法时，子类不知道该用哪一个；接口则可以多继承。",
+    "explanation": "Single：B extends A，只继承一个类。\nMultiple：同时继承多个不相关的类，Java 的 class 不支持。\nMulti-Level：C extends B、B extends A，继承链没有长度限制，但太深会让代码过于复杂。\nHierarchical：B、C 都 extends A，多个类继承同一个父类。\nHybrid：以上几种的组合。\n菱形问题：A 有 doSomething()，B 和 C 都继承 A 并重写了它，如果 D 同时继承 B 和 C，调用 d.doSomething() 时无法确定用 B 还是 C 的版本。\n接口可以多实现；如果两个接口有同名的 default 方法，实现类必须自己重写，并用 接口名.super.方法() 明确调用哪一个。",
+    "question": "Java 支持哪些类型的继承？为什么不支持类的多继承？",
+    "keyPoints": [
+      "支持单继承、多层继承、层次继承，以及不含类多继承的混合继承",
+      "类不支持多继承，一个类只能 extends 一个父类",
+      "原因是菱形问题：多个父类的同名方法会产生歧义",
+      "接口支持多继承：类可以实现多个接口，接口可以 extends 多个接口",
+      "接口 default 方法冲突时，实现类必须重写并显式选择"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "类型",
+        "结构",
+        "Java 的类是否支持"
+      ],
+      "rows": [
+        [
+          "Single",
+          "B extends A",
+          "支持"
+        ],
+        [
+          "Multiple",
+          "C 同时 extends A 和 B",
+          "不支持"
+        ],
+        [
+          "Multi-Level",
+          "C extends B，B extends A",
+          "支持"
+        ],
+        [
+          "Hierarchical",
+          "B、C 都 extends A",
+          "支持"
+        ],
+        [
+          "Hybrid",
+          "以上组合",
+          "不含多继承时支持"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Java 完全不支持多继承",
+        "right": "类不支持多继承，接口支持（一个类可以 implements 多个接口）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "除了用接口，还有什么办法避免菱形问题？",
+        "a": "用聚合 / 组合：把 B 和 C 作为 D 的成员变量，通过 b.doSomething()、c.doSomething() 明确调用"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class A { }\nclass B { }\nclass C extends A, B { }\nSystem.out.println(\"ok\");",
+        "options": [
+          "ok",
+          "编译错误",
+          "抛出 ClassCastException",
+          "什么也不输出"
+        ],
+        "answer": 1,
+        "why": "Java 的类只能 extends 一个父类，`extends A, B` 是语法错误。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class A { }\nclass B extends A { }\nclass C extends B { }\nObject o = new C();\nSystem.out.println((o instanceof A) + \" \" + (o instanceof B) + \" \" + (o instanceof Object));",
+        "options": [
+          "true true true",
+          "false true true",
+          "false false true",
+          "true false true"
+        ],
+        "answer": 0,
+        "why": "多层继承下，C 是 B，也是 A，所有类最终都继承 Object，所以三个 instanceof 都为 true。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "interface B { default String hi() { return \"B\"; } }\ninterface C { default String hi() { return \"C\"; } }\nclass D implements B, C {\n    public String hi() { return B.super.hi() + C.super.hi(); }\n}\nSystem.out.println(new D().hi());",
+        "options": [
+          "BC",
+          "B",
+          "C",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "两个接口有同名的 default 方法，D 必须自己重写 hi()，可以用 B.super.hi()、C.super.hi() 明确调用各自的版本，这样就没有歧义了。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Java 中继承链的层数没有限制",
+        "correct": true,
+        "why": "多层继承没有长度限制，但太深会让代码难以维护"
+      },
+      {
+        "statement": "一个接口只能 extends 一个接口",
+        "correct": false,
+        "why": "接口可以 extends 多个接口"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-继承与object类-this-与-super",
+    "category": "Java OOP/继承与Object类",
+    "title": "this 与 super",
+    "concept": "this 指向当前类的对象，super 指向直接父类的那部分；两者都可以访问字段、方法和构造器",
+    "oneLiner": "this.字段 / this.方法() / this(...) 访问当前类的成员和构造器；super.字段 / super.方法() / super(...) 访问直接父类的成员和构造器；this(...) 和 super(...) 都只能写在构造器第一行，所以不能同时出现；this 还可以作为参数传递或作为返回值。",
+    "explanation": "子类重写了方法后，用 super.方法() 可以调用父类的原始版本，常用来\"在父类逻辑基础上再加一点\"。\n子类定义了和父类同名的字段时会隐藏父类字段，用 super.字段 才能访问父类那个。\n子类构造器第一行如果没写 this(...) 或 super(...)，编译器会自动插入 super()。\nstatic 方法里没有 this 和 super。",
+    "question": "this 和 super 有什么区别？",
+    "keyPoints": [
+      "this 代表当前对象，super 代表直接父类的那部分",
+      "this.字段 / super.字段 区分当前类和父类的同名字段",
+      "this(...) 调用本类其他构造器，super(...) 调用父类构造器",
+      "两者都必须是构造器的第一条语句，不能同时出现",
+      "super.方法() 可以调用被重写的父类方法；static 方法里不能用 this 和 super"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "this",
+        "super"
+      ],
+      "rows": [
+        [
+          "指向",
+          "当前类（子类）的对象",
+          "直接父类的对象部分"
+        ],
+        [
+          "字段",
+          "this.field：当前类的实例变量",
+          "super.field：父类的实例变量"
+        ],
+        [
+          "构造器",
+          "this(...)：本类的另一个构造器",
+          "super(...)：父类的构造器"
+        ],
+        [
+          "方法",
+          "this.method()：当前类的方法",
+          "super.method()：父类的方法"
+        ],
+        [
+          "其他",
+          "可以作为参数传递、作为返回值",
+          "不能单独使用"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "在同一个构造器里同时写 this(...) 和 super(...)",
+        "right": "两者都要求是第一条语句，只能二选一"
+      },
+      {
+        "wrong": "以为 super 能跳过直接父类，访问祖父类的成员",
+        "right": "super 只指向直接父类，没有 super.super"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "子类构造器里不写 super(...)，会发生什么？",
+        "a": "编译器自动插入 super()，调用父类的无参构造器；父类没有无参构造器就编译错误"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    String name = \"animal\";\n}\nclass Dog extends Animal {\n    String name = \"dog\";\n    String show() { return this.name + \" \" + super.name; }\n}\nSystem.out.println(new Dog().show());",
+        "options": [
+          "dog animal",
+          "dog dog",
+          "animal animal",
+          "animal dog"
+        ],
+        "answer": 0,
+        "why": "Dog 定义了同名字段 name，隐藏了父类的 name；this.name 是 Dog 自己的，super.name 是父类 Animal 的。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    Animal() { System.out.print(\"Animal \"); }\n}\nclass Dog extends Animal {\n    Dog() {\n        this(\"Rex\");\n        System.out.print(\"Dog \");\n    }\n    Dog(String name) {\n        System.out.print(name + \" \");\n    }\n}\nnew Dog();",
+        "options": [
+          "Animal Rex Dog",
+          "Rex Dog Animal",
+          "Dog Rex Animal",
+          "Rex Animal Dog"
+        ],
+        "answer": 0,
+        "why": "Dog() 第一行 this(\"Rex\") 先调用 Dog(String)；Dog(String) 第一行隐式调用 super()，先打印 Animal，再打印 Rex；最后回到 Dog() 打印 Dog。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    String speak() { return \"...\"; }\n}\nclass Dog extends Animal {\n    String speak() { return super.speak() + \"woof\"; }\n}\nAnimal a = new Dog();\nSystem.out.println(a.speak());",
+        "options": [
+          "...woof",
+          "woof",
+          "...",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "a 实际是 Dog，调用的是 Dog 重写后的 speak()；它先用 super.speak() 拿到父类的 \"...\"，再拼上 \"woof\"。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "this 可以作为方法的返回值",
+        "correct": true,
+        "why": "返回 this 是链式调用（builder）的常见写法"
+      },
+      {
+        "statement": "可以写 super.super.method() 调用祖父类的方法",
+        "correct": false,
+        "why": "super 只能指向直接父类，没有 super.super"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-继承与object类-object-类及其方法",
+    "category": "Java OOP/继承与Object类",
+    "title": "Object 类及其方法",
+    "concept": "java.lang.Object 是 Java 中所有类的父类，位于继承体系的最顶端，它本身没有父类",
+    "oneLiner": "任何类不写 extends 时默认继承 Object，所以所有对象都有 equals、hashCode、toString、getClass、clone、finalize、wait、notify、notifyAll 这些方法；最常被重写的是 equals、hashCode 和 toString。",
+    "explanation": "Object 的方法可以分组记：\n比较：equals(Object obj)、hashCode()\n描述：toString()、getClass()（返回运行时的 Class）\n复制：clone()（protected，返回对象的副本，需要实现 Cloneable）\n回收：finalize()（protected，GC 回收前调用，已废弃）\n多线程：wait()、wait(long timeout)、wait(long timeout, int nanos)、notify()、notifyAll()\n默认实现：equals 等同于 ==；toString 返回 \"类名@哈希值的十六进制\"，比如 Person@1b6d3586。\nwait / notify 必须在 synchronized 块里、对同一个对象的 monitor 调用，属于多线程的内容。",
+    "question": "Object 类有哪些方法？哪些经常需要重写？",
+    "keyPoints": [
+      "Object 是所有类的父类，没有父类",
+      "比较：equals、hashCode；描述：toString、getClass",
+      "复制：clone（protected）；回收：finalize（已废弃）",
+      "多线程：wait（三个重载）、notify、notifyAll",
+      "常重写 equals、hashCode、toString；equals 默认等同于 =="
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方法",
+        "返回类型",
+        "作用"
+      ],
+      "rows": [
+        [
+          "clone()",
+          "protected Object",
+          "创建并返回对象的副本"
+        ],
+        [
+          "equals(Object obj)",
+          "boolean",
+          "判断另一个对象是否\"相等\""
+        ],
+        [
+          "finalize()",
+          "protected void",
+          "GC 回收前调用（已废弃）"
+        ],
+        [
+          "getClass()",
+          "Class<?>",
+          "返回运行时的类"
+        ],
+        [
+          "hashCode()",
+          "int",
+          "返回哈希值"
+        ],
+        [
+          "toString()",
+          "String",
+          "返回对象的字符串表示"
+        ],
+        [
+          "wait() / notify() / notifyAll()",
+          "void",
+          "线程间等待与唤醒"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 getClass() 返回的是变量的声明类型",
+        "right": "返回的是对象的运行时类型，Object o = \"hi\" 时 getClass() 是 String"
+      },
+      {
+        "wrong": "直接打印对象，期望看到字段内容",
+        "right": "默认 toString 只打印 类名@哈希值，要自己重写 toString"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么 wait、notify 定义在 Object 里，而不是 Thread 里？",
+        "a": "它们操作的是对象的监视器锁（monitor），任何对象都可以作为锁，所以放在所有类的父类 Object 里"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码依次输出什么？（多行用空格隔开）",
+        "lang": "java",
+        "code": "Object o = \"hello\";\nSystem.out.println(o.getClass().getSimpleName());\nSystem.out.println(o.equals(\"hello\"));\nSystem.out.println(new Object().equals(new Object()));",
+        "options": [
+          "String true false",
+          "Object true false",
+          "String false false",
+          "Object false true"
+        ],
+        "answer": 0,
+        "why": "getClass() 返回运行时类型 String；o 实际是 String，调用的是 String 重写的 equals，按内容比较；Object 默认的 equals 比较引用，两个 new Object() 不是同一个对象。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Point {\n    int x = 1, y = 2;\n    @Override\n    public String toString() { return \"(\" + x + \",\" + y + \")\"; }\n}\nSystem.out.println(\"p=\" + new Point());",
+        "options": [
+          "p=(1,2)",
+          "p=Point@1b6d3586",
+          "p=(x,y)",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "字符串拼接对象时会调用它的 toString()，Point 重写了 toString，所以打印 (1,2)；不重写的话才会是 类名@哈希值。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Object 类也有自己的父类",
+        "correct": false,
+        "why": "Object 位于继承体系最顶端，没有父类"
+      },
+      {
+        "statement": "Object 的 clone() 方法是 protected 的",
+        "correct": true,
+        "why": "想让外部调用，需要在子类里重写成 public 并实现 Cloneable"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-接口与聚合-接口-interface-的规则",
+    "category": "Java OOP/接口与聚合",
+    "title": "接口（interface）的规则",
+    "concept": "接口是一份行为合同（a contract of behaviors），规定实现类必须做什么，而不规定怎么做",
+    "oneLiner": "接口用 interface 定义、类用 implements 实现，一个类可以实现多个接口；接口方法默认 public abstract，字段默认 public static final；实现类必须实现所有抽象方法，否则自己要声明为 abstract；JDK 8 起接口还可以有 default 和 static 方法。",
+    "explanation": "语法：`public interface Shape {}`、`public class Triangle implements Shape {}`。\n接口像类一样可以有方法和变量，但方法默认是 abstract 的，只有签名没有方法体；它是类的 blueprint：Specifies what a class must do but not how to do it。\nJava 的类不能多继承，但接口可以：一个类可以 implements 多个接口，一个接口可以 extends 多个接口。\n类实现接口却没有给出全部方法的实现时，这个类必须声明为 abstract。\n接口里的方法默认 public，所以实现类里的方法也必须写成 public（不能缩小访问权限）。\n接口字段默认 public static final，是常量，不能被重新赋值；接口没有构造器，不能被实例化。",
+    "question": "接口有什么特点？类实现接口时要注意什么？",
+    "keyPoints": [
+      "接口是行为合同，规定\"做什么\"不规定\"怎么做\"",
+      "方法默认 public abstract，字段默认 public static final",
+      "一个类可以实现多个接口，接口可以 extends 多个接口",
+      "实现类要实现全部抽象方法，否则必须声明为 abstract",
+      "实现方法必须是 public；JDK 8 起接口可以有 default / static 方法"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "实现接口方法时省略 public",
+        "right": "接口方法默认 public，实现时不加 public 就是缩小访问权限，编译错误"
+      },
+      {
+        "wrong": "在实现类里修改接口里定义的变量",
+        "right": "接口变量都是 public static final 常量，不能重新赋值"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "接口里能写有方法体的方法吗？",
+        "a": "JDK 8 起可以写 default 方法和 static 方法，JDK 9 起还可以写 private 方法；普通抽象方法没有方法体"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "interface Config {\n    int MAX = 10;\n}\nConfig.MAX = 20;\nSystem.out.println(Config.MAX);",
+        "options": [
+          "20",
+          "10",
+          "编译错误",
+          "抛出 UnsupportedOperationException"
+        ],
+        "answer": 2,
+        "why": "接口里的变量默认是 public static final 常量，给 Config.MAX 重新赋值会编译报错。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "interface Shape {\n    double area();\n}\nclass Square implements Shape {\n    double area() { return 4; }\n}\nSystem.out.println(new Square().area());",
+        "options": [
+          "4.0",
+          "4",
+          "编译错误",
+          "0.0"
+        ],
+        "answer": 2,
+        "why": "接口方法默认是 public，Square 实现时没写 public，相当于把访问权限缩小成了默认访问，编译报错；要写成 public double area()。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "一个类没有实现接口的全部抽象方法时，必须声明为 abstract",
+        "correct": true,
+        "why": "否则编译错误"
+      },
+      {
+        "statement": "接口可以有构造器",
+        "correct": false,
+        "why": "接口不能被实例化，也没有构造器"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-接口与聚合-聚合与组合-has-a",
+    "category": "Java OOP/接口与聚合",
+    "title": "聚合与组合（HAS-A）",
+    "concept": "一个类持有另一个类的引用作为字段，就是聚合（Aggregation）或组合（Composition），表达 HAS-A 关系",
+    "oneLiner": "继承表达 IS-A（Dog is an Animal），聚合 / 组合表达 HAS-A（Employee has an Address）；没有 IS-A 关系时，用聚合同样能复用代码，避免把同样的字段在多个类里重复写，修改时也不会不一致。",
+    "explanation": "```java\nclass Address {\n    String city;\n    String zipcode;\n}\nclass Employee {\n    String id;\n    String name;\n    String email;\n    Address address;   // Employee HAS-A Address\n}\n```\n如果没有 Address 这个对象：要把 city、zipcode 直接写进 Employee；以后 Company 也有地址，又得再写一遍；字段改名（zipcode → postalCode）时要到处改，容易不一致。\n聚合提供灵活性和独立性：Address 对象可以独立于 Employee 或 Company 存在。\n聚合和组合的区别：聚合是弱 HAS-A，部分可以独立存在（员工和地址）；组合是强 HAS-A（part-of），部分随整体一起创建和销毁（房子和房间）。",
+    "question": "什么是聚合（HAS-A）？为什么要用聚合？",
+    "keyPoints": [
+      "一个类持有另一个类的引用作为字段，就是 HAS-A",
+      "继承是 IS-A，聚合 / 组合是 HAS-A",
+      "没有 IS-A 关系时，聚合同样能复用代码",
+      "避免重复字段，修改集中在一处，不会不一致",
+      "聚合的部分可独立存在，组合的部分随整体创建和销毁"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "聚合 Aggregation",
+        "组合 Composition"
+      ],
+      "rows": [
+        [
+          "关系强弱",
+          "弱 HAS-A",
+          "强 HAS-A（part-of）"
+        ],
+        [
+          "生命周期",
+          "部分可以独立存在",
+          "部分随整体创建和销毁"
+        ],
+        [
+          "例子",
+          "员工和地址",
+          "房子和房间"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "为了复用代码，让 Employee extends Address",
+        "right": "Employee 不是一种 Address，应该让 Employee 持有一个 Address 字段"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "多个对象聚合同一个 Address 对象，会有什么影响？",
+        "a": "它们共享同一个引用，通过任意一个修改 Address，其他对象看到的也会变；需要独立时要各自复制一份"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Address {\n    String city;\n    Address(String city) { this.city = city; }\n}\nclass Employee {\n    Address address;\n    Employee(Address address) { this.address = address; }\n}\nAddress home = new Address(\"Boston\");\nEmployee a = new Employee(home);\nEmployee b = new Employee(home);\na.address.city = \"NYC\";\nSystem.out.println(b.address.city);",
+        "options": [
+          "NYC",
+          "Boston",
+          "null",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "a 和 b 聚合的是同一个 Address 对象（只复制了引用），通过 a 修改 city，b 看到的也是 NYC。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "聚合可以在没有 IS-A 关系的类之间复用代码",
+        "correct": true,
+        "why": "通过持有对方的引用来复用"
+      },
+      {
+        "statement": "组合关系中，部分可以脱离整体独立存在",
+        "correct": false,
+        "why": "那是聚合；组合的部分随整体一起创建和销毁"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-接口与聚合-继承-vs-聚合",
+    "category": "Java OOP/接口与聚合",
+    "title": "继承 vs 聚合",
+    "concept": "继承（IS-A）和聚合 / 组合（HAS-A）都能复用代码；只有 IS-A 关系在对象整个生命周期都成立时才用继承，否则用聚合",
+    "oneLiner": "继承把子类和父类紧紧绑在一起，父类一改子类就得跟着改；聚合只依赖对方的公开方法，更灵活，方便替换和做 mock 测试，还能用来绕开菱形问题——这就是\"组合优于继承\"。",
+    "explanation": "原则：Inheritance should be used only if the IS-A relationship is maintained throughout the lifetime of the objects involved; otherwise, use aggregation.\n灵活性：父类某个方法的返回类型变了——用继承时子类没有选择，只能改自己的实现；用聚合时只要改一下接收返回值的变量类型。\n测试：聚合的依赖可以替换成 mock 对象，方便单元测试。\n解决菱形问题：不让 D 同时继承 B 和 C，而是把 B 和 C 作为 D 的成员变量，通过 b.doSomething() 或 c.doSomething() 明确调用，消除歧义。",
+    "question": "继承和聚合怎么选？为什么说组合优于继承？",
+    "keyPoints": [
+      "IS-A 关系在整个生命周期都成立才用继承",
+      "继承耦合紧，父类变化会直接影响子类",
+      "聚合只依赖公开接口，更灵活、更容易替换",
+      "聚合方便用 mock 做单元测试",
+      "聚合可以绕开多继承的菱形问题"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "继承 Inheritance",
+        "聚合 Aggregation"
+      ],
+      "rows": [
+        [
+          "关系",
+          "IS-A",
+          "HAS-A"
+        ],
+        [
+          "耦合",
+          "紧，父类变化影响子类",
+          "松，只依赖公开方法"
+        ],
+        [
+          "运行时替换",
+          "不能",
+          "能换成别的实现或 mock"
+        ],
+        [
+          "数量",
+          "只能继承一个类",
+          "可以持有多个对象"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "只要能复用代码就用继承",
+        "right": "先判断 IS-A 是否始终成立，不成立就用聚合"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "举一个用继承会出问题、用组合更好的例子？",
+        "a": "Stack extends Vector：栈继承了 Vector 的 add(index)、get(index) 等方法，可以绕过后进先出的规则；如果 Stack 内部持有一个 List，只暴露 push / pop，就不会有这个问题"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class B { String doSomething() { return \"B\"; } }\nclass C { String doSomething() { return \"C\"; } }\nclass D {\n    private B b = new B();\n    private C c = new C();\n    String run() { return b.doSomething() + c.doSomething(); }\n}\nSystem.out.println(new D().run());",
+        "options": [
+          "BC",
+          "B",
+          "C",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "D 没有继承 B 和 C，而是把它们作为成员变量（聚合），通过 b.doSomething()、c.doSomething() 明确调用，不存在菱形问题的歧义。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "用聚合可以避免多继承带来的菱形问题",
+        "correct": true,
+        "why": "通过成员变量明确调用某一个对象的方法"
+      },
+      {
+        "statement": "只要两个类有重复代码，就应该让其中一个继承另一个",
+        "correct": false,
+        "why": "继承要求 IS-A 关系始终成立，否则应该用聚合"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-多态-多态-编译时与运行时",
+    "category": "Java OOP/多态",
+    "title": "多态：编译时与运行时",
+    "concept": "多态（Polymorphism，\"many forms\"）指同一个动作有不同的实现方式；Java 有编译时多态（重载）和运行时多态（重写）两种",
+    "oneLiner": "重载在编译期根据参数的声明类型决定调用哪个方法；重写在运行期根据对象的实际类型决定调用哪个实现，所以 `Animal a = new Dog(); a.sound()` 调用的是 Dog 的版本；子类既共享父类的功能，又能有自己的行为。",
+    "explanation": "poly = many，morphs = forms，polymorphism = many forms。\nCompile time：源代码被转换成可执行文件的时候，比如 file.java → file.class。\nRuntime：可执行文件正在运行的时候，比如 for 循环正在执行。\n编译时多态（overloading）：同一个类里多个同名方法，参数个数或类型不同，\"形态\"在编译期就确定了，能提高可读性。\n运行时多态（overriding）：子类方法与父类方法同名、同参数、返回类型相同或协变；通过父类引用调用时，执行的是对象实际类型的版本。\n两者结合时：先在编译期按声明类型选出重载版本，运行时再按实际类型分派重写方法。",
+    "question": "什么是多态？编译时多态和运行时多态有什么区别？",
+    "keyPoints": [
+      "多态：同一个动作有多种实现（many forms）",
+      "编译时多态 = 方法重载，按参数的声明类型在编译期确定",
+      "运行时多态 = 方法重写，按对象的实际类型在运行期确定",
+      "父类引用指向子类对象时，调用的是子类重写后的方法",
+      "好处：调用方只依赖父类型，新增子类不用改调用代码"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "方法重载 Overloading",
+        "方法重写 Overriding"
+      ],
+      "rows": [
+        [
+          "作用",
+          "提高可读性",
+          "为父类方法提供具体实现"
+        ],
+        [
+          "发生位置",
+          "一个类内（也可以在父子类之间）",
+          "有 IS-A 关系的两个类之间"
+        ],
+        [
+          "参数",
+          "必须不同",
+          "必须相同"
+        ],
+        [
+          "多态类型",
+          "编译时多态",
+          "运行时多态"
+        ],
+        [
+          "返回类型",
+          "可以相同也可以不同",
+          "相同或协变"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为选择重载版本时看的是对象的实际类型",
+        "right": "重载看参数的声明类型（编译期），重写才看实际类型（运行期）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "运行时多态是怎么实现的？",
+        "a": "JVM 通过动态分派：调用实例方法时根据对象的实际类型查找方法（HotSpot 用虚方法表 vtable 加速查找）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Dog {\n    public String bark() { return \"woof\"; }\n}\nclass Hound extends Dog {\n    public String bark() { return \"awoo\"; }\n}\nDog d = new Hound();\nSystem.out.println(d.bark());",
+        "options": [
+          "awoo",
+          "woof",
+          "woofawoo",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "d 的声明类型是 Dog，实际类型是 Hound；bark() 被重写了，运行时按实际类型调用 Hound 的版本。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Dog {\n    public void bark() { System.out.print(\"woof \"); }\n}\nclass Hound extends Dog {\n    public void bark(int num) {\n        for (int i = 0; i < num; i++) System.out.print(\"woof \");\n    }\n}\nHound h = new Hound();\nh.bark();\nh.bark(2);",
+        "options": [
+          "woof woof woof",
+          "woof woof",
+          "woof",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "bark(int) 和继承来的 bark() 参数不同，是重载而不是重写，Hound 同时拥有两个方法；h.bark() 打印 1 次，h.bark(2) 打印 2 次。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal { String sound() { return \"...\"; } }\nclass Dog extends Animal { String sound() { return \"woof\"; } }\nclass Vet {\n    static String check(Animal a) { return \"animal:\" + a.sound(); }\n    static String check(Dog d) { return \"dog:\" + d.sound(); }\n}\nAnimal a = new Dog();\nSystem.out.println(Vet.check(a));",
+        "options": [
+          "animal:woof",
+          "dog:woof",
+          "animal:...",
+          "dog:..."
+        ],
+        "answer": 0,
+        "why": "选哪个 check 是重载，编译期按 a 的声明类型 Animal 选中 check(Animal)；方法里的 a.sound() 是重写，运行期按实际类型 Dog 调用，得到 woof。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "方法重载属于编译时多态",
+        "correct": true,
+        "why": "调用哪个重载版本在编译期就确定了"
+      },
+      {
+        "statement": "通过父类引用调用被重写的方法，执行的是父类的版本",
+        "correct": false,
+        "why": "执行的是对象实际类型（子类）的版本"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-多态-方法重写的规则与静态方法隐藏",
+    "category": "Java OOP/多态",
+    "title": "方法重写的规则与静态方法隐藏",
+    "concept": "子类定义了与父类同名、同参数、返回类型相同或协变的实例方法，就构成重写（override）；static 方法不能被重写，只会被隐藏（hiding）",
+    "oneLiner": "重写要求方法名和参数列表相同，返回类型相同或是子类型（协变），访问权限不能更小；final 方法不能重写，private 方法对子类不可见；static 方法同签名时只是隐藏，调用哪个看引用的声明类型；字段也没有多态，访问哪个字段同样看声明类型。",
+    "explanation": "When an overridden method is called through the subclass object, it will always refer to the version defined by the subclass.\nStatic method hiding：子类定义了和父类同签名的 static 方法，父类的版本被隐藏而不是被重写；通过父类类型的引用调用时，执行的仍是父类版本。\n字段隐藏：子类定义和父类同名的字段，父类字段被隐藏；`Animal a = new Dog(); a.name` 读的是 Animal 的字段，因为字段访问在编译期按声明类型确定。\n协变返回：父类方法返回 Animal，子类重写时可以返回 Dog。\n建议加上 @Override，签名写错时编译器直接报错。",
+    "question": "方法重写有哪些规则？static 方法能被重写吗？",
+    "keyPoints": [
+      "方法名、参数列表必须与父类相同",
+      "返回类型相同或是其子类型（协变返回）",
+      "访问权限不能比父类更小，受检异常不能更宽",
+      "final 方法不能重写，private 方法对子类不可见",
+      "static 方法只能被隐藏，字段也只会被隐藏，二者都没有多态"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为子类同名字段会像方法一样\"重写\"父类字段",
+        "right": "字段没有多态，通过父类引用访问的是父类的字段"
+      },
+      {
+        "wrong": "重写时把 public 方法改成 protected",
+        "right": "访问权限只能扩大，缩小会编译错误"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么建议重写时加 @Override？",
+        "a": "编译器会检查父类里确实有这个方法，方法名或参数写错时直接报错，避免\"以为重写了、其实是新方法\""
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    String name = \"animal\";\n    String getName() { return name; }\n}\nclass Dog extends Animal {\n    String name = \"dog\";\n    String getName() { return name; }\n}\nAnimal a = new Dog();\nSystem.out.println(a.name + \" \" + a.getName());",
+        "options": [
+          "animal dog",
+          "dog dog",
+          "animal animal",
+          "dog animal"
+        ],
+        "answer": 0,
+        "why": "字段没有多态，a.name 按声明类型 Animal 读取父类的字段；getName() 被重写，运行时调用 Dog 的版本，返回 Dog 的 name。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class Animal {\n    public void eat() { }\n}\nclass Dog extends Animal {\n    protected void eat() { }\n}\nnew Dog().eat();\nSystem.out.println(\"ok\");",
+        "options": [
+          "ok",
+          "编译错误",
+          "抛出 IllegalAccessException",
+          "什么也不输出"
+        ],
+        "answer": 1,
+        "why": "重写时访问权限不能缩小，父类是 public，子类改成 protected 会编译报错。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Animal {\n    Animal create() { return new Animal(); }\n}\nclass Dog extends Animal {\n    @Override\n    Dog create() { return new Dog(); }\n}\nAnimal a = new Dog();\nSystem.out.println(a.create().getClass().getSimpleName());",
+        "options": [
+          "Dog",
+          "Animal",
+          "编译错误",
+          "抛出 ClassCastException"
+        ],
+        "answer": 0,
+        "why": "子类重写时把返回类型从 Animal 改成了它的子类 Dog，这是协变返回，合法；a 实际是 Dog，调用 Dog 的 create()，返回一个 Dog。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "重写方法的返回类型可以是父类方法返回类型的子类",
+        "correct": true,
+        "why": "这叫协变返回类型"
+      },
+      {
+        "statement": "子类定义了同签名的 static 方法，就重写了父类的 static 方法",
+        "correct": false,
+        "why": "那是隐藏，调用哪个看引用的声明类型"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-抽象与封装-抽象-abstraction",
+    "category": "Java OOP/抽象与封装",
+    "title": "抽象（Abstraction）",
+    "concept": "抽象是隐藏内部细节、只展示功能（Hiding internal details and showing functionality）",
+    "oneLiner": "抽象让使用者只关心\"能做什么\"，不用关心\"怎么做\"，就像打电话不需要知道手机内部怎么处理；Java 里通过抽象类和接口实现抽象，好处是使用更简单，也更安全。",
+    "explanation": "What：隐藏内部细节、展示功能。比如打电话时，我们不知道内部是怎么处理的。\nHow：通过 Abstract Class 或 Interface。\nWhy：隐藏不必要的东西，让使用者更方便（easiness）；隐藏软件的内部实现，提供安全性（security）。\n在代码里的体现：调用方只依赖抽象类型（比如 `List<String> list = new ArrayList<>();`），换实现时调用方不用改。",
+    "question": "什么是抽象？Java 怎么实现抽象？",
+    "keyPoints": [
+      "抽象：隐藏实现细节，只暴露功能",
+      "Java 通过抽象类和接口实现抽象",
+      "好处一：使用者只需了解必要的功能，更简单",
+      "好处二：隐藏内部实现，更安全",
+      "调用方依赖抽象类型，更换实现时不受影响"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为抽象只能用 abstract class 实现",
+        "right": "抽象类和接口都可以实现抽象"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "举一个 JDK 里抽象的例子？",
+        "a": "List 接口：调用方只用 add、get、size，不关心底层是数组（ArrayList）还是链表（LinkedList）"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "接口是实现抽象的一种方式",
+        "correct": true,
+        "why": "抽象可以通过抽象类或接口实现"
+      },
+      {
+        "statement": "抽象的目的是让使用者了解所有实现细节",
+        "correct": false,
+        "why": "恰恰相反，是隐藏细节、只暴露功能"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-抽象与封装-抽象类的规则与用途",
+    "category": "Java OOP/抽象与封装",
+    "title": "抽象类的规则与用途",
+    "concept": "abstract class 表示一个通用的概念，定义部分行为（partial behavior），剩下的交给子类实现",
+    "oneLiner": "抽象类可以有 0 个或多个抽象方法，抽象方法没有实现；抽象类不能被实例化，但可以作为引用变量的类型；子类没有实现全部抽象方法时必须也声明为 abstract；用它是为了强制子类采用统一的方法签名、防止被误实例化、并复用公共的属性和方法。",
+    "explanation": "```java\nabstract class Shape {\n    abstract double area();            // 抽象方法，没有方法体\n    void print() { System.out.println(area()); }\n}\nShape s = new Shape();     // ❌ 不能实例化\nShape s = new Circle();    // ✅ 可以作为引用类型\n```\nWhy Abstract Class：\n1. 强制所有子类使用相同的方法名和签名\n2. 子类可以按自己的需求灵活实现这些方法\n3. 防止意外实例化（prevent accidental initialization）\n4. 定义公共的属性和方法供子类复用\n抽象类可以有构造器、实例变量和普通方法，构造器在创建子类对象时通过 super(...) 执行。",
+    "question": "抽象类有什么特点？为什么要用抽象类？",
+    "keyPoints": [
+      "包含 0 个或多个抽象方法，抽象方法没有实现",
+      "不能被实例化，但可以作为引用变量的类型",
+      "子类必须实现全部抽象方法，否则自己也要声明为 abstract",
+      "可以有构造器、字段和普通方法",
+      "用途：统一子类签名、防止误实例化、复用公共代码"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "接口 Interface",
+        "抽象类 Abstract Class"
+      ],
+      "rows": [
+        [
+          "可以多实现，一个类能实现任意多个接口",
+          "不能多继承，一个类只能 extends 一个类"
+        ],
+        [
+          "用 implements",
+          "用 extends"
+        ],
+        [
+          "方法默认 public abstract",
+          "方法可以是 public / protected / 默认，可以抽象也可以有实现"
+        ],
+        [
+          "除 default / static 方法外没有实现",
+          "可以有部分或全部方法的实现"
+        ],
+        [
+          "除 default / static 外的方法都要实现",
+          "只有抽象方法需要实现"
+        ],
+        [
+          "变量隐式 public static final",
+          "变量可以是任意访问修饰符，不必 static / final"
+        ],
+        [
+          "没有构造器",
+          "可以有构造器"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为抽象类不能有构造器，所以构造器里的代码不会执行",
+        "right": "抽象类有构造器，创建子类对象时会先执行它"
+      },
+      {
+        "wrong": "认为子类继承抽象类后可以只实现一部分抽象方法",
+        "right": "只实现一部分的话，子类也必须声明为 abstract"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "抽象类不能实例化，那它的构造器有什么用？",
+        "a": "给子类调用：创建子类对象时通过 super(...) 初始化抽象类里定义的公共字段"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "abstract class Shape {\n    Shape() { System.out.print(\"Shape \"); }\n    abstract double area();\n}\nclass Square extends Shape {\n    double side = 2;\n    Square() { System.out.print(\"Square \"); }\n    double area() { return side * side; }\n}\nShape s = new Square();\nSystem.out.println(s.area());",
+        "options": [
+          "Shape Square 4.0",
+          "Square Shape 4.0",
+          "Square 4.0",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "抽象类不能直接 new，但可以作为引用类型；创建 Square 时先执行父类 Shape 的构造器，再执行 Square 的构造器；area() 被重写，返回 2 * 2 = 4.0。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "abstract class Shape {\n    abstract double area();\n}\nclass Circle extends Shape { }\nSystem.out.println(\"ok\");",
+        "options": [
+          "ok",
+          "编译错误",
+          "抛出 AbstractMethodError",
+          "什么也不输出"
+        ],
+        "answer": 1,
+        "why": "Circle 没有实现抽象方法 area()，自己又不是 abstract，编译报错；要么实现 area()，要么把 Circle 声明为 abstract。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "抽象类可以一个抽象方法都没有",
+        "correct": true,
+        "why": "抽象类包含 0 个或多个抽象方法"
+      },
+      {
+        "statement": "抽象类的变量都是 public static final",
+        "correct": false,
+        "why": "那是接口；抽象类的变量可以是任意访问修饰符"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-抽象与封装-封装-encapsulation",
+    "category": "Java OOP/抽象与封装",
+    "title": "封装（Encapsulation）",
+    "concept": "封装是把字段和方法组合成一个单元（类），并用访问修饰符隐藏数据",
+    "oneLiner": "封装的做法是把字段设为 private，通过 public 的 getter / setter 等方法访问；这样外部无法直接改数据，方法里可以做校验，内部实现改了也不影响调用方；好处是数据隐藏、可复用、易维护、灵活。",
+    "explanation": "What：Encapsulation means combining fields and methods into a single unit (class)；Encapsulation is hiding information → use access modifiers to do data hiding.\nHow：Making the fields in a class private and providing access to the fields via public getter methods.\n```java\npublic class Account {\n    private double balance;\n    public double getBalance() { return balance; }\n    public void deposit(double amount) {\n        if (amount <= 0) throw new IllegalArgumentException(\"amount must be positive\");\n        balance += amount;\n    }\n}\n```\nWhy：\nData hiding：保护敏感数据不被未授权访问\nReusability：封装好的代码可以被不同调用者使用\nMaintainability：对封装单元的操作不会影响其他部分\nFlexibility：内部逻辑的修改不会影响方法的调用者",
+    "question": "什么是封装？怎么实现？有什么好处？",
+    "keyPoints": [
+      "把字段和方法组合成一个类，并隐藏数据",
+      "字段 private，通过 public 方法访问",
+      "方法里可以做校验，保证数据合法",
+      "好处：数据隐藏、可复用、易维护、灵活",
+      "内部实现变化时，调用方不受影响"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为给每个字段都机械地加上 getter / setter 就是封装",
+        "right": "封装的重点是控制访问：只暴露必要的方法，并在方法里保证数据合法"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "字段设成 public 有什么问题？",
+        "a": "任何地方都能直接改，无法校验数据，也无法在不影响调用方的情况下修改内部表示"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Account {\n    private double balance;\n    public void deposit(double amount) {\n        if (amount > 0) balance += amount;\n    }\n    public double getBalance() { return balance; }\n}\nAccount acc = new Account();\nacc.deposit(100);\nacc.deposit(-50);\nSystem.out.println(acc.getBalance());",
+        "options": [
+          "100.0",
+          "50.0",
+          "150.0",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "balance 被封装成 private，只能通过 deposit 修改；deposit 里做了校验，-50 被忽略，余额是 100.0。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class Account {\n    private double balance;\n}\nAccount acc = new Account();\nacc.balance = 100;\nSystem.out.println(acc.balance);",
+        "options": [
+          "100.0",
+          "0.0",
+          "编译错误",
+          "抛出 IllegalAccessException"
+        ],
+        "answer": 2,
+        "why": "balance 是 Account 的 private 字段，在其他类里直接访问会编译报错，这正是封装的数据隐藏。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "封装可以让类的内部实现修改后不影响调用方",
+        "correct": true,
+        "why": "调用方只依赖公开的方法"
+      },
+      {
+        "statement": "封装就是把所有字段都声明为 public",
+        "correct": false,
+        "why": "封装要把字段设为 private，通过方法控制访问"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-抽象与封装-抽象-vs-封装",
+    "category": "Java OOP/抽象与封装",
+    "title": "抽象 vs 封装",
+    "concept": "抽象隐藏复杂的实现细节、只暴露必要的功能；封装把数据和方法捆绑在一个类里，并控制对数据的访问",
+    "oneLiner": "抽象关注\"外部能看到和使用什么\"，属于设计层面；封装关注\"内部的数据怎么藏起来、怎么受控访问\"，属于实现层面。用手机举例：点 Call 按钮手机就拨号了，这是抽象；手机的系统、芯片、电池都装在机身里，这是封装。",
+    "explanation": "Encapsulation bundles data and methods within one class, and controls access to the data.\nAbstraction hides the complex implementation details, only exposes necessary features.\n手机的例子：\nAbstraction：When you tap Call button → phone dials.\nEncapsulation：phone OS, chip, battery inside the phone.\n两者经常一起出现：接口 / 抽象类定义\"能做什么\"（抽象），具体类用 private 字段和方法把实现藏起来（封装）。",
+    "question": "抽象和封装有什么区别？",
+    "keyPoints": [
+      "抽象：隐藏实现细节，只暴露必要功能",
+      "封装：把数据和方法打包，控制对数据的访问",
+      "抽象偏设计层面（做什么），封装偏实现层面（怎么保护数据）",
+      "抽象用抽象类 / 接口实现，封装用访问修饰符实现",
+      "手机例子：拨号按钮是抽象，装进机身的零件是封装"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "抽象 Abstraction",
+        "封装 Encapsulation"
+      ],
+      "rows": [
+        [
+          "关注点",
+          "暴露什么功能",
+          "隐藏数据、控制访问"
+        ],
+        [
+          "层面",
+          "设计",
+          "实现"
+        ],
+        [
+          "Java 手段",
+          "abstract class、interface",
+          "private 字段 + 公开方法"
+        ],
+        [
+          "手机例子",
+          "点 Call 就拨号",
+          "系统、芯片、电池装在机身里"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把两者都说成\"隐藏\"，说不出区别",
+        "right": "抽象隐藏的是\"实现复杂度\"，封装隐藏的是\"数据\""
+      }
+    ],
+    "followUp": [
+      {
+        "q": "一个类可以同时体现抽象和封装吗？",
+        "a": "可以，比如 ArrayList 实现了 List 接口（抽象），内部的 elementData 数组是 private 的（封装）"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "用 private 修饰字段属于封装",
+        "correct": true,
+        "why": "通过访问修饰符隐藏数据"
+      },
+      {
+        "statement": "抽象和封装是同一个概念的两种叫法",
+        "correct": false,
+        "why": "抽象关注暴露什么功能，封装关注隐藏和保护数据"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-不可变类-不可变类的特点与好处",
+    "category": "Java OOP/不可变类",
+    "title": "不可变类的特点与好处",
+    "concept": "不可变类（Immutable class）的对象在构造完成后，内部状态就不能再被改变",
+    "oneLiner": "String 和 Integer、Long、Double 等包装类都是不可变类；不可变对象天然线程安全、不需要同步，可以放心地作为 HashMap / HashSet 的 key，不会产生意外的副作用，更容易推理、测试和调试，也适合函数式编程；常用于配置对象、多线程环境和 key。",
+    "explanation": "定义：An object whose internal state cannot be changed after construction.\n例子：String，包装类（Integer、Long、Double ...）。\nBenefits：\n1. 线程安全，不需要同步\n2. 可以安全地作为 HashMap / HashSet 的 key（hashCode 不会变）\n3. 防止意外的副作用（side effects）\n4. 更容易推理、测试和调试\n5. 天然支持函数式编程风格\nWhen to use：配置对象（Configuration objects）、多线程环境、作为 key。\n对不可变对象的\"修改\"（比如 Integer 的 a++、String 的拼接）其实都是创建了一个新对象。",
+    "question": "什么是不可变类？有什么好处？什么时候用？",
+    "keyPoints": [
+      "对象构造完成后状态不能再改变",
+      "例子：String、Integer、Long、Double 等包装类",
+      "线程安全，不需要同步",
+      "适合做 HashMap / HashSet 的 key，不会有意外的副作用",
+      "适用场景：配置对象、多线程环境、作为 key"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为 `Integer a = 10; a++;` 修改了原来的 Integer 对象",
+        "right": "a++ 是拆箱、加一、再装箱成一个新对象，原对象没变"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "不可变对象有什么缺点？",
+        "a": "每次\"修改\"都要创建新对象，频繁修改时会产生大量临时对象，比如循环拼接字符串应改用 StringBuilder"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Integer a = 10;\nInteger b = a;\na++;\nSystem.out.println(a + \" \" + b);",
+        "options": [
+          "11 10",
+          "11 11",
+          "10 10",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "Integer 是不可变的，a++ 会拆箱、加一、再装箱成新的 Integer 让 a 指向它；b 仍指向原来的 10。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "不可变对象在多线程之间共享时不需要加锁",
+        "correct": true,
+        "why": "状态不会改变，不存在并发修改"
+      },
+      {
+        "statement": "StringBuilder 是不可变类",
+        "correct": false,
+        "why": "StringBuilder 是可变的，String 才是不可变的"
+      }
+    ]
+  },
+  {
+    "id": "java-oop-不可变类-如何设计不可变类",
+    "category": "Java OOP/不可变类",
+    "title": "如何设计不可变类",
+    "concept": "设计不可变类要阻止子类重写、把字段设为 private final、只在构造器里初始化、不提供修改方法，并对可变的引用字段做深拷贝",
+    "oneLiner": "类声明为 final（或构造器 private + 工厂方法），所有字段 private final，在构造器里初始化，不提供 setter；如果字段引用的是可变对象（比如 List、数组、Date），构造时要复制一份再保存，getter 也要返回副本，否则外部仍能改掉内部状态。",
+    "explanation": "How to create an Immutable class：\n1. 不允许子类重写：类声明为 final；或者构造器设为 private，用工厂方法创建实例\n2. 所有字段 private 且 final\n3. 通过构造器初始化所有字段（可变对象要深拷贝）\n4. 不提供 setter，也不提供任何能修改属性的方法\n5. 字段引用其他对象时：深拷贝一份并在副本上操作，需要返回时返回副本\n```java\npublic final class Student {\n    private final String name;\n    private final List<String> courses;\n\n    public Student(String name, List<String> courses) {\n        this.name = name;\n        this.courses = new ArrayList<>(courses);   // 进来复制一次\n    }\n\n    public List<String> getCourses() {\n        return new ArrayList<>(courses);           // 出去再复制一次\n    }\n}\n```\n只把字段写成 final 不够：final 只保证引用不能指向别的对象，List 的内容仍然可以被修改。",
+    "question": "怎么设计一个不可变类？",
+    "keyPoints": [
+      "类声明为 final，或构造器 private + 工厂方法，防止子类破坏",
+      "所有字段 private final",
+      "在构造器里初始化全部字段，不提供 setter",
+      "可变的引用字段：构造时深拷贝",
+      "getter 返回可变字段的副本（或不可修改的视图）"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为字段都加了 final，类就不可变了",
+        "right": "final 只锁住引用；可变字段还要做防御性复制"
+      },
+      {
+        "wrong": "构造器直接保存外部传进来的 List",
+        "right": "外部仍持有同一个 List，修改它就改掉了\"不可变\"对象的状态"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么不可变类要声明为 final？",
+        "a": "否则子类可以重写方法、添加可变状态，把子类对象当父类用时就破坏了不可变性"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "final class Team {\n    private final List<String> members;\n    Team(List<String> members) { this.members = members; }\n    List<String> getMembers() { return members; }\n}\nList<String> list = new ArrayList<>(List.of(\"A\"));\nTeam t = new Team(list);\nlist.add(\"B\");\nt.getMembers().add(\"C\");\nSystem.out.println(t.getMembers());",
+        "options": [
+          "[A, B, C]",
+          "[A]",
+          "[A, B]",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "构造器直接保存了外部的 list，getter 又把内部的 list 原样返回，外部两次修改都改到了同一个 List；final 字段并不能阻止这一点。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "final class Team {\n    private final List<String> members;\n    Team(List<String> members) { this.members = new ArrayList<>(members); }\n    List<String> getMembers() { return new ArrayList<>(members); }\n}\nList<String> list = new ArrayList<>(List.of(\"A\"));\nTeam t = new Team(list);\nlist.add(\"B\");\nt.getMembers().add(\"C\");\nSystem.out.println(t.getMembers());",
+        "options": [
+          "[A]",
+          "[A, B, C]",
+          "[A, C]",
+          "[A, B]"
+        ],
+        "answer": 0,
+        "why": "构造时复制了一份，外部再改 list 不影响内部；getter 返回的也是副本，往副本里 add 不影响内部，所以始终是 [A]。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "final class Money { }\nclass FakeMoney extends Money { }\nSystem.out.println(\"ok\");",
+        "options": [
+          "ok",
+          "编译错误",
+          "抛出 IllegalStateException",
+          "什么也不输出"
+        ],
+        "answer": 1,
+        "why": "final 类不能被继承，这正是不可变类声明为 final 的原因：防止子类重写方法、破坏不可变性。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "不可变类可以用 private 构造器 + 静态工厂方法代替 final 类",
+        "correct": true,
+        "why": "子类无法调用 private 构造器，也就无法继承"
+      },
+      {
+        "statement": "只要所有字段都是 final，这个类就一定是不可变的",
+        "correct": false,
+        "why": "final 字段引用的可变对象（如 List）内容仍可被修改"
+      }
+    ]
+  },
+  {
     "id": "java基础-语法基础-main-方法",
     "category": "Java基础/语法基础",
     "title": "main 方法",

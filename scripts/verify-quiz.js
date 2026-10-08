@@ -3,8 +3,8 @@
  * Run every ```java 代码题 in dist/bagugu.json and check the marked answer.
  * Needs JDK 11+ (single-file source launch): JAVA=/path/to/java node scripts/verify-quiz.js
  *
- * Class / interface / enum declarations that start at column 0 become top-level classes
- * (so private access works like separate files); the remaining lines go into main().
+ * Class / interface / enum declarations (and annotations right above them) that start at column 0
+ * become top-level classes (so private access works like separate files); the remaining lines go into main().
  */
 const fs = require('fs');
 const os = require('os');
@@ -22,7 +22,7 @@ function splitSource(code) {
   const top = [], body = [];
   let depth = 0, inType = false;
   for (const line of code.split('\n')) {
-    if (!inType && /^(abstract |final )*(class|interface|enum|record)\s/.test(line)) inType = true;
+    if (!inType && /^(@\w+(\(.*\))?\s*$|(abstract |final )*(class|interface|enum|record)\s)/.test(line)) inType = true;
     (inType ? top : body).push(line);
     if (inType) {
       depth += (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
@@ -39,14 +39,14 @@ for (const item of items) {
     if (q.lang !== 'java') return;
     n++;
     const { top, body } = splitSource(q.code);
-    const src = `import java.util.*;\npublic class Q {\n  public static void main(String[] args) throws Exception {\n${body}\n  }\n}\n${top}\n`;
+    const src = `import java.util.*;\nimport java.util.function.*;\npublic class Q {\n  public static void main(String[] args) throws Exception {\n${body}\n  }\n}\n${top}\n`;
     const file = path.join(work, 'Q.java');
     fs.writeFileSync(file, src);
     const r = spawnSync(JAVA, ['-Duser.language=en', '-Dstdout.encoding=UTF-8', file], { encoding: 'utf-8' });
     const out = norm(r.stdout || '');
     const err = r.stderr || '';
     const compileErr = /error: compilation failed/.test(err);
-    const exc = (err.match(/Exception in thread "main" java\.lang\.(\w+)/) || [])[1];
+    const exc = (err.match(/Exception in thread "main" java\.(?:lang|util)\.(\w+)/) || [])[1];
     const expected = q.options[q.answer];
 
     let ok, actual;

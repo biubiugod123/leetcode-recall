@@ -4969,6 +4969,1654 @@
     ]
   },
   {
+    "id": "java异常与io-异常体系-异常与-throwable-体系",
+    "category": "Java异常与IO/异常体系",
+    "title": "异常与 Throwable 体系",
+    "concept": "异常是程序运行时发生的、打断正常执行流程的意外事件；Java 里所有异常和错误的父类是 Throwable，它下面分成 Error 和 Exception",
+    "oneLiner": "Throwable 分两支：Error 是 JVM 级别的严重问题（OutOfMemoryError、StackOverflowError），程序不应该尝试恢复；Exception 是程序可以处理的问题，又分成 RuntimeException（unchecked）和其他 Exception（checked，比如 IOException）。",
+    "explanation": "定义：An exception is an unwanted or unexpected event, which occurs during the execution of a program (at runtime), that disrupts the normal flow of the program's instructions.\n常见场景：数组越界（ArrayIndexOutOfBoundsException）、除以 0（ArithmeticException）、文件不存在（FileNotFoundException）、线程被中断（InterruptedException）、I/O 失败（IOException）、对 null 解引用（NullPointerException）。\nError：indicates serious problem that a reasonable application should not try to recover from，大多在致命情况下由 JVM 抛出。\n体系：Object → Throwable → Error（OutOfMemoryError、StackOverflowError、LinkageError）/ Exception → RuntimeException（IllegalArgumentException → NumberFormatException、ArithmeticException、IndexOutOfBoundsException → ArrayIndexOutOfBoundsException）/ IOException（FileNotFoundException、SocketException）。",
+    "question": "说一下 Java 的异常体系，Exception 和 Error 有什么区别？",
+    "keyPoints": [
+      "Throwable 是所有异常和错误的父类",
+      "Error：JVM 级别的严重问题，如 OutOfMemoryError、StackOverflowError，不应该捕获处理",
+      "Exception：程序可以处理的问题",
+      "Exception 分为 RuntimeException（unchecked）和其他 Exception（checked）",
+      "异常发生在运行时，会打断正常的执行流程"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "Error",
+        "Exception"
+      ],
+      "rows": [
+        [
+          "含义",
+          "严重问题，程序无法恢复",
+          "程序可以处理的问题"
+        ],
+        [
+          "谁抛出",
+          "大多是 JVM",
+          "JVM 或程序代码"
+        ],
+        [
+          "例子",
+          "OutOfMemoryError、StackOverflowError",
+          "IOException、NullPointerException"
+        ],
+        [
+          "是否应该 catch",
+          "不应该",
+          "应该处理"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 catch (Throwable t) 或 catch (Error e) 兜住一切",
+        "right": "Error 说明 JVM 已经处于异常状态，捕获后程序也很难正常运行，应该让它暴露出来"
+      },
+      {
+        "wrong": "认为 NumberFormatException 是 checked 异常",
+        "right": "它继承自 IllegalArgumentException → RuntimeException，是 unchecked"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "无限递归会抛什么？是 Exception 还是 Error？",
+        "a": "StackOverflowError，属于 Error"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码依次输出什么？（多行用空格隔开）",
+        "lang": "java",
+        "code": "Throwable a = new NumberFormatException();\nThrowable b = new StackOverflowError();\nSystem.out.println(a instanceof RuntimeException);\nSystem.out.println(b instanceof Exception);\nSystem.out.println(b instanceof Throwable);",
+        "options": [
+          "true false true",
+          "false false true",
+          "true true true",
+          "true false false"
+        ],
+        "answer": 0,
+        "why": "NumberFormatException → IllegalArgumentException → RuntimeException；StackOverflowError 是 Error，不是 Exception，但它们都继承 Throwable。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Throwable 是所有异常和错误的父类",
+        "correct": true,
+        "why": "Error 和 Exception 都继承自 Throwable"
+      },
+      {
+        "statement": "StackOverflowError 是 RuntimeException 的子类",
+        "correct": false,
+        "why": "它是 Error 的子类（VirtualMachineError），和 Exception 平级"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常体系-checked-与-unchecked-异常",
+    "category": "Java异常与IO/异常体系",
+    "title": "Checked 与 Unchecked 异常",
+    "concept": "继承 RuntimeException 的是 unchecked 异常，运行时由 JVM 检查；其他 Exception 是 checked 异常，编译器在编译时检查，程序员必须处理",
+    "oneLiner": "checked 异常（IOException、SQLException、InterruptedException）必须用 try-catch 处理或者在方法上用 throws 声明，否则编译不过；unchecked 异常（NullPointerException、ArrayIndexOutOfBoundsException）不强制处理，通常代表程序 bug；Error 也不强制处理。",
+    "explanation": "Unchecked exception：Any classes extends RuntimeException；checked by the JVM at run time；e.g. ArrayIndexOutOfBoundsException、NullPointerException。\nChecked exception：Any other Exceptions that are not unchecked exception；checked by the compiler at compile time；Programmers are required to handle any possible checked exceptions；e.g. IOException、SQLException、InterruptedException。\n选择原则：调用方有能力恢复的外部问题（文件不存在、网络断了）用 checked；编程错误（参数非法、空指针）用 unchecked。\nSpring 等框架倾向于把 checked 异常包装成 unchecked，避免层层 throws。",
+    "question": "checked 异常和 unchecked 异常有什么区别？各举几个例子",
+    "keyPoints": [
+      "unchecked：RuntimeException 及其子类，运行时检查",
+      "checked：其他 Exception，编译时检查",
+      "checked 必须 try-catch 或 throws，否则编译错误",
+      "unchecked 不强制处理，通常是程序 bug",
+      "例子：IOException / SQLException 是 checked；NPE / 越界 / 除 0 是 unchecked"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "Checked",
+        "Unchecked"
+      ],
+      "rows": [
+        [
+          "父类",
+          "Exception（不是 RuntimeException）",
+          "RuntimeException"
+        ],
+        [
+          "检查时机",
+          "编译时",
+          "运行时"
+        ],
+        [
+          "必须处理",
+          "是",
+          "否"
+        ],
+        [
+          "典型原因",
+          "外部环境（文件、网络、数据库）",
+          "程序 bug"
+        ],
+        [
+          "例子",
+          "IOException、SQLException、InterruptedException",
+          "NullPointerException、ArithmeticException"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 checked 异常是\"运行时才检查\"的",
+        "right": "checked 是编译器检查的；运行时才暴露、编译器不管的是 unchecked"
+      },
+      {
+        "wrong": "认为 Error 是 checked",
+        "right": "Error 和 RuntimeException 一样都不强制处理"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么 InterruptedException 是 checked 异常？",
+        "a": "线程被中断是可以预期、也应该处理的情况（比如结束任务、恢复中断标志），所以强制调用方面对它"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class T {\n    static void sleep() {\n        Thread.sleep(10);\n    }\n}\nT.sleep();\nSystem.out.println(\"ok\");",
+        "options": [
+          "ok",
+          "编译错误",
+          "抛出 InterruptedException",
+          "什么也不输出"
+        ],
+        "answer": 1,
+        "why": "Thread.sleep 声明了 checked 异常 InterruptedException，sleep() 既没有 try-catch 也没有 throws，编译器报 unreported exception。"
+      },
+      {
+        "prompt": "下面代码能编译吗？运行结果是什么？",
+        "lang": "java",
+        "code": "class T {\n    static int parse(String s) {\n        return Integer.parseInt(s);\n    }\n}\nSystem.out.println(T.parse(\"12a\"));",
+        "options": [
+          "12",
+          "编译错误",
+          "抛出 NumberFormatException",
+          "0"
+        ],
+        "answer": 2,
+        "why": "NumberFormatException 是 unchecked 异常，不需要声明也能编译；运行时 \"12a\" 不是合法整数，抛出 NumberFormatException。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "编译器会强制处理 checked 异常",
+        "correct": true,
+        "why": "必须 try-catch 或者在方法签名上 throws"
+      },
+      {
+        "statement": "NullPointerException 是 checked 异常",
+        "correct": false,
+        "why": "它继承 RuntimeException，是 unchecked"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常体系-读懂异常栈-stack-trace",
+    "category": "Java异常与IO/异常体系",
+    "title": "读懂异常栈（stack trace）",
+    "concept": "程序抛出未处理的异常时，控制台会打印 stack trace：第一行是异常类型和原因，下面每一行是调用栈中的一个方法和行号",
+    "oneLiner": "先看第一行知道是什么异常、为什么（比如 ArrayIndexOutOfBoundsException: 11），再从上往下找第一行属于自己代码的位置，那里通常就是出错点；越往下越接近程序入口 main；被包装过的异常还要看 Caused by。",
+    "explanation": "PPT 的例子：\n```java\nException in thread \"main\" java.lang.ArrayIndexOutOfBoundsException: 11\n    at D1_Exception.ExceptionDemo.method3(ExceptionDemo.java:32)\n    at D1_Exception.ExceptionDemo.main(ExceptionDemo.java:9)\n```\n第一行：在 main 线程，发生了 ArrayIndexOutOfBoundsException，原因是下标 11。\n第二行：出错的位置是 method3，第 32 行；第三行：是 main 第 9 行调用了 method3。\n很长的栈（比如网络异常）里大部分是 JDK 内部调用，要找自己项目包名下的那几行。\n代码里拿异常信息：e.getMessage() 只返回原因；e.toString() 返回\"全类名: 原因\"；e.printStackTrace() 打印完整的栈；e.getCause() 拿到包装的原始异常。",
+    "question": "程序报错时怎么读异常栈、快速定位问题？",
+    "keyPoints": [
+      "第一行：异常类型 + 原因（message）",
+      "下面每行是调用栈：类、方法、文件名和行号",
+      "越靠上越接近出错点，越靠下越接近 main",
+      "找第一个属于自己代码的那一行",
+      "有 Caused by 时，最底下的 Caused by 往往是根本原因"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "只看最后一行或者只看 JDK 内部的调用",
+        "right": "从上往下找第一行自己代码的位置"
+      },
+      {
+        "wrong": "catch 之后什么都不做（吞掉异常）",
+        "right": "至少记录日志或 e.printStackTrace()，否则问题无从排查"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "重新抛出包装后的异常时，怎么保留原始异常栈？",
+        "a": "把原始异常作为 cause 传进去：throw new ServiceException(\"msg\", e)，栈里会出现 Caused by"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码依次输出什么？（多行用空格隔开）",
+        "lang": "java",
+        "code": "Exception e = new IllegalStateException(\"bad state\");\nSystem.out.println(e.getMessage());\nSystem.out.println(e);",
+        "options": [
+          "bad state java.lang.IllegalStateException: bad state",
+          "bad state IllegalStateException",
+          "java.lang.IllegalStateException: bad state bad state",
+          "bad state bad state"
+        ],
+        "answer": 0,
+        "why": "getMessage() 只返回创建异常时传入的原因；直接打印异常对象调用的是 toString()，格式是\"全类名: message\"。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "异常栈的第一行会显示异常的类型和原因",
+        "correct": true,
+        "why": "比如 java.lang.ArrayIndexOutOfBoundsException: 11"
+      },
+      {
+        "statement": "异常栈里越往下的行越接近真正出错的位置",
+        "correct": false,
+        "why": "越往上越接近出错点，越往下越接近 main"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常处理-try-catch-与-catch-的顺序",
+    "category": "Java异常与IO/异常处理",
+    "title": "try-catch 与 catch 的顺序",
+    "concept": "可能抛异常的代码放在 try 里，catch 块处理 try 中抛出的异常；try 里一旦发生异常，执行立刻停止，跳到第一个匹配的 catch",
+    "oneLiner": "一个 try 可以跟多个 catch，但只有第一个匹配的会执行，所以子类异常的 catch 要写在父类前面，最通用的 catch (Exception e) 放最后，顺序写反会编译错误；Java 7 起支持 multi-catch：catch (A | B e)；try-catch 也可以嵌套。",
+    "explanation": "try-catch 可以放在任何你觉得会抛异常的方法里。\nIf an exception occurs in the try block, execution stops at that point, and control is immediately transferred to the matching catch block。\nOrder of catch is important：catch having super class types should be defined later than the catch clauses with subclass types；most general handling must come last。\nPPT 的例子：\n```java\ntry {\n    // risky code\n} catch (IOException e) {\n    System.out.println(\"File error: \" + e.getMessage());\n} catch (ArithmeticException e) {\n    System.out.println(\"Math error: \" + e.getMessage());\n} catch (Exception e) {\n    System.out.println(\"General error: \" + e.getMessage());\n}\n```\nmulti-catch：catch (Exception1 | Exception2 | Exception3 e) {...}，| 连接的异常之间不能有父子关系，e 隐式是 final。",
+    "question": "多个 catch 块的执行规则是什么？顺序有什么要求？",
+    "keyPoints": [
+      "try 中发生异常后，后面的语句不再执行，跳到匹配的 catch",
+      "多个 catch 只执行第一个匹配的",
+      "子类异常写在前面，父类异常写在后面，否则编译错误",
+      "Java 7 起支持 multi-catch，用 | 分隔，类型之间不能有继承关系",
+      "try-catch 可以嵌套"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "把 catch (Exception e) 写在最前面",
+        "right": "后面的 catch 永远到不了，编译器报 \"exception has already been caught\""
+      },
+      {
+        "wrong": "以为匹配的多个 catch 会依次都执行",
+        "right": "只执行第一个匹配的 catch"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "catch 一个 try 里根本不可能抛出的 checked 异常会怎样？",
+        "a": "编译错误（exception is never thrown in body of corresponding try statement）；但 catch Exception 或 unchecked 异常没有这个限制"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "try {\n    String s = null;\n    System.out.print(\"A \");\n    s.length();\n    System.out.print(\"B \");\n} catch (IllegalArgumentException e) {\n    System.out.print(\"C \");\n} catch (RuntimeException e) {\n    System.out.print(\"D \");\n} catch (Exception e) {\n    System.out.print(\"E \");\n}\nSystem.out.println(\"F\");",
+        "options": [
+          "A D F",
+          "A B F",
+          "A D E F",
+          "A C D E F"
+        ],
+        "answer": 0,
+        "why": "s.length() 抛出 NullPointerException，B 不会执行；NullPointerException 不是 IllegalArgumentException，跳过 C；它是 RuntimeException，匹配 D 后就不再看后面的 catch；最后继续执行 F。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "try {\n    int x = 10 / 0;\n} catch (Exception e) {\n    System.out.println(\"general\");\n} catch (ArithmeticException e) {\n    System.out.println(\"math\");\n}",
+        "options": [
+          "general",
+          "math",
+          "编译错误",
+          "general math"
+        ],
+        "answer": 2,
+        "why": "ArithmeticException 是 Exception 的子类，写在 catch (Exception e) 后面永远不会被执行到，编译器报错。父类异常必须放在后面。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "一个 try 后面的多个 catch 中，最多只有一个会执行",
+        "correct": true,
+        "why": "只执行第一个匹配的 catch"
+      },
+      {
+        "statement": "multi-catch 可以写 catch (IOException | Exception e)",
+        "correct": false,
+        "why": "用 | 连接的类型不能有父子关系，否则编译错误"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常处理-finally-与-try-with-resources",
+    "category": "Java异常与IO/异常处理",
+    "title": "finally 与 try-with-resources",
+    "concept": "finally 块写在 try 或 try-catch 之后，里面的代码无论是否发生异常、即使 try 里 return 了，都会执行；try-with-resources 是自动关闭资源的另一种写法",
+    "oneLiner": "finally 常用来释放资源（关文件、关数据库连接）；try 里 return 时会先执行 finally 再返回，返回值在 finally 执行前就已经确定，但如果 finally 自己 return，会覆盖 try 的返回值；只有 System.exit 或 JVM 崩溃时 finally 才不执行；Java 7 的 try-with-resources 会自动按相反顺序关闭实现了 AutoCloseable 的资源。",
+    "explanation": "It executes in all circumstances, whether: an exception occurs / no exception occurs / a method returns using return。\nTypical use cases：When we need to release some resources (open a file, start a database connection, etc.) in the try block；An alternative way is using try-with-resources statement。\n```java\ntry (BufferedReader br = new BufferedReader(new FileReader(\"in.txt\"))) {\n    System.out.println(br.readLine());\n}   // 自动调用 br.close()，即使抛了异常\n```\ntry-with-resources 的规则：资源要实现 AutoCloseable；多个资源用分号隔开，关闭顺序和打开顺序相反；try 块和 close 都抛异常时，close 的异常作为 suppressed 附在主异常上。\ntry { return x; } finally { x = 2; }：返回值在执行 finally 之前已经保存，修改基本类型变量不影响返回值。",
+    "question": "finally 一定会执行吗？try 里 return 了 finally 还执行吗？",
+    "keyPoints": [
+      "有异常、无异常、try 里 return，finally 都会执行",
+      "try 里 return 时，先保存返回值，再执行 finally，最后返回",
+      "finally 里写 return 会覆盖 try 的返回值（不推荐）",
+      "System.exit()、JVM 崩溃、线程被杀时 finally 不执行",
+      "释放资源优先用 try-with-resources，自动按相反顺序关闭"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "在 finally 里写 return",
+        "right": "会覆盖 try 的返回值，还会吞掉 try 里抛出的异常"
+      },
+      {
+        "wrong": "以为在 finally 里修改返回的局部变量会改变返回结果",
+        "right": "对基本类型无效，返回值在执行 finally 之前已经确定"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "try-with-resources 里的资源需要满足什么条件？",
+        "a": "实现 AutoCloseable（或 Closeable）接口；Java 9 起还可以直接写已经声明好的 effectively final 变量"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class T {\n    static int f() {\n        try {\n            return 1;\n        } finally {\n            System.out.print(\"finally \");\n        }\n    }\n}\nSystem.out.println(T.f());",
+        "options": [
+          "finally 1",
+          "1 finally",
+          "1",
+          "finally"
+        ],
+        "answer": 0,
+        "why": "try 里 return 1 时，先把返回值 1 保存下来，再执行 finally 打印 \"finally \"，最后才真正返回 1，由 println 打印。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class T {\n    static int f() {\n        int x = 1;\n        try {\n            return x;\n        } finally {\n            x = 2;\n        }\n    }\n    static int g() {\n        try {\n            return 1;\n        } finally {\n            return 2;\n        }\n    }\n}\nSystem.out.println(T.f() + \" \" + T.g());",
+        "options": [
+          "1 2",
+          "2 2",
+          "1 1",
+          "2 1"
+        ],
+        "answer": 0,
+        "why": "f 的返回值 1 在 finally 执行前已经确定，finally 里改 x 不影响结果；g 的 finally 里有 return 2，覆盖了 try 的 return 1。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Res implements AutoCloseable {\n    String name;\n    Res(String name) { this.name = name; System.out.print(\"open \" + name + \" \"); }\n    public void close() { System.out.print(\"close \" + name + \" \"); }\n}\ntry (Res a = new Res(\"A\"); Res b = new Res(\"B\")) {\n    System.out.print(\"body \");\n}\nSystem.out.println();",
+        "options": [
+          "open A open B body close B close A",
+          "open A open B body close A close B",
+          "open A open B body",
+          "open A body close A open B close B"
+        ],
+        "answer": 0,
+        "why": "try-with-resources 按声明顺序打开资源，执行完 try 块后按相反顺序自动调用 close()。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "try 块中执行了 return，finally 块仍然会执行",
+        "correct": true,
+        "why": "finally 在方法真正返回之前执行"
+      },
+      {
+        "statement": "调用 System.exit(0) 之后，finally 块仍然会执行",
+        "correct": false,
+        "why": "System.exit 直接终止 JVM，finally 不会执行"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常处理-throw-与-throws",
+    "category": "Java异常与IO/异常处理",
+    "title": "throw 与 throws",
+    "concept": "throw 在方法体里主动抛出一个异常对象；throws 写在方法签名上，声明这个方法可能抛出的异常类型，让调用者知道并处理",
+    "oneLiner": "throw 后面跟一个 Throwable 实例，比如 throw new IllegalArgumentException(\"age < 0\")；throws 后面跟一个或多个异常类型；调用声明了 checked 异常的方法时，调用者要么 try-catch，要么自己也 throws 往上传；一直传到 main 都没处理，就交给默认异常处理器打印栈并终止程序；不要 throw 或 catch Error。",
+    "explanation": "Throw：Used to explicitly throw an exception；\"Something is going wrong\"；Syntax: throw ThrowableInstance，例如 throw new InvalidCredentialException();\nThrows：Added to the method signature to let the caller know about what exception the called method (callee) can throw；It is the responsibility of the caller to either handle the exception (try...catch) or pass the exception (throws clause)；If all the methods in a program pass the exception to their callers (including main()), then ultimately the exception passes to the default exception handler。\nThrowing and catching errors are doable, but strongly discouraged。\n重写方法时，子类方法 throws 的 checked 异常不能比父类更宽（可以更少、更具体，或者不抛）。",
+    "question": "throw 和 throws 有什么区别？",
+    "keyPoints": [
+      "throw 用在方法体里，抛出一个异常对象",
+      "throws 用在方法签名上，声明可能抛出的异常类型",
+      "throw 一次只能抛一个，throws 可以声明多个",
+      "调用者对 checked 异常要么 try-catch，要么继续 throws",
+      "一直传到 main 也没处理，由默认处理器打印栈并终止程序"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "throw",
+        "throws"
+      ],
+      "rows": [
+        [
+          "位置",
+          "方法体内",
+          "方法签名上"
+        ],
+        [
+          "后面跟",
+          "一个异常对象",
+          "一个或多个异常类型"
+        ],
+        [
+          "作用",
+          "真正抛出异常",
+          "声明可能抛出的异常"
+        ],
+        [
+          "例子",
+          "throw new IOException(\"disk\")",
+          "void read() throws IOException"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "抛出 checked 异常却不在方法上声明 throws",
+        "right": "编译错误 unreported exception；unchecked 异常才可以不声明"
+      },
+      {
+        "wrong": "写成 throw IllegalArgumentException;",
+        "right": "throw 后面必须是异常对象：throw new IllegalArgumentException(...)"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "子类重写父类方法时，throws 有什么限制？",
+        "a": "不能抛出比父类方法更宽的 checked 异常，可以不抛、少抛或抛更具体的子类异常；unchecked 异常不受限制"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class T {\n    static void read() {\n        throw new IOException(\"disk\");\n    }\n}\nT.read();",
+        "options": [
+          "抛出 IOException",
+          "编译错误",
+          "什么也不输出",
+          "disk"
+        ],
+        "answer": 1,
+        "why": "IOException 是 checked 异常，read() 抛出了它却没有 try-catch，也没有在签名上 throws IOException，编译器报 unreported exception。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class T {\n    static void check(int age) {\n        if (age < 0) throw new IllegalArgumentException(\"age < 0\");\n        System.out.print(\"valid \");\n    }\n}\ntry {\n    T.check(5);\n    T.check(-1);\n} catch (IllegalArgumentException e) {\n    System.out.print(\"caught: \" + e.getMessage());\n}\nSystem.out.println();",
+        "options": [
+          "valid caught: age < 0",
+          "valid valid caught: age < 0",
+          "caught: age < 0",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "IllegalArgumentException 是 unchecked 异常，不用声明 throws；check(5) 正常打印 valid，check(-1) 用 throw 主动抛出异常，被外层 catch 捕获。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "throws 后面可以声明多个异常类型",
+        "correct": true,
+        "why": "比如 throws IOException, SQLException"
+      },
+      {
+        "statement": "throw 后面跟的是异常类型名",
+        "correct": false,
+        "why": "throw 后面必须是一个异常对象（实例）"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常处理-异常传播",
+    "category": "Java异常与IO/异常处理",
+    "title": "异常传播",
+    "concept": "异常传播（Exception Propagation）指一个方法没有处理的异常，会沿着调用栈传给调用它的方法，直到被处理或到达 main",
+    "oneLiner": "异常发生时，JVM 先在当前方法找匹配的 catch，找不到就把异常抛给调用方，一层层往上，直到某层处理了它；如果一直到 main 都没处理，JVM 终止程序并打印异常栈；checked 异常沿途每个方法都要用 throws 声明，unchecked 异常自动传播。",
+    "explanation": "What is Exception Propagation：how an exception is passed from one method to another in the call stack；If a method does not handle an exception, it is propagated to the calling method。\nHow does propagation work：\n1. JVM searches for a matching catch block in the current method\n2. If no catch block is found, the exception is propagated to the calling method\n3. This process continues until the exception is handled or reach the main() method\n4. If unhandled, the JVM terminates the program and prints the stack trace\nKey points：Checked exceptions must be explicitly declared using throws and handled by the caller；Unchecked exceptions are propagated automatically without requiring declaration。\n异常传播时，沿途每个方法中异常发生点之后的代码都不会执行（finally 除外）。",
+    "question": "什么是异常传播？异常没有被处理时会发生什么？",
+    "keyPoints": [
+      "当前方法没有处理的异常会传给调用方",
+      "沿调用栈一层层往上找匹配的 catch",
+      "被某一层处理后，程序从那层的 catch 之后继续执行",
+      "一直到 main 都没处理：JVM 终止程序并打印异常栈",
+      "checked 异常沿途要 throws 声明，unchecked 自动传播"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "以为异常被外层捕获后，内层方法里异常之后的代码还会执行",
+        "right": "异常点之后的代码都被跳过，只有 finally 会执行"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "多线程里，子线程抛出未处理的异常会传播到主线程吗？",
+        "a": "不会，异常只在当前线程的调用栈里传播；子线程会终止，可以用 UncaughtExceptionHandler 处理"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class T {\n    static void a() {\n        System.out.print(\"a1 \");\n        b();\n        System.out.print(\"a2 \");\n    }\n    static void b() {\n        System.out.print(\"b1 \");\n        int x = 1 / 0;\n        System.out.print(\"b2 \");\n    }\n}\ntry {\n    T.a();\n} catch (ArithmeticException e) {\n    System.out.print(\"caught \");\n}\nSystem.out.println(\"end\");",
+        "options": [
+          "a1 b1 caught end",
+          "a1 b1 b2 a2 caught end",
+          "a1 b1 a2 caught end",
+          "a1 b1 caught"
+        ],
+        "answer": 0,
+        "why": "b() 里除以 0 抛出 ArithmeticException，b 没有处理，传给 a；a 也没处理，传给调用处被 catch 捕获。b2、a2 都被跳过，catch 之后程序继续打印 end。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "未处理的异常会沿着调用栈传给调用方",
+        "correct": true,
+        "why": "直到被 catch 或到达 main"
+      },
+      {
+        "statement": "unchecked 异常必须用 throws 声明才能向上传播",
+        "correct": false,
+        "why": "unchecked 异常自动传播，不需要声明"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-异常处理-自定义异常",
+    "category": "Java异常与IO/异常处理",
+    "title": "自定义异常",
+    "concept": "自定义异常是继承 Exception 或 RuntimeException 的类，按需提供构造器，在需要时用 throw 抛出",
+    "oneLiner": "想让调用方必须处理就继承 Exception（checked），表示程序错误或不想强制处理就继承 RuntimeException（unchecked）；通常提供带 message 的构造器，以及带 message 和 cause 的构造器，方便保留原始异常；自定义异常让错误含义更清晰，比如 InsufficientFundsException、InvalidCredentialException。",
+    "explanation": "A class which is a subclass of Exception (or RuntimeException)；Provide constructor as needed；Use throw keyword to throw exception whenever you want to raise the exception；Can be either checked or unchecked exception：Extend Exception class if you want to create checked exception；Extend RuntimeException class if you want to create unchecked exception。\n```java\npublic class InsufficientFundsException extends Exception {\n    public InsufficientFundsException(String message) { super(message); }\n    public InsufficientFundsException(String message, Throwable cause) { super(message, cause); }\n}\n```\n命名习惯以 Exception 结尾；业务项目常定义一个基础异常（比如 BusinessException extends RuntimeException），再按错误码细分。",
+    "question": "怎么自定义异常？什么时候继承 Exception、什么时候继承 RuntimeException？",
+    "keyPoints": [
+      "继承 Exception 或 RuntimeException",
+      "提供需要的构造器，通常调用 super(message) / super(message, cause)",
+      "继承 Exception 是 checked，调用方必须处理",
+      "继承 RuntimeException 是 unchecked，不强制处理",
+      "用 throw new XxxException(...) 抛出，名字以 Exception 结尾"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "自定义异常不传 message，也不保留 cause",
+        "right": "至少传 message；包装别的异常时传入 cause，排查时才能看到根因"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "业务代码里自定义异常更常继承哪个？",
+        "a": "多数项目继承 RuntimeException，避免每层方法都写 throws，再由全局异常处理器统一转成错误响应"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class InsufficientFundsException extends Exception {\n    InsufficientFundsException(String msg) { super(msg); }\n}\nclass Account {\n    int balance = 50;\n    void withdraw(int amount) throws InsufficientFundsException {\n        if (amount > balance) throw new InsufficientFundsException(\"need \" + (amount - balance) + \" more\");\n        balance -= amount;\n    }\n}\nAccount acc = new Account();\ntry {\n    acc.withdraw(80);\n} catch (InsufficientFundsException e) {\n    System.out.println(e.getMessage() + \" \" + acc.balance);\n}",
+        "options": [
+          "need 30 more 50",
+          "need 30 more -30",
+          "need 80 more 50",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "取 80 超过余额 50，抛出自定义的 checked 异常，throw 之后的 balance -= amount 不会执行，所以余额仍是 50。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class InvalidAgeException extends Exception {\n    InvalidAgeException(String msg) { super(msg); }\n}\nclass T {\n    static void check(int age) {\n        if (age < 0) throw new InvalidAgeException(\"negative\");\n    }\n}\nT.check(-1);",
+        "options": [
+          "抛出 InvalidAgeException",
+          "编译错误",
+          "什么也不输出",
+          "negative"
+        ],
+        "answer": 1,
+        "why": "InvalidAgeException 继承 Exception，是 checked 异常；check 抛出它却没有声明 throws，编译报错。改成继承 RuntimeException 就可以不声明。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "继承 RuntimeException 的自定义异常不需要在方法上声明 throws",
+        "correct": true,
+        "why": "它是 unchecked 异常"
+      },
+      {
+        "statement": "自定义异常必须继承 Throwable 并实现所有方法",
+        "correct": false,
+        "why": "一般继承 Exception 或 RuntimeException，只需要提供构造器"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-optional与函数式接口-optional",
+    "category": "Java异常与IO/Optional与函数式接口",
+    "title": "Optional",
+    "concept": "Optional 是 Java 8 引入的容器对象，里面可能有一个非 null 的值，也可能为空，用来代替直接返回 null",
+    "oneLiner": "用 Optional.ofNullable(x) 把可能为 null 的值包起来，再用 isPresent / ifPresent / orElse / orElseGet / filter / map 处理\"有值\"和\"没值\"两种情况，减少到处判 null 和 NullPointerException；Optional.of(null) 会直接抛 NPE，空 Optional 调 get() 会抛 NoSuchElementException。",
+    "explanation": "PPT 的例子：\n```java\nString input = null;\nOptional<String> name = Optional.ofNullable(input);\nif (name.isPresent()) {\n    System.out.println(\"Name: \" + name.get());\n} else {\n    System.out.println(\"Name is missing\");\n}\nSystem.out.println(name.orElse(\"Default Name\"));\n```\n常用方法：empty()、of(T value)（值不能为 null）、ofNullable(T value)、ifPresent(Consumer)、isPresent()、orElse(T other)、orElseGet(Supplier)、filter(Predicate)；另外还有 map、flatMap、orElseThrow。\norElse(x) 的参数 x 无论有没有值都会先被计算；orElseGet(supplier) 只有为空时才调用 supplier，默认值计算代价大时用它。\nOptional 主要用作方法返回值，不推荐用作字段或方法参数，也不能被序列化。",
+    "question": "Optional 是什么？有哪些常用方法？orElse 和 orElseGet 有什么区别？",
+    "keyPoints": [
+      "Optional 是可能为空的容器，用来表示\"值可能不存在\"，代替返回 null",
+      "创建：of（不能为 null）、ofNullable、empty",
+      "判断与取值：isPresent、ifPresent、orElse、orElseGet、orElseThrow",
+      "转换：filter、map、flatMap",
+      "orElse 的默认值总会被计算，orElseGet 只在为空时才调用"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方法",
+        "有值时",
+        "没值时"
+      ],
+      "rows": [
+        [
+          "orElse(x)",
+          "返回值（x 也已经被计算了）",
+          "返回 x"
+        ],
+        [
+          "orElseGet(sup)",
+          "返回值，不调用 sup",
+          "调用 sup 并返回结果"
+        ],
+        [
+          "orElseThrow()",
+          "返回值",
+          "抛 NoSuchElementException"
+        ],
+        [
+          "get()",
+          "返回值",
+          "抛 NoSuchElementException"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 Optional.of(可能为 null 的值)",
+        "right": "可能为 null 时用 Optional.ofNullable，of(null) 会直接抛 NPE"
+      },
+      {
+        "wrong": "先 isPresent() 再 get()，写法和判 null 没区别",
+        "right": "优先用 orElse / ifPresent / map 这类链式写法"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Optional 适合用在哪里？",
+        "a": "主要用作可能查不到结果的方法的返回值，比如 findById；不建议用作字段、方法参数或集合元素"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "String input = null;\nOptional<String> name = Optional.ofNullable(input);\nSystem.out.println(name.isPresent() + \" \" + name.orElse(\"Default Name\"));",
+        "options": [
+          "false Default Name",
+          "true null",
+          "false null",
+          "抛出 NullPointerException"
+        ],
+        "answer": 0,
+        "why": "ofNullable(null) 得到空 Optional，isPresent() 为 false，orElse 返回默认值。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Optional<String> opt = Optional.of(\"java\");\nSystem.out.println(opt.filter(s -> s.length() > 5).orElse(\"short\") + \" \" + opt.map(String::toUpperCase).get());",
+        "options": [
+          "short JAVA",
+          "java JAVA",
+          "short java",
+          "抛出 NoSuchElementException"
+        ],
+        "answer": 0,
+        "why": "\"java\" 长度是 4，不满足 filter 条件，得到空 Optional，orElse 返回 \"short\"；map 把值转成大写 \"JAVA\"，get() 取出。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class T {\n    static String fallback() {\n        System.out.print(\"called \");\n        return \"x\";\n    }\n}\nOptional<String> opt = Optional.of(\"a\");\nSystem.out.print(opt.orElse(T.fallback()) + \" \");\nSystem.out.println(opt.orElseGet(T::fallback));",
+        "options": [
+          "called a a",
+          "a a",
+          "called a called a",
+          "x x"
+        ],
+        "answer": 0,
+        "why": "orElse 的参数在调用前就会被计算，所以即使有值也会执行 fallback() 打印 called；orElseGet 只有在为空时才调用 supplier，这里有值，不会调用。"
+      },
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Optional<String> opt = Optional.of(null);\nSystem.out.println(opt.isPresent());",
+        "options": [
+          "false",
+          "true",
+          "抛出 NullPointerException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "Optional.of 要求值不为 null，传入 null 直接抛 NullPointerException；可能为 null 时应该用 ofNullable。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Optional.ofNullable(null) 返回一个空的 Optional",
+        "correct": true,
+        "why": "不会抛异常"
+      },
+      {
+        "statement": "orElseGet 的 Supplier 无论 Optional 是否有值都会被调用",
+        "correct": false,
+        "why": "只有为空时才调用；总会被计算的是 orElse 的参数"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-optional与函数式接口-常用函数式接口与组合方法",
+    "category": "Java异常与IO/Optional与函数式接口",
+    "title": "常用函数式接口与组合方法",
+    "concept": "java.util.function 包里最常用的四个函数式接口是 Consumer、Supplier、Function、Predicate，它们还提供 andThen、compose、and、or、negate 等 default 方法用来组合",
+    "oneLiner": "Consumer<T> 接收一个参数不返回（accept，andThen 串联两个操作）；Supplier<T> 不接收参数、返回结果（get）；Function<T,R> 接收参数返回结果（apply，andThen 先自己后别人，compose 先别人后自己）；Predicate<T> 返回 boolean（test，and / or / negate 组合条件）。",
+    "explanation": "Consumer<T>：Represents an operation that accepts a single input argument and returns no result；void accept(T t)；Consumer<T> andThen(Consumer<? super T> after)。\nSupplier<T>：Represents a supplier of results；T get()。\nFunction<T,R>：Represents a function that accepts one argument and produces a result；R apply(T t)；f.andThen(g) 是先 f 后 g，f.compose(g) 是先 g 后 f。\nPredicate<T>：Represents a predicate (boolean-valued function) of one argument；boolean test(T t)；and、or、negate，以及静态方法 Predicate.not。\n这些组合方法都是接口里的 default 方法，这正是 Java 8 给接口加 default 方法的用处之一。\n基本类型版本：IntPredicate、IntFunction、ToIntFunction 等，避免装箱；两个参数的版本：BiFunction、BiConsumer、BiPredicate。",
+    "question": "Consumer、Supplier、Function、Predicate 分别是什么？怎么组合使用？",
+    "keyPoints": [
+      "Consumer：accept(T)，只消费不返回，andThen 串联",
+      "Supplier：get()，不接收参数，提供结果",
+      "Function：apply(T) 返回 R，andThen 先自己后别人，compose 相反",
+      "Predicate：test(T) 返回 boolean，and / or / negate 组合条件",
+      "组合方法都是 default 方法；还有 Bi 版本和基本类型版本"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "接口",
+        "方法",
+        "组合方法"
+      ],
+      "rows": [
+        [
+          "Consumer<T>",
+          "void accept(T t)",
+          "andThen"
+        ],
+        [
+          "Supplier<T>",
+          "T get()",
+          "无"
+        ],
+        [
+          "Function<T, R>",
+          "R apply(T t)",
+          "andThen、compose、identity"
+        ],
+        [
+          "Predicate<T>",
+          "boolean test(T t)",
+          "and、or、negate、not"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把 Function 的 andThen 和 compose 的顺序搞反",
+        "right": "f.andThen(g).apply(x) = g(f(x))；f.compose(g).apply(x) = f(g(x))"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Runnable 和 Supplier 有什么区别？",
+        "a": "Runnable 的 run() 既不接收参数也不返回值；Supplier 的 get() 不接收参数但有返回值"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Consumer<String> hello = s -> System.out.print(\"hello \" + s + \" \");\nConsumer<String> bye = s -> System.out.print(\"bye \" + s + \" \");\nhello.andThen(bye).accept(\"tom\");\nFunction<Integer, Integer> plus1 = x -> x + 1;\nFunction<Integer, Integer> times2 = x -> x * 2;\nSystem.out.println(plus1.andThen(times2).apply(3) + \" \" + plus1.compose(times2).apply(3));",
+        "options": [
+          "hello tom bye tom 8 7",
+          "hello tom bye tom 7 8",
+          "bye tom hello tom 8 7",
+          "hello tom 8 7"
+        ],
+        "answer": 0,
+        "why": "andThen 先执行 hello 再执行 bye；plus1.andThen(times2) 是 (3 + 1) * 2 = 8；plus1.compose(times2) 先乘再加：3 * 2 + 1 = 7。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Predicate<Integer> positive = x -> x > 0;\nPredicate<Integer> even = x -> x % 2 == 0;\nSystem.out.println(positive.and(even).test(4) + \" \" + positive.negate().test(4) + \" \" + positive.or(even).test(-2));",
+        "options": [
+          "true false true",
+          "true true true",
+          "false false true",
+          "true false false"
+        ],
+        "answer": 0,
+        "why": "4 是正数也是偶数，and 为 true；negate 取反，4 是正数所以为 false；-2 不是正数但是偶数，or 为 true。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Consumer 的 andThen 会先执行自己，再执行参数里的 Consumer",
+        "correct": true,
+        "why": "两个操作按顺序串联"
+      },
+      {
+        "statement": "Supplier<T> 的抽象方法需要一个参数",
+        "correct": false,
+        "why": "Supplier 的 get() 不接收任何参数"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-optional与函数式接口-接口的-default-static-方法与-foreach",
+    "category": "Java异常与IO/Optional与函数式接口",
+    "title": "接口的 default、static 方法与 forEach",
+    "concept": "Java 8 起接口里可以写有方法体的 default 方法和 static 方法；Iterable 接口借此新增了 default 方法 forEach(Consumer)",
+    "oneLiner": "default 方法让接口在不破坏已有实现类的前提下增加新方法，实现类可以直接用也可以重写；static 方法通过接口名调用，不会被实现类继承；所有集合都因此可以 list.forEach(...)，Map 也有 forEach((k, v) -> ...)。",
+    "explanation": "```java\ninterface Greeter {\n    String name();\n    default String greet() { return \"Hi \" + name(); }   // 实现类可以直接用或重写\n    static Greeter of(String n) { return () -> n; }       // 通过 Greeter.of(...) 调用\n}\n```\n为什么要加：Java 8 要给 Iterable 加 forEach、给 Collection 加 stream() 和 removeIf()，如果是普通抽象方法，所有已有的集合实现类（包括第三方库的）都会编译不过。\n冲突规则：类的方法优先于接口的 default 方法；两个接口有同名 default 方法时，实现类必须重写，可以用 接口名.super.方法() 选择。\nforEach：Iterable 的 default void forEach(Consumer<? super T> action)；Map 的 default void forEach(BiConsumer<? super K, ? super V> action)。",
+    "question": "Java 8 为什么允许接口有 default 方法？default 和 static 方法有什么区别？",
+    "keyPoints": [
+      "default 方法有方法体，实现类可以直接继承使用，也可以重写",
+      "目的：给已有接口加新方法（如 forEach、stream）而不破坏已有实现类",
+      "static 方法属于接口本身，只能通过接口名调用，不被实现类继承",
+      "两个接口的 default 方法冲突时，实现类必须重写",
+      "Iterable.forEach 和 Map.forEach 都是 default 方法"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "default 方法",
+        "static 方法"
+      ],
+      "rows": [
+        [
+          "调用方式",
+          "通过实现类的对象",
+          "通过接口名"
+        ],
+        [
+          "能否被重写",
+          "能",
+          "不能（不会被继承）"
+        ],
+        [
+          "用途",
+          "给接口增加默认行为",
+          "提供工具方法、工厂方法"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "通过实现类或实现类的对象调用接口的 static 方法",
+        "right": "接口的 static 方法只能用 接口名.方法() 调用"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "有了 default 方法，接口和抽象类还有什么区别？",
+        "a": "接口仍然不能有实例字段（状态）和构造器，一个类可以实现多个接口；抽象类可以有状态和构造器，但只能单继承"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "interface Greeter {\n    String name();\n    default String greet() { return \"Hi \" + name(); }\n    static Greeter of(String n) { return () -> n; }\n}\nSystem.out.println(Greeter.of(\"Ann\").greet());",
+        "options": [
+          "Hi Ann",
+          "Ann",
+          "Hi null",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "Greeter 只有一个抽象方法 name()，是函数式接口，static 方法 of 用 lambda 返回一个实现；greet() 是 default 方法，调用 name() 拼出 \"Hi Ann\"。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "List<String> list = List.of(\"a\", \"b\");\nlist.forEach(s -> System.out.print(s.toUpperCase()));\nMap<String, Integer> map = new TreeMap<>(Map.of(\"x\", 1, \"y\", 2));\nmap.forEach((k, v) -> System.out.print(\" \" + k + \"=\" + v));\nSystem.out.println();",
+        "options": [
+          "AB x=1 y=2",
+          "ab x=1 y=2",
+          "AB x y",
+          "AB 1 2"
+        ],
+        "answer": 0,
+        "why": "Iterable.forEach 对每个元素执行 Consumer；Map.forEach 接收 BiConsumer，同时拿到 key 和 value；TreeMap 按 key 排序，所以是 x 再 y。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Java 8 起 Iterable 接口有 default 方法 forEach",
+        "correct": true,
+        "why": "所以所有集合都可以直接调用 forEach"
+      },
+      {
+        "statement": "接口的 static 方法可以通过实现类的对象调用",
+        "correct": false,
+        "why": "只能通过接口名调用"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-stream-api-stream-的特点",
+    "category": "Java异常与IO/Stream API",
+    "title": "Stream 的特点",
+    "concept": "Stream 是 Java 8 引入的、用来处理对象集合的 API；一个 stream 是一个对象序列，支持把多个操作串成流水线（pipeline）得到结果",
+    "oneLiner": "Stream 不是数据结构、不存储数据，它从集合、数组或 I/O 通道获取数据，不修改原始数据源，而是通过\"中间操作 + 终止操作\"的流水线产生新结果；一个 stream 只能被消费一次。",
+    "explanation": "Main features：\nA Stream is not a data structure, meaning it does not store data。\nIt takes input from sources like Collections, Arrays, or I/O channels。\nStreams do not modify the original data source. They produce a new result based on a pipeline of operations。\nTwo types of operations：Intermediate（takes a stream, returns a stream，可以链式调用）；Terminal（marks the end of the stream, and return the actual result）。\nPPT 的例子：从人员列表里取出所有成年人的名字，转成大写并按字母排序：\n```java\nreturn input.stream()              // Stream<Person>\n    .filter(p -> p.age >= 18)      // 成年人\n    .map(p -> p.name)              // Stream<String>\n    .map(String::toUpperCase)\n    .sorted()                      // 自然顺序（字典序）\n    .collect(Collectors.toList()); // List<String>\n```\n创建 stream：collection.stream()、Arrays.stream(arr)、Stream.of(...)、IntStream.range(0, n)。\n注意和 java.io 的 InputStream / OutputStream 是两回事。",
+    "question": "什么是 Stream API？它有什么特点？",
+    "keyPoints": [
+      "Java 8 引入，用声明式的流水线处理集合数据",
+      "不存储数据，数据来自集合、数组、I/O",
+      "不修改数据源，产生新的结果",
+      "由中间操作（返回 stream，可链式）和终止操作（产生结果）组成",
+      "一个 stream 只能消费一次，再用会抛 IllegalStateException"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "以为 stream().sorted() 会把原来的 List 排好序",
+        "right": "Stream 不修改数据源，要用 collect 拿到新列表，或者直接 list.sort(...)"
+      },
+      {
+        "wrong": "把同一个 stream 变量用两次",
+        "right": "终止操作之后 stream 就关闭了，需要重新从数据源创建"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "sorted() 不传参数时按什么排序？",
+        "a": "按元素的自然顺序（Comparable），元素没有实现 Comparable 会在终止操作时抛 ClassCastException；可以传 Comparator 自定义"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Person {\n    String name;\n    int age;\n    Person(String name, int age) { this.name = name; this.age = age; }\n}\nList<Person> people = List.of(new Person(\"Carson\", 17), new Person(\"bob\", 22), new Person(\"Alice\", 24));\nList<String> result = people.stream()\n        .filter(p -> p.age >= 18)\n        .map(p -> p.name)\n        .map(String::toUpperCase)\n        .sorted()\n        .collect(Collectors.toList());\nSystem.out.println(result);",
+        "options": [
+          "[ALICE, BOB]",
+          "[BOB, ALICE]",
+          "[ALICE, BOB, CARSON]",
+          "[Alice, bob]"
+        ],
+        "answer": 0,
+        "why": "Carson 17 岁被 filter 过滤掉；剩下的名字转大写后是 BOB、ALICE，sorted() 按字典序排成 [ALICE, BOB]。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "List<Integer> nums = new ArrayList<>(List.of(3, 1, 2));\nList<Integer> sorted = nums.stream().sorted().collect(Collectors.toList());\nSystem.out.println(sorted + \" \" + nums);",
+        "options": [
+          "[1, 2, 3] [3, 1, 2]",
+          "[1, 2, 3] [1, 2, 3]",
+          "[3, 1, 2] [3, 1, 2]",
+          "[3, 1, 2] [1, 2, 3]"
+        ],
+        "answer": 0,
+        "why": "Stream 不修改原始数据源，sorted 的结果收集到了一个新的 List，nums 保持原样。"
+      },
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Stream<String> s = Stream.of(\"a\", \"b\");\ns.forEach(x -> { });\nSystem.out.println(s.count());",
+        "options": [
+          "2",
+          "0",
+          "抛出 IllegalStateException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "forEach 是终止操作，执行后 stream 就被消费掉了；再调用 count() 抛 IllegalStateException（stream has already been operated upon or closed）。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Stream 不会修改原始的数据源",
+        "correct": true,
+        "why": "它基于流水线产生新的结果"
+      },
+      {
+        "statement": "Stream 是一种存储数据的数据结构",
+        "correct": false,
+        "why": "Stream 不存储数据，数据来自集合、数组等数据源"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-stream-api-中间操作与终止操作",
+    "category": "Java异常与IO/Stream API",
+    "title": "中间操作与终止操作",
+    "concept": "中间操作（intermediate）返回一个新的 stream，可以链式调用，并且是惰性执行的；终止操作（terminal）返回非 stream 的结果或什么都不返回，调用它才会真正触发整条流水线执行",
+    "oneLiner": "map、filter、distinct、sorted、limit、skip 是中间操作，调用时只是记录下来，不会执行；forEach、toArray、collect、min、count、anyMatch 是终止操作，调用后才一次性执行；limit、anyMatch 这类短路操作找到结果就停，不会处理剩下的元素。",
+    "explanation": "Return value：Intermediate operations return a stream as a result and terminal operations return non-stream values like primitive or object or collection or may not return anything。\nIntermediate operations are lazily executed：When you call intermediate operations, they are actually not executed. They are just stored in the memory and executed when the terminal operation is called on the stream。\n例如 `Stream<Person> stream = input.stream().filter(p -> p.age >= 18);` 这一行执行完，filter 一个元素都还没检查。\n执行方式：元素是一个一个\"纵向\"流过整条流水线的，而不是先对所有元素做完 filter 再统一做 map。\n短路操作：limit、findFirst、anyMatch、allMatch、noneMatch 找到结果就停止。\n常用收集：Collectors.toList / toSet / joining / groupingBy / counting；归约：reduce(初始值, 累加函数)。",
+    "question": "Stream 的中间操作和终止操作有什么区别？什么是惰性求值？",
+    "keyPoints": [
+      "中间操作返回 stream，可以链式调用；终止操作返回结果或不返回",
+      "中间操作是惰性的，只有调用终止操作时才执行",
+      "中间操作：map、filter、distinct、sorted、limit、skip",
+      "终止操作：forEach、toArray、collect、min、count、anyMatch、reduce",
+      "元素逐个流过流水线，limit / anyMatch 等可以短路"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "中间操作",
+        "终止操作"
+      ],
+      "rows": [
+        [
+          "返回值",
+          "Stream",
+          "非 Stream 的结果或 void"
+        ],
+        [
+          "执行时机",
+          "惰性，不立即执行",
+          "立即执行，触发整条流水线"
+        ],
+        [
+          "能否链式调用",
+          "能",
+          "调用后流水线结束"
+        ],
+        [
+          "例子",
+          "map、filter、sorted、limit",
+          "collect、forEach、count、anyMatch"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "只写了 filter / map 没有终止操作，以为代码已经执行了",
+        "right": "没有终止操作，中间操作里的逻辑（包括打印）一次都不会运行"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "惰性求值有什么好处？",
+        "a": "可以合并多个操作一次遍历完成，配合 limit / findFirst 短路时能少处理很多元素，甚至能处理无限流（Stream.iterate）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "List<Integer> nums = List.of(1, 2, 3);\nStream<Integer> s = nums.stream().filter(x -> {\n    System.out.print(\"check\" + x + \" \");\n    return x > 1;\n});\nSystem.out.print(\"before \");\nSystem.out.println(s.count());",
+        "options": [
+          "before check1 check2 check3 2",
+          "check1 check2 check3 before 2",
+          "before 2",
+          "check1 check2 check3 2 before"
+        ],
+        "answer": 0,
+        "why": "filter 是中间操作，定义时不执行；先打印 before，直到调用终止操作 count() 才逐个检查元素，最后有 2 个元素大于 1。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Stream.of(5, 3, 8, 1, 9)\n        .filter(x -> x > 2)\n        .limit(2)\n        .forEach(x -> System.out.print(x + \" \"));\nSystem.out.println();",
+        "options": [
+          "5 3",
+          "5 3 8",
+          "3 5",
+          "8 9"
+        ],
+        "answer": 0,
+        "why": "按原顺序过滤出大于 2 的元素，limit(2) 只取前两个：5 和 3；取够之后流水线就停止，不再处理后面的元素。"
+      },
+      {
+        "prompt": "下面代码依次输出什么？（多行用空格隔开）",
+        "lang": "java",
+        "code": "List<Integer> nums = List.of(4, 2, 4, 7, 2, 9);\nSystem.out.println(nums.stream().distinct().skip(1).collect(Collectors.toList()));\nSystem.out.println(nums.stream().anyMatch(x -> x > 8) + \" \" + nums.stream().min(Integer::compare).get());\nList<String> words = List.of(\"apple\", \"bob\", \"avocado\");\nSystem.out.println(words.stream().map(String::length).reduce(0, Integer::sum) + \" \" + words.stream().filter(w -> w.startsWith(\"a\")).collect(Collectors.joining(\",\")));",
+        "options": [
+          "[2, 7, 9] true 2 15 apple,avocado",
+          "[4, 2, 7, 9] true 2 15 apple,avocado",
+          "[2, 7, 9] false 2 15 apple,avocado",
+          "[2, 7, 9] true 2 3 apple,avocado"
+        ],
+        "answer": 0,
+        "why": "distinct 按出现顺序去重得 [4, 2, 7, 9]，skip(1) 跳过第一个；9 大于 8，anyMatch 为 true；最小值是 2；长度 5 + 3 + 7 = 15；以 a 开头的单词用逗号连接。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "中间操作在调用终止操作之前不会执行",
+        "correct": true,
+        "why": "中间操作是惰性的"
+      },
+      {
+        "statement": "count() 是中间操作",
+        "correct": false,
+        "why": "count() 返回 long，是终止操作"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-java-io-i-o-流的概念-字节流与字符流",
+    "category": "Java异常与IO/Java IO",
+    "title": "I/O 流的概念：字节流与字符流",
+    "concept": "Java I/O 用\"流（stream）\"来读写数据：输入流连接数据源，输出流连接数据目的地；按处理单位分为字节流（8 bit）和字符流（16 bit，UTF-16）",
+    "oneLiner": "Input / Output 是相对 Java 程序说的，数据流进程序是输入，流出程序是输出；流没有下标，一般只能顺序读写；字节流是 InputStream / OutputStream，处理二进制数据（图片、音频、序列化对象）；字符流是 Reader / Writer，处理文本，涉及字符编码；InputStreamReader / OutputStreamWriter 是把字节流转成字符流的桥梁。",
+    "explanation": "Java I/O is used to process the input and produce the output (read and write data)；Input refers to data coming into the program (user, file, network)；Output refers to data going out from the program (file, console, network)；java.io 包含所有输入输出需要的类。\nStreams：A stream is a conceptually endless flow of data；\"Input\" Stream: connected to a data source；\"Output\" Stream: connected to a data destination；Stream does not have concept of an index, nor can we typically move forward and backward。\nDifferent types：1 byte = 8 bits，1 character = 16 bits（Java 使用 UTF-16）。\nByte Stream：xxxInputStream、xxxOutputStream，用于字节和二进制对象。\nCharacter Stream：使用 Unicode，可以国际化，用于字符和字符串；命名是 xxxReader、xxxWriter（课件写成 xxxInputStreamReader / xxxOutputStreamWriter，那其实是桥接类的名字）。\n同一段文字在不同编码下字节数不同：UTF-8 里英文 1 字节、常用汉字 3 字节，所以读写文本要用字符流并指定编码。\n注意：java.io 的 I/O 流和 Java 8 的 Stream API 是两个不同的概念。",
+    "question": "Java 的字节流和字符流有什么区别？分别什么时候用？",
+    "keyPoints": [
+      "I/O 相对于程序：输入流读数据源，输出流写目的地",
+      "字节流：InputStream / OutputStream，以 8 位字节为单位，处理二进制数据",
+      "字符流：Reader / Writer，以 16 位字符为单位，处理文本，涉及编码",
+      "InputStreamReader / OutputStreamWriter 把字节流转换成字符流，可以指定字符集",
+      "流没有下标，一般只能顺序读写"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "字节流",
+        "字符流"
+      ],
+      "rows": [
+        [
+          "父类",
+          "InputStream / OutputStream",
+          "Reader / Writer"
+        ],
+        [
+          "单位",
+          "byte（8 位）",
+          "char（16 位）"
+        ],
+        [
+          "适用",
+          "图片、音频、序列化对象等二进制数据",
+          "文本"
+        ],
+        [
+          "例子",
+          "FileInputStream、BufferedOutputStream",
+          "FileReader、BufferedWriter"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用字节流逐字节读中文文本，再转成 char",
+        "right": "一个汉字在 UTF-8 里占多个字节，会出现乱码，文本应该用字符流并指定编码"
+      },
+      {
+        "wrong": "把 java.io 的 InputStream 和 Java 8 的 Stream API 混为一谈",
+        "right": "前者读写字节，后者是处理集合数据的流水线"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "怎么把一个 InputStream 按 UTF-8 读成文本？",
+        "a": "new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))，再用 readLine() 逐行读"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "String s = \"a中\";\nSystem.out.println(s.length() + \" \" + s.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);",
+        "options": [
+          "2 4",
+          "2 2",
+          "4 4",
+          "2 3"
+        ],
+        "answer": 0,
+        "why": "length() 统计的是 char 个数，\"a\" 和 \"中\" 各一个，共 2；按 UTF-8 编码时 \"a\" 占 1 字节、\"中\" 占 3 字节，共 4 字节。这就是文本要用字符流并注意编码的原因。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "InputStream in = new ByteArrayInputStream(new byte[]{65, 66});\nSystem.out.println(in.read() + \" \" + in.read() + \" \" + in.read());",
+        "options": [
+          "65 66 -1",
+          "1 1 0",
+          "A B -1",
+          "65 66 0"
+        ],
+        "answer": 0,
+        "why": "read() 每次返回读到的那个字节的值（0~255），读到末尾返回 -1；返回\"实际读到的字节数\"的是 read(byte[] b)。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "字符流使用 Unicode，适合处理需要国际化的文本",
+        "correct": true,
+        "why": "Java 的 char 是 16 位 UTF-16"
+      },
+      {
+        "statement": "字节流适合读写文本，字符流适合读写图片",
+        "correct": false,
+        "why": "反过来：字节流处理二进制数据，字符流处理文本"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-java-io-inputstream-outputstream-与缓冲流",
+    "category": "Java异常与IO/Java IO",
+    "title": "InputStream、OutputStream 与缓冲流",
+    "concept": "InputStream 和 OutputStream 是字节输入、输出流的抽象父类；缓冲流（BufferedInputStream / BufferedOutputStream）包装基础流，用一块内存缓冲区减少直接读写次数",
+    "oneLiner": "InputStream 用 read() / read(byte[]) 读，到末尾返回 -1；OutputStream 用 write() / write(byte[]) 写，flush() 把缓冲区数据强制写到目的地，close() 关闭流（会先 flush）；缓冲流默认缓冲区 8 KB，写入的数据先放在缓冲区里，没 flush 或 close 之前目的地可能看不到。",
+    "explanation": "InputStream：an abstract class，子类 FileInputStream、FilterInputStream ...；read() 读一个字节；read(byte[] b) 读到字节数组里，返回实际读到的字节数；读到 EOF 返回 -1；close() 关闭输入流。\nOutputStream：an abstract class，子类 FileOutputStream、PrintStream ...；write() 写一个字节；write(byte[] b) 写出所有字节；close() 关闭；flush() 强制把缓冲的数据真正写到目的地（文件、网络）。\nBuffer：A buffer is a temporary memory area used to hold data while it's being moved between two places；It reduces the number of direct reads/writes, improving performance。\nBufferedInputStream、BufferedOutputStream：Wraps a basic InputStream / OutputStream to improve efficiency；The default chunk size is 8 KB (8192 bytes)。\n```java\nBufferedInputStream bis = new BufferedInputStream(new FileInputStream(\"in.txt\"));\nBufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(\"out.txt\"));\n```\n一层包一层的写法是装饰器模式；字符流对应的是 BufferedReader（有 readLine()）和 BufferedWriter（有 newLine()）。",
+    "question": "缓冲流为什么能提高效率？flush() 有什么作用？",
+    "keyPoints": [
+      "InputStream / OutputStream 是字节流的抽象父类",
+      "缓冲流包装基础流，数据先进内存缓冲区，攒够了再一次性读写",
+      "减少了直接访问磁盘或网络的次数，默认缓冲区 8 KB",
+      "flush() 把缓冲区里的数据强制写到目的地；close() 会先 flush 再关闭",
+      "这种包装方式是装饰器模式"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "用缓冲输出流写完数据后既不 flush 也不 close",
+        "right": "数据可能还留在缓冲区，文件里是空的或不完整；用 try-with-resources 自动关闭"
+      },
+      {
+        "wrong": "把 read() 的返回值当成读到的字节数",
+        "right": "read() 返回的是那个字节本身，read(byte[]) 才返回读到的字节数"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么 read() 返回 int 而不是 byte？",
+        "a": "要用 0~255 表示读到的字节，再额外用 -1 表示流结束，byte 的范围放不下这 257 种情况"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "StringWriter sw = new StringWriter();\nBufferedWriter bw = new BufferedWriter(sw);\nbw.write(\"hello\");\nSystem.out.print(\"[\" + sw + \"] \");\nbw.flush();\nSystem.out.println(\"[\" + sw + \"]\");",
+        "options": [
+          "[] [hello]",
+          "[hello] [hello]",
+          "[] []",
+          "[hello] []"
+        ],
+        "answer": 0,
+        "why": "BufferedWriter 先把 \"hello\" 放在自己的缓冲区里，底层的 StringWriter 还是空的；调用 flush() 之后数据才真正写到 StringWriter。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "InputStream in = new ByteArrayInputStream(\"abcde\".getBytes());\nbyte[] buf = new byte[3];\nint n1 = in.read(buf);\nint n2 = in.read(buf);\nint n3 = in.read(buf);\nSystem.out.println(n1 + \" \" + n2 + \" \" + n3);",
+        "options": [
+          "3 2 -1",
+          "3 3 3",
+          "3 2 0",
+          "5 0 -1"
+        ],
+        "answer": 0,
+        "why": "read(byte[]) 返回实际读到的字节数：第一次读满 3 个，第二次只剩 2 个，第三次已经到末尾返回 -1。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "BufferedInputStream 的默认缓冲区大小是 8192 字节",
+        "correct": true,
+        "why": "也就是 8 KB"
+      },
+      {
+        "statement": "调用 close() 关闭缓冲输出流之前必须手动调用 flush()，否则数据一定丢失",
+        "correct": false,
+        "why": "close() 会先 flush 再关闭"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-java-io-file-i-o-与-java-io-file",
+    "category": "Java异常与IO/Java IO",
+    "title": "File I/O 与 java.io.File",
+    "concept": "FileInputStream / FileOutputStream 读写文件的字节，FileReader / FileWriter 读写文件的字符；java.io.File 表示文件系统里的一个文件或目录路径",
+    "oneLiner": "FileWriter(fileName) 会创建文件或覆盖原有内容，FileWriter(fileName, true) 追加到末尾；File 对象只是一个路径，new File(\"a.txt\") 不会在磁盘上创建文件，可以用 exists、isFile、isDirectory、getName、getPath、getAbsolutePath、getParent、length 查询信息，用 createNewFile、mkdir、delete、renameTo 操作文件。",
+    "explanation": "File I/O：FileInputStream、FileOutputStream；FileReader、FileWriter。\nFileReader(String filePath)：从给定路径读文件；FileReader(File fileObj)：从 File 对象读。\nFileWriter(String fileName)：Creates or overwrites the file with new content；FileWriter(String fileName, boolean append)：append 为 true 写到末尾，为 false 覆盖。\njava.io.File：represents a file or directory (folder) path in the filesystem，提供方法：创建文件或目录、检查是否存在、获取元数据（名字、大小、路径）、删除或重命名、遍历目录。\nAPIs：File(String pathname)、exists()、isFile()、isDirectory()；课件例子里还有 getName()、getPath()、getAbsolutePath()、getParent()、canWrite()、canRead()、length()。\nJava 7 起还有更现代的 java.nio.file（Path、Files.readAllLines、Files.write）。",
+    "question": "FileWriter 怎么追加写入？java.io.File 能做什么？",
+    "keyPoints": [
+      "FileInputStream / FileOutputStream 处理字节，FileReader / FileWriter 处理字符",
+      "FileWriter(name) 默认覆盖，FileWriter(name, true) 追加",
+      "File 表示文件或目录的路径，创建 File 对象不会创建文件",
+      "查询：exists、isFile、isDirectory、getName、getPath、getAbsolutePath、length",
+      "操作：createNewFile、mkdir / mkdirs、delete、renameTo、listFiles"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "以为 new File(\"a.txt\") 会在磁盘上创建文件",
+        "right": "只是路径对象，要 createNewFile() 或用输出流写入才会创建"
+      },
+      {
+        "wrong": "用 new FileWriter(name) 想往已有文件后面追加内容",
+        "right": "默认是覆盖，追加要传 append = true"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "读写文件后不关闭流会怎样？",
+        "a": "文件句柄一直被占用，可能导致数据没写完、文件被锁、句柄耗尽；应该用 try-with-resources"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "File f = new File(\"no_such_dir/readme.txt\");\nSystem.out.println(f.getName() + \" \" + f.exists() + \" \" + f.isFile());",
+        "options": [
+          "readme.txt false false",
+          "readme.txt true true",
+          "no_such_dir/readme.txt false false",
+          "抛出 FileNotFoundException"
+        ],
+        "answer": 0,
+        "why": "创建 File 对象只是表示一个路径，不会检查也不会创建文件；getName() 返回最后一段文件名，文件不存在所以 exists() 和 isFile() 都是 false。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "File f = File.createTempFile(\"demo\", \".txt\");\ntry (FileWriter w = new FileWriter(f)) { w.write(\"A\"); }\ntry (FileWriter w = new FileWriter(f, true)) { w.write(\"B\"); }\ntry (FileWriter w = new FileWriter(f.getPath(), false)) { w.write(\"C\"); }\ntry (FileWriter w = new FileWriter(f, true)) { w.write(\"D\"); }\nSystem.out.println(new String(java.nio.file.Files.readAllBytes(f.toPath())));\nf.delete();",
+        "options": [
+          "CD",
+          "ABCD",
+          "D",
+          "ABD"
+        ],
+        "answer": 0,
+        "why": "第一次写入 A；append = true 追加得到 AB；append = false 覆盖成 C；再追加得到 CD。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "FileWriter 的 append 参数为 true 时，数据写到文件末尾",
+        "correct": true,
+        "why": "为 false 时覆盖原内容"
+      },
+      {
+        "statement": "创建 File 对象时，如果文件不存在会自动创建",
+        "correct": false,
+        "why": "File 只是路径对象，不会创建文件"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-序列化与solid-序列化与反序列化",
+    "category": "Java异常与IO/序列化与SOLID",
+    "title": "序列化与反序列化",
+    "concept": "序列化（Serialization）是 Java 内置的机制，把对象转换成包含类型和字段数据的字节；反序列化（Deserialization）是把这些字节还原成 Java 对象",
+    "oneLiner": "类要实现 Serializable 才能用 ObjectOutputStream.writeObject 序列化、ObjectInputStream.readObject 反序列化，否则抛 NotSerializableException；readObject 返回 Object，需要自己强转；反序列化时不会调用实现了 Serializable 的类的构造器，只会调用继承链上没有实现 Serializable 的父类的无参构造器；序列化后的字节可以保存或通过网络发送，并且平台无关。",
+    "explanation": "Serialization：convert java object to bytes, including the type and data fields information。\nOnce serialized, object will be stored in somewhere as byte. These data can be read by other input streams and convert back into Java Objects. This process is called deserialization。\nWhy is this important：allows an object's state to be converted into a byte stream so it can be saved or sent over a network；platform independent；以后会学 JSON，它是另一种常见的、语言无关的数据交换格式。\nDeserialization Flow：FileInputStream → ObjectInputStream → Java objects；The deserialized objects are returned as type Object；It's the developer's responsibility to cast them to the correct class。\nProcess：the JVM loads the class and restores the object's state from the byte stream；Constructors are not called for classes that implement Serializable；Constructors are called only for non-serializable superclass(es) in the object's hierarchy。\n所以字段的初始化语句（比如 int cache = 42）在反序列化时也不会执行。",
+    "question": "什么是序列化和反序列化？反序列化时会调用构造器吗？",
+    "keyPoints": [
+      "序列化：对象 → 字节（包括类型和字段数据）；反序列化：字节 → 对象",
+      "类必须实现 Serializable，否则抛 NotSerializableException",
+      "用 ObjectOutputStream.writeObject / ObjectInputStream.readObject，读出来是 Object 需要强转",
+      "反序列化不调用 Serializable 类的构造器，只调用不可序列化父类的无参构造器",
+      "用途：保存到文件、网络传输；平台无关"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "以为反序列化时会执行类的构造器和字段初始化",
+        "right": "对象状态直接从字节流恢复，构造器不会被调用"
+      },
+      {
+        "wrong": "只让外层类实现 Serializable，字段里引用的对象没实现",
+        "right": "被引用的对象也要能序列化，否则同样抛 NotSerializableException（或者把字段标成 transient）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Java 原生序列化有什么缺点？现在常用什么替代？",
+        "a": "只能在 Java 之间使用、体积大、有反序列化安全漏洞；跨语言的数据交换常用 JSON、Protobuf"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class User implements Serializable {\n    String username;\n    transient String password;\n    int age;\n    User(String u, String p, int a) { username = u; password = p; age = a; System.out.print(\"ctor \"); }\n}\nByteArrayOutputStream bos = new ByteArrayOutputStream();\ntry (ObjectOutputStream out = new ObjectOutputStream(bos)) {\n    out.writeObject(new User(\"tom\", \"secret\", 20));\n}\ntry (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()))) {\n    User u = (User) in.readObject();\n    System.out.println(u.username + \" \" + u.password + \" \" + u.age);\n}",
+        "options": [
+          "ctor tom null 20",
+          "ctor ctor tom null 20",
+          "ctor tom secret 20",
+          "ctor ctor tom secret 20"
+        ],
+        "answer": 0,
+        "why": "构造器只在 new User 时执行一次，反序列化不会调用它；password 是 transient，没有被序列化，恢复后是 null；username 和 age 正常恢复。"
+      },
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "class Point {\n    int x = 1;\n}\nObjectOutputStream out = new ObjectOutputStream(new ByteArrayOutputStream());\nout.writeObject(new Point());\nSystem.out.println(\"done\");",
+        "options": [
+          "done",
+          "编译错误",
+          "抛出 NotSerializableException",
+          "抛出 ClassCastException"
+        ],
+        "answer": 2,
+        "why": "Point 没有实现 Serializable，writeObject 在运行时抛出 java.io.NotSerializableException；编译器不会检查这一点。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "readObject() 的返回类型是 Object，需要强转成具体类型",
+        "correct": true,
+        "why": "由开发者负责转换成正确的类"
+      },
+      {
+        "statement": "反序列化时会调用实现了 Serializable 的类的构造器",
+        "correct": false,
+        "why": "只会调用不可序列化父类的无参构造器"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-序列化与solid-serializable-transient-与-serialversionuid",
+    "category": "Java异常与IO/序列化与SOLID",
+    "title": "Serializable、transient 与 serialVersionUID",
+    "concept": "Serializable 是一个标记接口（marker interface），没有任何方法，用来告诉 JVM 这个类可以被序列化；transient 用来排除不想序列化的字段；serialVersionUID 是序列化时的版本号",
+    "oneLiner": "标记接口没有方法或常量，只提供运行时的类型信息（还有 Cloneable）；transient 字段不会被序列化，反序列化后是默认值（null、0、false），常用于密码等敏感数据；static 字段属于类，也不会被序列化；反序列化时字节流里的 serialVersionUID 和当前类不一致会抛 InvalidClassException，所以建议显式声明。",
+    "explanation": "java.io.Serializable is a marker interface：has no methods or constants inside it. It provides run-time type information about objects, so the compiler and JVM have additional information about the object；e.g. Cloneable, Serializable。\nClasses that do not implement this interface will not have any of their state serialized or deserialized。\ntransient：What if we don't want to serialize certain fields？transient keyword can be used to exclude specific fields from serialization。\n```java\npublic class User implements Serializable {\n    private String username;\n    private transient String password;   // This will NOT be serialized\n}\n```\nTransient variables are given null or default values (0, false, null) after deserialization。\nserialVersionUID：a special version control identifier；When an object is deserialized, Java checks if the serialVersionUID of the serialized class (in the file) matches the current class；If they don't match, you get an InvalidClassException。\n`private static final long serialVersionUID = 1L;`\n不显式声明时编译器会根据类结构自动计算，类一改就变，旧数据就无法反序列化。课件提到这个机制不常用：一般不修改已有类的结构（违反开闭原则），而是新建类、新建表。",
+    "question": "transient 关键字有什么用？serialVersionUID 是干什么的？",
+    "keyPoints": [
+      "Serializable 是标记接口，没有方法，只表示\"可以序列化\"",
+      "transient 字段不参与序列化，反序列化后是默认值",
+      "static 字段属于类，也不会被序列化",
+      "serialVersionUID 用来校验版本，不一致抛 InvalidClassException",
+      "建议显式声明 serialVersionUID，避免类结构变化导致旧数据无法读取"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "字段类型",
+        "是否被序列化",
+        "反序列化后的值"
+      ],
+      "rows": [
+        [
+          "普通实例字段",
+          "是",
+          "原来的值"
+        ],
+        [
+          "transient 字段",
+          "否",
+          "默认值（null / 0 / false）"
+        ],
+        [
+          "static 字段",
+          "否",
+          "当前类里的静态值"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 transient 字段反序列化后会恢复成声明时的初始值",
+        "right": "字段初始化语句不会执行，得到的是类型默认值"
+      },
+      {
+        "wrong": "不声明 serialVersionUID，之后给类加了字段",
+        "right": "自动生成的 UID 变了，旧的序列化数据反序列化时抛 InvalidClassException"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "除了 Serializable，还有哪些标记接口？",
+        "a": "Cloneable（允许调用 Object.clone()）、RandomAccess（表示支持快速随机访问，比如 ArrayList）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Config implements Serializable {\n    static int version = 1;\n    transient int cache = 42;\n    String name = \"app\";\n}\nByteArrayOutputStream bos = new ByteArrayOutputStream();\nObjectOutputStream out = new ObjectOutputStream(bos);\nout.writeObject(new Config());\nout.flush();\nConfig.version = 2;\nObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));\nConfig c = (Config) in.readObject();\nSystem.out.println(c.name + \" \" + c.cache + \" \" + Config.version);",
+        "options": [
+          "app 0 2",
+          "app 42 1",
+          "app 42 2",
+          "app 0 1"
+        ],
+        "answer": 0,
+        "why": "name 正常恢复；cache 是 transient，没有被序列化，而且反序列化不执行字段初始化，所以是 0；version 是 static，不属于对象，读的是类当前的值 2。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Serializable 接口里没有任何方法",
+        "correct": true,
+        "why": "它是标记接口"
+      },
+      {
+        "statement": "transient 字段反序列化后会恢复成字段声明时的初始值",
+        "correct": false,
+        "why": "得到的是类型默认值，初始化语句不会执行"
+      }
+    ]
+  },
+  {
+    "id": "java异常与io-序列化与solid-solid-原则",
+    "category": "Java异常与IO/序列化与SOLID",
+    "title": "SOLID 原则",
+    "concept": "SOLID 是五条面向对象设计原则，让代码更易维护、易扩展、易测试、易理解",
+    "oneLiner": "S 单一职责（一个类只有一个变化的理由）、O 开闭原则（对扩展开放、对修改关闭）、L 里氏替换（子类能替换父类而不破坏程序）、I 接口隔离（不强迫类实现用不到的方法）、D 依赖倒置（依赖抽象而不是具体实现）。",
+    "explanation": "Design principles that help make code more maintainable, extensible, testable, and easier to understand。\nSingle Responsibility Principle：一个类只负责一件事。\nOpen/Closed Principle：Open for extension, closed for modification；新需求通过新增类实现，而不是改已有类（课件在 serialVersionUID 那页用它说明为什么不改已有类的结构）。\nLiskov Substitution Principle：subclass should be able to replace its parent class without breaking the program；比如重写方法时不能缩小访问权限、不能抛出更宽的异常。\nInterface Segregation Principle：a class shouldn't be forced to implement methods they don't use；把大接口拆成多个小接口。\nDependency Inversion Principle：depend on abstractions, not concrete implementations；比如变量类型写 List 而不是 ArrayList，Spring 的依赖注入就是这个思想。\n（课件标题写作 \"SOLID principal\"，正确拼写是 principle。）",
+    "question": "说一下 SOLID 原则",
+    "keyPoints": [
+      "S 单一职责：一个类只负责一件事",
+      "O 开闭原则：对扩展开放，对修改关闭",
+      "L 里氏替换：子类可以替换父类而不破坏程序",
+      "I 接口隔离：不强迫类实现它不需要的方法，拆分大接口",
+      "D 依赖倒置：依赖抽象而不是具体实现"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "原则",
+        "一句话",
+        "例子"
+      ],
+      "rows": [
+        [
+          "S",
+          "一个类一个职责",
+          "把\"计算订单\"和\"发送邮件\"拆成两个类"
+        ],
+        [
+          "O",
+          "加功能靠扩展不靠修改",
+          "新支付方式新增一个实现类"
+        ],
+        [
+          "L",
+          "子类能替换父类",
+          "重写方法不缩小权限、不改变约定"
+        ],
+        [
+          "I",
+          "接口要小而专",
+          "函数式接口只有一个抽象方法"
+        ],
+        [
+          "D",
+          "依赖抽象",
+          "List<String> list = new ArrayList<>()"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把依赖倒置（DIP）和依赖注入（DI）当成同一个东西",
+        "right": "DIP 是设计原则（依赖抽象），DI 是实现它的一种手段（由外部把依赖传进来）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "正方形继承长方形为什么违反里氏替换原则？",
+        "a": "长方形可以分别设置宽和高，正方形设置宽时会同时改变高；用正方形替换长方形后，\"设置宽高后面积等于宽乘高\"的预期被破坏"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "开闭原则要求软件对扩展开放、对修改关闭",
+        "correct": true,
+        "why": "新需求通过新增代码实现，而不是修改已有代码"
+      },
+      {
+        "statement": "接口隔离原则要求把所有方法都放进一个大接口，方便统一实现",
+        "correct": false,
+        "why": "恰恰相反，应该拆成小而专的接口"
+      }
+    ]
+  },
+  {
     "id": "java集合-collection与list-collection-体系结构",
     "category": "Java集合/Collection与List",
     "title": "Collection 体系结构",

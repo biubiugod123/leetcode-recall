@@ -39,14 +39,14 @@ for (const item of items) {
     if (q.lang !== 'java') return;
     n++;
     const { top, body } = splitSource(q.code);
-    const src = `import java.util.*;\nimport java.util.function.*;\npublic class Q {\n  public static void main(String[] args) throws Exception {\n${body}\n  }\n}\n${top}\n`;
+    const src = `import java.util.*;\nimport java.util.function.*;\nimport java.util.stream.*;\nimport java.io.*;\npublic class Q {\n  public static void main(String[] args) throws Exception {\n${body}\n  }\n}\n${top}\n`;
     const file = path.join(work, 'Q.java');
     fs.writeFileSync(file, src);
     const r = spawnSync(JAVA, ['-Duser.language=en', '-Dstdout.encoding=UTF-8', file], { encoding: 'utf-8' });
     const out = norm(r.stdout || '');
     const err = r.stderr || '';
     const compileErr = /error: compilation failed/.test(err);
-    const exc = (err.match(/Exception in thread "main" java\.(?:lang|util)\.(\w+)/) || [])[1];
+    const exc = (err.match(/Exception in thread "main" java\.(?:lang|util|io)\.(\w+)/) || [])[1];
     const expected = q.options[q.answer];
 
     let ok, actual;

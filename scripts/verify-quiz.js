@@ -5,6 +5,9 @@
  *
  * Class / interface / enum declarations (and annotations right above them) that start at column 0
  * become top-level classes (so private access works like separate files); the remaining lines go into main().
+ *
+ * ```sql 代码题 run in Python's built-in sqlite3 (PYTHON=/path/to/python): statements are split on ";",
+ * the rows of the last query are printed as "col col | col col"; special answers: 执行报错, 查询结果为空.
  */
 const fs = require('fs');
 const os = require('os');
@@ -12,6 +15,22 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const JAVA = process.env.JAVA || 'java';
+const PYTHON = process.env.PYTHON || 'python';
+const SQL_RUNNER = `
+import sqlite3, sys
+con = sqlite3.connect(':memory:')
+con.execute('PRAGMA foreign_keys = ON')
+rows = None
+try:
+    for stmt in [s.strip() for s in sys.stdin.read().split(';') if s.strip()]:
+        cur = con.execute(stmt)
+        if cur.description is not None:
+            rows = cur.fetchall()
+except Exception as e:
+    print('SQL_ERROR: ' + str(e))
+    sys.exit(0)
+print(' | '.join(' '.join('NULL' if v is None else str(v) for v in r) for r in (rows or [])))
+`;
 const items = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'dist', 'bagugu.json'), 'utf-8'));
 const only = process.argv[2];   // optional: category prefix, e.g. "Java OOP"
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'quiz-'));
@@ -36,6 +55,19 @@ let n = 0, fail = 0;
 for (const item of items) {
   if (only && !item.category.startsWith(only)) continue;
   (item.codeQuiz || []).forEach((q, qi) => {
+    if (q.lang === 'sql') {
+      n++;
+      const r = spawnSync(PYTHON, ['-c', SQL_RUNNER], { input: q.code, encoding: 'utf-8' });
+      const raw = (r.stdout || '').trim();
+      const sqlErr = raw.startsWith('SQL_ERROR:');
+      const out = sqlErr ? '' : norm(raw);
+      const expected = q.options[q.answer];
+      const ok = expected === '执行报错' ? sqlErr : !sqlErr && out === (expected === '查询结果为空' ? '' : norm(expected));
+      const clash = q.options.filter((o, i) => i !== q.answer && !sqlErr && norm(o) === out);
+      if (!ok || clash.length) fail++;
+      console.log(`${ok && !clash.length ? 'PASS' : 'FAIL'} ${item.title} #${qi + 1} | expected: ${expected} | actual: ${sqlErr ? raw : out}${clash.length ? ' | CLASH ' + clash : ''}`);
+      return;
+    }
     if (q.lang !== 'java') return;
     n++;
     const { top, body } = splitSource(q.code);

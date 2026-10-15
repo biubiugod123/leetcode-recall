@@ -4969,6 +4969,1486 @@
     ]
   },
   {
+    "id": "java多线程-jvm与线程基础-java-程序的执行与-jvm-jre-jdk",
+    "category": "Java多线程/JVM与线程基础",
+    "title": "Java 程序的执行与 JVM、JRE、JDK",
+    "concept": "Java 源代码先被编译成平台无关的字节码，再由 JVM 解释执行或 JIT 编译成本地机器码；JDK 是开发工具包，JRE 是运行环境，JVM 是执行字节码的虚拟机",
+    "oneLiner": ".java 经 javac 编译成 .class 字节码，字节码能在任何平台的 JVM 上运行（Write once, run anywhere）；JDK = JRE + 编译器、调试器等开发工具，JRE = JVM + 类库；只运行程序装 JRE 就够，开发要装 JDK；线程和进程也由 JVM 管理。",
+    "explanation": "执行流程：写 Java 源代码（.java）→ Java Compiler 编译成字节码（.class）→ 字节码平台无关，可以在任何 JVM 上运行 → JVM 把字节码翻译成本机的机器码：逐行解释（interprets line-by-line）或 JIT（just-in-time）编译。\n同一个 HelloWorld.class 可以在 Windows JVM、macOS JVM、Android 的 ART / Dalvik 上运行。\nJVM：抽象概念、平台无关、一台\"计算机器\"、运行 bytecode。\nJRE：JVM 的实现 + 类库（net、I/O 等）+ 其他文件。\nJDK：给开发者的工具包 = JRE + 开发工具（编译器、调试器等）。\nJIT 会把热点代码编译成机器码缓存起来，所以 Java 程序预热后会越跑越快。JDK 11 起官方不再单独发布 JRE。",
+    "question": "JDK、JRE、JVM 有什么区别？Java 为什么能跨平台？",
+    "keyPoints": [
+      "JVM 执行字节码，是平台无关的虚拟机",
+      "JRE = JVM + 类库，用来运行 Java 程序",
+      "JDK = JRE + 开发工具（javac、调试器等），用来开发",
+      "源代码编译成平台无关的字节码，各平台用自己的 JVM 运行",
+      "JVM 通过解释执行或 JIT 编译把字节码变成机器码"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "JVM",
+        "JRE",
+        "JDK"
+      ],
+      "rows": [
+        [
+          "是什么",
+          "运行字节码的虚拟机",
+          "运行环境",
+          "开发工具包"
+        ],
+        [
+          "组成",
+          "—",
+          "JVM + 类库",
+          "JRE + 编译器、调试器等"
+        ],
+        [
+          "谁需要",
+          "—",
+          "只运行 Java 程序的人",
+          "Java 开发者"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Java 跨平台是因为 JVM 本身跨平台",
+        "right": "跨平台的是字节码；JVM 恰恰是每个平台各自实现的"
+      },
+      {
+        "wrong": "认为 Java 只是解释执行的语言",
+        "right": "JVM 会用 JIT 把热点代码编译成本地机器码"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "JIT 编译和解释执行有什么区别？",
+        "a": "解释执行逐行把字节码翻译成机器码，启动快但执行慢；JIT 把频繁执行的热点代码整体编译成机器码并缓存，执行快但需要预热"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "JDK 包含 JRE，JRE 包含 JVM",
+        "correct": true,
+        "why": "JDK = JRE + 开发工具，JRE = JVM + 类库"
+      },
+      {
+        "statement": ".class 字节码文件只能在编译它的那个操作系统上运行",
+        "correct": false,
+        "why": "字节码平台无关，任何平台的 JVM 都能运行"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-jvm与线程基础-进程与线程",
+    "category": "Java多线程/JVM与线程基础",
+    "title": "进程与线程",
+    "concept": "进程是运行中的程序，拥有独立的内存空间；线程是进程中最小的执行单元，是轻量级的子进程，同一进程的多个线程共享进程的内存",
+    "oneLiner": "一个进程至少有一个线程；进程之间内存隔离，一个崩溃不影响别的进程；线程之间共享代码、堆、static 变量和打开的文件，通信方便但需要同步，每个线程有自己的栈和寄存器（程序计数器）；线程创建和切换的开销比进程小得多。",
+    "explanation": "Process：A process is a program in execution；Self-Contained Execution Environment（拥有独立运行所需的一切）；Private memory space；Isolated: One process won't affect others if it fails。\nThread：the smallest unit of processing, a lightweight sub-process；One process has >= 1 thread(s)；Each thread has a separate path of execution（一个线程里发生异常，不影响其他线程）；Threads in the same process share the code, data (static variables, heap data, files)，通信容易但需要小心同步。\n课件的图：单线程进程里 code、data、files、registers、stack 各一份；多线程进程里 code、data、files 共享，每个线程有自己的 registers 和 stack。\n这和\"栈线程私有、堆线程共享\"是同一个道理。",
+    "question": "进程和线程有什么区别？",
+    "keyPoints": [
+      "进程是运行中的程序，线程是进程里最小的执行单元",
+      "一个进程至少有一个线程",
+      "进程有独立内存，互相隔离；线程共享进程的堆、static 变量、文件",
+      "每个线程有自己的栈和寄存器（程序计数器）",
+      "线程更轻量，创建和切换开销小，但共享数据需要同步"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "进程",
+        "线程"
+      ],
+      "rows": [
+        [
+          "定义",
+          "运行中的程序",
+          "进程中最小的执行单元"
+        ],
+        [
+          "内存",
+          "独立地址空间",
+          "共享进程的堆、static、文件"
+        ],
+        [
+          "私有部分",
+          "整个地址空间",
+          "栈、寄存器"
+        ],
+        [
+          "开销",
+          "创建、切换开销大",
+          "轻量"
+        ],
+        [
+          "故障影响",
+          "一个崩溃不影响其他进程",
+          "共享内存，可能互相影响数据"
+        ],
+        [
+          "通信",
+          "IPC（管道、socket 等）",
+          "直接读写共享变量"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为同一进程里的线程各有各的堆",
+        "right": "堆和 static 变量是共享的，只有栈和寄存器是线程私有的"
+      },
+      {
+        "wrong": "认为线程越多程序一定越快",
+        "right": "线程切换有开销，CPU 核数有限；计算密集型任务线程数一般接近核数"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "一个线程抛出未捕获的异常，会让整个 Java 程序退出吗？",
+        "a": "不会，只有这个线程终止；只有所有非守护线程都结束后 JVM 才退出"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "int[] shared = {0};\nThread t = new Thread(() -> shared[0] = 42);\nt.start();\nt.join();\nSystem.out.println(shared[0] + \" \" + Thread.currentThread().getName());",
+        "options": [
+          "42 main",
+          "0 main",
+          "42 Thread-0",
+          "0 Thread-0"
+        ],
+        "answer": 0,
+        "why": "数组对象在堆上，被两个线程共享；子线程修改后，main 用 join 等它结束再读，能看到 42；打印语句在 main 线程里执行，所以线程名是 main。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "同一个进程中的线程共享堆内存",
+        "correct": true,
+        "why": "每个线程只有自己的栈和寄存器"
+      },
+      {
+        "statement": "一个进程只能有一个线程",
+        "correct": false,
+        "why": "一个进程可以有一个或多个线程"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-创建线程-thread-与-runnable",
+    "category": "Java多线程/创建线程",
+    "title": "Thread 与 Runnable",
+    "concept": "Java 有两种创建线程的方式：继承 java.lang.Thread 并重写 run()，或者实现 java.lang.Runnable 接口再把它交给 Thread",
+    "oneLiner": "Thread 类本身就实现了 Runnable；继承 Thread 会用掉唯一的继承机会，而实现 Runnable 可以继续继承别的类，同一个 Runnable 实例还能交给多个线程共享（比如多个窗口卖同一批票），Java 8 起还能直接用 lambda 写；所以一般推荐 Runnable。",
+    "explanation": "Thread 的声明：`public class Thread extends Object implements Runnable`。任何线程都是 Thread 的实例，线程要执行的任务（task）通过重写 run() 实现。\nRunnable：`@FunctionalInterface public interface Runnable { void run(); }`，表示\"一个可以被运行的任务\"；它让任务和线程分离：任务可以创建一次、到处传递、交给不同线程执行，甚至存起来以后再用。\n```java\nRunnable task = () -> {\n    for (int i = 0; i < 10; i++) System.out.println(i);\n};\nThread t = new Thread(task);\nt.start();\n```\nRunnable VS. Thread：继承类 vs 实现接口（灵活性、代码复用）；资源共享（多个线程共享同一个 Runnable 实例）；Java 8 可以用 lambda。Simply put, we generally recommend the use of Runnable over Thread。\n实际项目中更常把 Runnable / Callable 提交给线程池（ExecutorService），而不是自己 new Thread。",
+    "question": "创建线程有哪几种方式？为什么推荐实现 Runnable？",
+    "keyPoints": [
+      "继承 Thread，重写 run()",
+      "实现 Runnable，把它传给 new Thread(runnable)",
+      "Runnable 不占用继承，类还能继承别的父类",
+      "多个线程可以共享同一个 Runnable 实例（共享任务和数据）",
+      "Runnable 是函数式接口，可以用 lambda；实际开发多用线程池"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "继承 Thread",
+        "实现 Runnable"
+      ],
+      "rows": [
+        [
+          "继承",
+          "用掉唯一的父类",
+          "还能继承别的类"
+        ],
+        [
+          "任务与线程",
+          "绑在一起",
+          "分离，任务可复用"
+        ],
+        [
+          "共享数据",
+          "每个线程对象各有一份字段",
+          "多个线程可以共享同一个任务对象"
+        ],
+        [
+          "lambda",
+          "不行",
+          "可以"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "实现了 Runnable 就直接调用 task.run()，以为启动了线程",
+        "right": "要 new Thread(task).start() 才会创建新线程"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Runnable 和 Callable 有什么区别？",
+        "a": "Callable 的 call() 有返回值、可以抛出 checked 异常，一般配合线程池和 Future 使用；Runnable 的 run() 没有返回值，也不能抛 checked 异常"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Task implements Runnable {\n    int count = 0;\n    public void run() { count++; }\n}\nTask task = new Task();\nThread t1 = new Thread(task);\nThread t2 = new Thread(task);\nt1.start();\nt1.join();\nt2.start();\nt2.join();\nSystem.out.println(task.count);",
+        "options": [
+          "2",
+          "1",
+          "0",
+          "编译错误"
+        ],
+        "answer": 0,
+        "why": "两个线程共享同一个 Runnable 实例，各执行一次 run()，count 被加了两次；这里用 join 让它们先后执行，所以结果确定是 2。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Worker extends Thread {\n    int count = 0;\n    public void run() { count++; }\n}\nWorker w1 = new Worker();\nWorker w2 = new Worker();\nw1.start();\nw2.start();\nw1.join();\nw2.join();\nSystem.out.println(w1.count + \" \" + w2.count);",
+        "options": [
+          "1 1",
+          "2 2",
+          "2 0",
+          "0 0"
+        ],
+        "answer": 0,
+        "why": "继承 Thread 时，每个线程对象各有自己的 count 字段，各自加一次，互不影响。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Thread 类本身实现了 Runnable 接口",
+        "correct": true,
+        "why": "声明是 class Thread extends Object implements Runnable"
+      },
+      {
+        "statement": "实现 Runnable 的类不能再继承其他类",
+        "correct": false,
+        "why": "实现接口不占用继承，还可以 extends 一个父类"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-创建线程-start-与-run",
+    "category": "Java多线程/创建线程",
+    "title": "start() 与 run()",
+    "concept": "调用 start() 会创建一个新线程，并在新线程里执行一次 run()；直接调用 run() 只是在当前线程里执行一个普通方法，不会创建新线程",
+    "oneLiner": "start() 定义在 Thread 类里，同一个线程对象只能 start 一次，再调用抛 IllegalThreadStateException；run() 定义在 Runnable 接口里、必须被重写，可以调用任意多次，每次都在调用它的那个线程里同步执行。",
+    "explanation": "When a program calls the start() method, an actual thread is created and then the run() method is executed once in that new thread。\nWhen a program calls the run() method, no new thread will be created；run() will be executed as a normal method call on the current calling thread itself；Multithreading does not necessarily take place。\nInterview Question: start() VS. run()：Behavior（新线程 vs 当前线程）；Multiple invocation（start 只能一次，run 可以多次）；Definition（start() 在 java.lang.Thread，run() 在 java.lang.Runnable，必须重写）。\n课件例子：p.start() 之后再 p.run(); p.run();，结果是新线程打印一遍、main 线程打印两遍，并且输出会交错。\nstart() 之后线程进入 RUNNABLE 状态，什么时候真正执行由线程调度器决定。",
+    "question": "start() 和 run() 有什么区别？一个线程能 start 两次吗？",
+    "keyPoints": [
+      "start() 创建新线程，在新线程里执行 run()",
+      "直接调用 run() 不创建线程，在当前线程里同步执行",
+      "start() 只能调用一次，第二次抛 IllegalThreadStateException",
+      "run() 可以调用多次",
+      "start() 定义在 Thread 类，run() 定义在 Runnable 接口"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "start()",
+        "run()"
+      ],
+      "rows": [
+        [
+          "是否创建新线程",
+          "是",
+          "否"
+        ],
+        [
+          "在哪个线程执行",
+          "新线程",
+          "当前调用线程"
+        ],
+        [
+          "调用次数",
+          "只能一次",
+          "任意多次"
+        ],
+        [
+          "定义位置",
+          "Thread 类",
+          "Runnable 接口"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "调用 t.run() 以为启动了一个新线程",
+        "right": "run() 就是普通方法调用，代码仍在当前线程里同步执行"
+      },
+      {
+        "wrong": "线程结束后想再 start() 一次复用它",
+        "right": "线程对象只能启动一次，要重新执行任务得创建新的 Thread 或用线程池"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么不能直接调用 run() 来实现多线程？",
+        "a": "创建线程、交给操作系统调度是 start() 里（native 方法 start0）完成的；直接调 run() 跳过了这一步，只是一次普通方法调用"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> System.out.print(Thread.currentThread().getName() + \" \"), \"worker\");\nt.run();\nt.start();\nt.join();\nSystem.out.println();",
+        "options": [
+          "main worker",
+          "worker worker",
+          "main main",
+          "worker main"
+        ],
+        "answer": 0,
+        "why": "t.run() 是普通方法调用，在 main 线程里执行，打印 main；t.start() 创建了名为 worker 的新线程，在新线程里打印 worker；join 保证它打印完再换行。"
+      },
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> { });\nt.start();\nt.join();\nt.start();\nSystem.out.println(\"done\");",
+        "options": [
+          "done",
+          "什么也不输出",
+          "抛出 IllegalThreadStateException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "一个线程对象只能 start 一次；第二次调用 start() 时线程已经不是 NEW 状态，抛出 IllegalThreadStateException。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "int[] n = {0};\nThread t = new Thread(() -> n[0]++);\nt.run();\nt.run();\nSystem.out.println(n[0] + \" \" + t.getState());",
+        "options": [
+          "2 NEW",
+          "2 TERMINATED",
+          "1 NEW",
+          "抛出 IllegalThreadStateException"
+        ],
+        "answer": 0,
+        "why": "run() 可以调用多次，每次都在 main 线程里执行一遍任务，n[0] 变成 2；因为从没调用 start()，线程对象仍处于 NEW 状态。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "直接调用 run() 不会创建新线程",
+        "correct": true,
+        "why": "它在当前调用线程里作为普通方法执行"
+      },
+      {
+        "statement": "同一个 Thread 对象可以多次调用 start()",
+        "correct": false,
+        "why": "第二次会抛 IllegalThreadStateException"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-创建线程-main-线程与守护线程",
+    "category": "Java多线程/创建线程",
+    "title": "main 线程与守护线程",
+    "concept": "程序启动时 JVM 创建 main 线程并在其中调用 main()；守护线程（daemon thread）是为用户线程提供后台服务的低优先级线程，所有用户线程结束后 JVM 会直接终止守护线程",
+    "oneLiner": "main 线程是每个 Java 程序的默认线程，JVM 还会创建一些看不见的后台线程（比如 GC）；用 setDaemon(true) 把线程设为守护线程，必须在 start() 之前设置；只要还有用户线程在运行，JVM 就不会退出，而守护线程不会阻止 JVM 退出。",
+    "explanation": "Main Thread：main() method – entry point of every java program；main thread – default thread of every java program；When the execution of Java program starts, the JVM creates the main thread and calls the program's main() method within that thread；Programmers can always take control of the main thread；JVM also creates some invisible threads for JVM housekeeping tasks。\nDaemon Threads（课件标题写成 Demon）：A low priority thread provides services to user threads for background supporting tasks；Its life depend on the mercy of user thread：when the user thread dies, JVM terminates this thread immediately, regardless of if its daemon threads are still executing。\nHow to create：public void setDaemon(boolean status)；public boolean isDaemon()。\n例子：MMORPG 游戏用守护线程加载地图，用户线程处理角色动作；退出游戏后没必要继续加载地图。\n新线程默认继承创建者的 daemon 属性，main 是用户线程，所以默认都是用户线程；守护线程里的 finally 不保证执行，不要用它做写文件等需要收尾的工作。",
+    "question": "什么是守护线程？它和用户线程有什么区别？",
+    "keyPoints": [
+      "main 线程由 JVM 创建，执行 main() 方法",
+      "守护线程为用户线程提供后台服务，比如 GC 线程",
+      "所有用户线程结束后，JVM 退出，守护线程被直接终止",
+      "用 setDaemon(true) 设置，必须在 start() 之前",
+      "新线程默认继承创建它的线程的 daemon 属性"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "用户线程",
+        "守护线程"
+      ],
+      "rows": [
+        [
+          "是否阻止 JVM 退出",
+          "是",
+          "否"
+        ],
+        [
+          "默认",
+          "main 创建的线程默认是用户线程",
+          "需要 setDaemon(true)"
+        ],
+        [
+          "适合做",
+          "业务逻辑",
+          "后台辅助任务（GC、监控、预加载）"
+        ],
+        [
+          "finally 是否保证执行",
+          "正常结束时会",
+          "JVM 退出时可能来不及执行"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "线程启动之后再调用 setDaemon(true)",
+        "right": "运行中的线程调用 setDaemon 会抛 IllegalThreadStateException，必须在 start() 前设置"
+      },
+      {
+        "wrong": "在守护线程里写文件、提交事务等收尾工作",
+        "right": "JVM 退出时守护线程会被直接终止，工作可能做到一半"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "main 方法执行完了，JVM 一定会退出吗？",
+        "a": "不一定，只要还有用户线程（非守护线程）在运行，JVM 就会继续运行，直到它们都结束"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> { });\nSystem.out.println(Thread.currentThread().getName() + \" \" + Thread.currentThread().isDaemon() + \" \" + t.isDaemon());",
+        "options": [
+          "main false false",
+          "main true false",
+          "main false true",
+          "Thread-0 false false"
+        ],
+        "answer": 0,
+        "why": "当前线程是 JVM 创建的 main 线程，它是用户线程；新线程默认继承创建者的 daemon 属性，所以也不是守护线程。"
+      },
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> {\n    try { Thread.sleep(1000); } catch (InterruptedException e) { }\n});\nt.start();\nt.setDaemon(true);\nSystem.out.println(\"daemon set\");",
+        "options": [
+          "daemon set",
+          "什么也不输出",
+          "抛出 IllegalThreadStateException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "线程已经启动并且还在运行（在 sleep），这时再调用 setDaemon 会抛 IllegalThreadStateException；必须在 start() 之前设置。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "所有用户线程结束后，JVM 会直接终止仍在运行的守护线程",
+        "correct": true,
+        "why": "守护线程不会阻止 JVM 退出"
+      },
+      {
+        "statement": "可以在线程运行过程中随时调用 setDaemon(true) 把它变成守护线程",
+        "correct": false,
+        "why": "必须在 start() 之前调用"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程状态与线程通信-线程的生命周期",
+    "category": "Java多线程/线程状态与线程通信",
+    "title": "线程的生命周期",
+    "concept": "线程的状态由 JVM 的线程调度器管理，共有 NEW、RUNNABLE、BLOCKED、WAITING、TIMED_WAITING、TERMINATED 六种",
+    "oneLiner": "new 出来是 NEW，start() 后是 RUNNABLE（包括正在运行和等 CPU）；等 synchronized 的锁是 BLOCKED，join() / wait() 无限期等待是 WAITING，sleep() / wait(ms) / join(ms) 限时等待是 TIMED_WAITING；被 notify、I/O 完成、sleep 到期、join 完成后回到 RUNNABLE；run() 执行完或抛出未捕获异常后是 TERMINATED。",
+    "explanation": "States of thread — managed by Thread Scheduler of JVM：\nNEW — just created but not started\nRUNNABLE — created, started, and able to run（running：正在运行，也属于 RUNNABLE）\nBLOCKED、WAITING、TIMED_WAITING — created and started but unable to run because it is waiting for some event to occur：BLOCKED 等待获取锁（比如 synchronized）；WAITING 无限期等待（join()、wait()）；TIMED_WAITING 等待指定的时间（sleep()、wait(ms)、join(ms)）\nTERMINATED — thread has finished or is stopped\n状态转换：new → NEW；start() → RUNNABLE；I/O、sleep()、join()、wait → 阻塞类状态；notify()、notifyAll()、I/O Complete、sleep expired、join complete → 回到 RUNNABLE；结束 → TERMINATED。\n课件图里写的 terminate() 只表示\"线程结束\"，Java 里没有这个方法；已废弃的 stop() 也不应该使用。\n可以用 t.getState() 查看线程当前的状态。",
+    "question": "Java 线程有哪几种状态？它们之间怎么转换？",
+    "keyPoints": [
+      "NEW：创建但还没 start",
+      "RUNNABLE：start 之后可运行，包括正在运行",
+      "BLOCKED：等待获取 synchronized 锁",
+      "WAITING / TIMED_WAITING：无限期等待（join、wait）/ 限时等待（sleep、wait(ms)、join(ms)）",
+      "TERMINATED：run() 执行完或抛出未捕获异常"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "状态",
+        "进入方式",
+        "离开方式"
+      ],
+      "rows": [
+        [
+          "NEW",
+          "new Thread()",
+          "start()"
+        ],
+        [
+          "RUNNABLE",
+          "start()、等待结束、拿到锁",
+          "阻塞、等待、执行完"
+        ],
+        [
+          "BLOCKED",
+          "竞争 synchronized 锁失败",
+          "拿到锁"
+        ],
+        [
+          "WAITING",
+          "wait()、join()",
+          "notify / notifyAll、被 join 的线程结束"
+        ],
+        [
+          "TIMED_WAITING",
+          "sleep(ms)、wait(ms)、join(ms)",
+          "超时、被唤醒"
+        ],
+        [
+          "TERMINATED",
+          "run() 结束",
+          "不能再启动"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Java 线程有一个独立的 RUNNING 状态",
+        "right": "Thread.State 里没有 RUNNING，正在运行和等待 CPU 都属于 RUNNABLE"
+      },
+      {
+        "wrong": "把 BLOCKED 和 WAITING 混为一谈",
+        "right": "BLOCKED 是在等锁；WAITING 是主动等待别的线程的通知或结束"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "TERMINATED 状态的线程能重新 start 吗？",
+        "a": "不能，会抛 IllegalThreadStateException；线程对象只能启动一次"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> {\n    try { Thread.sleep(1000); } catch (InterruptedException e) { }\n});\nSystem.out.print(t.getState() + \" \");\nt.start();\nThread.sleep(200);\nSystem.out.print(t.getState() + \" \");\nt.join();\nSystem.out.println(t.getState());",
+        "options": [
+          "NEW TIMED_WAITING TERMINATED",
+          "NEW RUNNABLE TERMINATED",
+          "NEW WAITING TERMINATED",
+          "RUNNABLE TIMED_WAITING TERMINATED"
+        ],
+        "answer": 0,
+        "why": "start 之前是 NEW；子线程在 sleep(1000) 期间处于限时等待 TIMED_WAITING；join 等它结束后是 TERMINATED。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "线程在等待获取 synchronized 锁时处于 BLOCKED 状态",
+        "correct": true,
+        "why": "拿到锁后回到 RUNNABLE"
+      },
+      {
+        "statement": "调用 sleep(1000) 的线程处于 WAITING 状态",
+        "correct": false,
+        "why": "有时间限制的等待是 TIMED_WAITING"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程状态与线程通信-sleep-与-join",
+    "category": "Java多线程/线程状态与线程通信",
+    "title": "sleep 与 join",
+    "concept": "Thread.sleep(ms) 让当前线程暂停指定的毫秒数；t.join() 让当前线程等待线程 t 执行完毕，join(timeout) 最多等待 timeout 毫秒",
+    "oneLiner": "sleep 是 Thread 的静态方法，作用于\"当前线程\"，暂停期间不会释放已经持有的锁，可能被 interrupt 打断而抛出 InterruptedException；join 常用来让 main 等子线程算完再继续，join(timeout) 超时后不管子线程有没有结束都会继续往下走。",
+    "explanation": "Thread.sleep()：causes the current thread to suspend execution for a specified period；Thread.sleep(x) makes the thread sleep for x milliseconds。\nThread.join()：The method allows one thread to wait for the completion of another；例如在 main 线程里创建 Thread t，调用 t.join() 会让 main 线程等到 t 执行完；join(timeout)：main 最多等 timeout 毫秒，之后如果新线程还在运行，main 也会继续执行。\nsleep 和 join 都会抛出 checked 异常 InterruptedException，调用时必须处理。\nt.sleep(1000) 这种写法虽然能编译，但睡眠的仍然是当前线程而不是 t，容易误导。",
+    "question": "sleep() 和 join() 分别有什么作用？",
+    "keyPoints": [
+      "sleep(ms) 让当前线程暂停指定时间，进入 TIMED_WAITING",
+      "sleep 不释放已经持有的锁",
+      "t.join() 让当前线程等 t 结束，进入 WAITING",
+      "join(timeout) 最多等 timeout 毫秒，超时后继续执行",
+      "两者都声明了 InterruptedException，需要处理"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "sleep(ms)",
+        "join()"
+      ],
+      "rows": [
+        [
+          "属于",
+          "Thread 的静态方法",
+          "Thread 的实例方法"
+        ],
+        [
+          "作用",
+          "当前线程暂停一段时间",
+          "当前线程等另一个线程结束"
+        ],
+        [
+          "状态",
+          "TIMED_WAITING",
+          "WAITING（join(ms) 是 TIMED_WAITING）"
+        ],
+        [
+          "是否释放锁",
+          "不释放",
+          "内部基于 wait，释放的是被 join 线程对象的锁"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "写 t.sleep(1000) 以为让线程 t 睡眠",
+        "right": "sleep 是静态方法，睡眠的是当前线程"
+      },
+      {
+        "wrong": "在持有锁时 sleep，以为别的线程能趁机拿到锁",
+        "right": "sleep 不释放锁，其他等这把锁的线程会一直 BLOCKED"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "怎么让三个线程 T1、T2、T3 按顺序执行完？",
+        "a": "依次 start 并 join：T1.start(); T1.join(); T2.start(); T2.join(); ...，或者在 T2 里 join T1、T3 里 join T2"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> System.out.print(\"child \"));\nt.start();\nt.join();\nSystem.out.println(\"main\");",
+        "options": [
+          "child main",
+          "main child",
+          "main",
+          "顺序不确定"
+        ],
+        "answer": 0,
+        "why": "t.join() 让 main 线程等 t 执行完，所以 child 一定先于 main 打印。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "Thread.sleep() 不会释放当前线程持有的锁",
+        "correct": true,
+        "why": "只是暂停执行，锁仍被占着"
+      },
+      {
+        "statement": "join(timeout) 超时后，会强制终止那个还没结束的线程",
+        "correct": false,
+        "why": "只是当前线程不再等待，那个线程继续运行"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程状态与线程通信-wait-notify-与-notifyall",
+    "category": "Java多线程/线程状态与线程通信",
+    "title": "wait、notify 与 notifyAll",
+    "concept": "wait()、notify()、notifyAll() 是 Object 的方法，用于线程间协作：线程在某个对象上 wait 并释放锁，其他线程在同一个对象上 notify 唤醒它",
+    "oneLiner": "三个方法都必须在 synchronized 里、对同一个锁对象调用，否则抛 IllegalMonitorStateException；wait 会释放锁并进入 WAITING，被唤醒后要重新拿到锁才能继续；notify 唤醒一个等待线程，notifyAll 唤醒所有；典型场景是生产者-消费者：缓冲区满了生产者等，空了消费者等。",
+    "explanation": "Lock in Java：每个资源有一把锁，只有持有锁的线程才能访问资源；Synchronization is a mechanism to control access to shared resources when multiple threads are running concurrently。\nProducer and Consumer：Buffer 是共享存储；Producer 往 buffer 里放数据，满了就等消费者；Consumer 从 buffer 取数据，空了就等生产者。\nObject.wait()：让当前线程等待，直到其他线程在同一个对象上调用 notify() / notifyAll()；必须在 synchronized 上下文中调用，否则抛 IllegalMonitorStateException；调用 wait() 时会释放这个对象的锁并进入 WAITING。\nObject.notify()：唤醒一个在该对象 monitor 上等待的线程，被唤醒的线程要重新获得锁后才继续执行。\nObject.notifyAll()：唤醒所有在该对象 monitor 上等待的线程。\nwait 要放在 while 循环里检查条件，防止虚假唤醒（spurious wakeup）。",
+    "question": "wait() 和 sleep() 有什么区别？为什么 wait / notify 必须在 synchronized 里调用？",
+    "keyPoints": [
+      "wait / notify / notifyAll 是 Object 的方法，任何对象都可以当锁",
+      "必须在 synchronized 里、对同一个锁对象调用，否则抛 IllegalMonitorStateException",
+      "wait 释放锁并进入 WAITING，sleep 不释放锁",
+      "notify 唤醒一个，notifyAll 唤醒全部，被唤醒后要重新竞争锁",
+      "wait 写在 while 循环里检查条件，防止虚假唤醒"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "wait()",
+        "sleep()"
+      ],
+      "rows": [
+        [
+          "属于",
+          "Object 的实例方法",
+          "Thread 的静态方法"
+        ],
+        [
+          "调用前提",
+          "必须持有该对象的锁",
+          "没有要求"
+        ],
+        [
+          "是否释放锁",
+          "释放",
+          "不释放"
+        ],
+        [
+          "如何醒来",
+          "notify / notifyAll、超时、中断",
+          "时间到、中断"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 if 判断条件后 wait",
+        "right": "用 while：被唤醒后条件可能已经被别的线程改变，要重新检查"
+      },
+      {
+        "wrong": "在没有持有锁的地方调用 notify",
+        "right": "必须在 synchronized(lock) 里调用 lock.notify()"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "notify 和 notifyAll 应该用哪个？",
+        "a": "一般用 notifyAll 更安全；notify 只唤醒一个线程，如果唤醒的不是能继续执行的那个，可能导致所有线程都在等待"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Object lock = new Object();\nlock.wait();\nSystem.out.println(\"woke up\");",
+        "options": [
+          "woke up",
+          "程序一直等待",
+          "抛出 IllegalMonitorStateException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "调用 wait() 前必须持有这个对象的锁（在 synchronized(lock) 里），否则运行时抛 IllegalMonitorStateException。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Object lock = new Object();\nboolean[] ready = {false};\nThread consumer = new Thread(() -> {\n    synchronized (lock) {\n        while (!ready[0]) {\n            try { lock.wait(); } catch (InterruptedException e) { }\n        }\n        System.out.print(\"consumed \");\n    }\n});\nconsumer.start();\nsynchronized (lock) {\n    System.out.print(\"produced \");\n    ready[0] = true;\n    lock.notify();\n}\nconsumer.join();\nSystem.out.println();",
+        "options": [
+          "produced consumed",
+          "consumed produced",
+          "produced",
+          "顺序不确定"
+        ],
+        "answer": 0,
+        "why": "消费者如果先拿到锁，发现 ready 为 false 就 wait 并释放锁；main 拿到锁后打印 produced、设置标志并 notify。如果 main 先拿到锁，消费者之后进入时 ready 已是 true，不用等。两种情况输出都是 produced consumed。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "调用 wait() 的线程会释放它持有的这个对象的锁",
+        "correct": true,
+        "why": "这样其他线程才能进入 synchronized 并 notify 它"
+      },
+      {
+        "statement": "notify() 被调用后，被唤醒的线程立即继续执行，不需要重新获取锁",
+        "correct": false,
+        "why": "必须等通知方退出 synchronized、自己重新拿到锁后才能继续"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程状态与线程通信-interrupt-与-interruptedexception",
+    "category": "Java多线程/线程状态与线程通信",
+    "title": "interrupt 与 InterruptedException",
+    "concept": "Thread.interrupt() 用来通知一个线程停止它正在做的事，它不会强制停止线程，只是设置中断标志；线程处于 sleep、wait、join 等阻塞状态时被中断，会抛出 InterruptedException",
+    "oneLiner": "中断是一种协作机制：被中断的线程要自己检查 isInterrupted() 或捕获 InterruptedException 来决定怎么结束；InterruptedException 是 checked 异常，而 Runnable 的 run() 没有声明它，所以只能在 run() 里面处理；抛出异常时中断标志会被清除，常见做法是在 catch 里再调用一次 interrupt() 恢复它。",
+    "explanation": "Thread.interrupt()：A method used to signal a thread to stop what it's doing；It does not forcibly stop the thread — it simply sets an interrupt flag；If the thread is in a blocking state (sleep(), wait(), join()), it will throw an InterruptedException。\nInterruptedException：A checked exception thrown when a thread is interrupted while it's in a blocking state；Catching this exception is often a signal to gracefully stop or exit the current thread。\nRunnable and InterruptedException：The Runnable interface run() method does not declare InterruptedException；所以用 Runnable（或 lambda）时不能把它往外抛，必须在 run() 里处理。\n查询方法：t.isInterrupted() 查看标志、不清除；静态方法 Thread.interrupted() 查看当前线程的标志并清除它。\n不要用已废弃的 stop() 强行停止线程，它会让锁保护的数据处于不一致状态。",
+    "question": "怎么正确地停止一个线程？interrupt() 会立即停止线程吗？",
+    "keyPoints": [
+      "interrupt() 只设置中断标志，不会强制停止线程",
+      "线程在 sleep / wait / join 时被中断会抛 InterruptedException",
+      "线程自己检查 isInterrupted() 或捕获异常后优雅退出",
+      "Runnable.run() 不能抛 checked 异常，必须在内部处理 InterruptedException",
+      "抛出异常会清除中断标志，捕获后常用 Thread.currentThread().interrupt() 恢复"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "catch (InterruptedException e) {} 什么都不做",
+        "right": "吞掉异常会丢失中断信号，应该退出或恢复中断标志"
+      },
+      {
+        "wrong": "以为调用 interrupt() 后线程马上就停了",
+        "right": "线程不检查标志、也不处于阻塞状态时，会照常运行下去"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "isInterrupted() 和 Thread.interrupted() 有什么区别？",
+        "a": "isInterrupted() 是实例方法，只读取标志；interrupted() 是静态方法，读取当前线程的标志并把它清除"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread t = new Thread(() -> {\n    try {\n        Thread.sleep(5000);\n        System.out.print(\"woke \");\n    } catch (InterruptedException e) {\n        System.out.print(\"interrupted \");\n    }\n});\nt.start();\nt.interrupt();\nt.join();\nSystem.out.println(\"done\");",
+        "options": [
+          "interrupted done",
+          "woke done",
+          "done",
+          "woke interrupted done"
+        ],
+        "answer": 0,
+        "why": "子线程在 sleep 时被中断（即使中断发生在 sleep 之前，进入 sleep 时也会立即抛出），捕获 InterruptedException 打印 interrupted；不用等 5 秒。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Thread.currentThread().interrupt();\nSystem.out.println(Thread.currentThread().isInterrupted() + \" \" + Thread.interrupted() + \" \" + Thread.currentThread().isInterrupted());",
+        "options": [
+          "true true false",
+          "true true true",
+          "false false false",
+          "true false false"
+        ],
+        "answer": 0,
+        "why": "interrupt() 设置了中断标志；isInterrupted() 读取但不清除，为 true；Thread.interrupted() 读取到 true 并清除标志；之后再读就是 false。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "interrupt() 不会强制终止线程，只是设置中断标志",
+        "correct": true,
+        "why": "线程需要自己响应中断"
+      },
+      {
+        "statement": "Runnable 的 run() 方法可以声明 throws InterruptedException",
+        "correct": false,
+        "why": "run() 签名没有声明 checked 异常，必须在内部处理"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程安全与同步-竞态条件与线程干扰",
+    "category": "Java多线程/线程安全与同步",
+    "title": "竞态条件与线程干扰",
+    "concept": "多个线程通过共享资源通信，高效但容易出错，这类问题统称竞态条件（race conditions），包括线程干扰（thread interference）和内存一致性错误（memory consistency errors）",
+    "oneLiner": "线程干扰是指两个线程对同一份数据的多步操作交错执行；比如 c++ 在 JVM 里分成\"读取 c、加 1、写回 c\"三步，不是原子操作，线程 A 执行 increment、线程 B 执行 decrement 时，一方的结果可能被另一方覆盖，最终结果不确定。",
+    "explanation": "Thread Safety：Threads primarily communicate by sharing access to common resources；This form of communication is efficient and fast, but also error-prone without proper care；Multi-threaded communication can lead to various issues collectively known as race conditions。\nThread Interference：两个线程同时操作同一个对象；Interference happens when two operations, running in different threads, but acting on the same data, interleave. This means that the two operations consist of multiple steps, and the sequences of steps overlap。\nc++ 被 JVM 分解为：Retrieve the current value of c → Increment the retrieved value by 1 → Store the incremented value back in c，所以 \"c++ is not atomic\"。\n一种交错：c = 0，A 读到 0，B 读到 0，A 写回 1，B 写回 -1，A 的修改丢失。\n解决：synchronized、Lock，或者用原子类 AtomicInteger。",
+    "question": "什么是竞态条件？为什么 count++ 在多线程下不安全？",
+    "keyPoints": [
+      "多个线程共享数据、并且操作交错执行时会出现竞态条件",
+      "包括线程干扰和内存一致性错误",
+      "count++ 不是原子操作，分为读取、加一、写回三步",
+      "两个线程的步骤交错时，一个线程的修改会被另一个覆盖",
+      "用 synchronized、Lock 或 AtomicInteger 解决"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "认为一行代码就是一个原子操作",
+        "right": "c++、i = i + 1、if (x == null) x = new X() 都由多步组成，可能被打断"
+      },
+      {
+        "wrong": "以为把变量声明为 volatile 就能让 c++ 线程安全",
+        "right": "volatile 只保证可见性，不保证复合操作的原子性"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "多线程调用没有同步的 increment 各 10000 次，结果一定小于 20000 吗？",
+        "a": "不一定，通常会小于 20000，但也可能恰好等于；结果不确定正是问题所在"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Counter {\n    private int c = 0;\n    public synchronized void increment() { c++; }\n    public synchronized void decrement() { c--; }\n    public synchronized int value() { return c; }\n}\nCounter counter = new Counter();\nThread a = new Thread(() -> { for (int i = 0; i < 10000; i++) counter.increment(); });\nThread b = new Thread(() -> { for (int i = 0; i < 10000; i++) counter.decrement(); });\na.start();\nb.start();\na.join();\nb.join();\nSystem.out.println(counter.value());",
+        "options": [
+          "0",
+          "不确定，可能是任何值",
+          "10000",
+          "-10000"
+        ],
+        "answer": 0,
+        "why": "三个方法都加了 synchronized，同一时刻只有一个线程能修改 c，不会互相覆盖，加减各 10000 次后结果一定是 0；去掉 synchronized 结果就不确定了。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "c++ 不是原子操作",
+        "correct": true,
+        "why": "它包括读取、加一、写回三个步骤"
+      },
+      {
+        "statement": "只要两个线程访问的是同一个对象，就一定会发生线程干扰",
+        "correct": false,
+        "why": "只读、或者操作被正确同步时不会出问题"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程安全与同步-内存可见性与-volatile",
+    "category": "Java多线程/线程安全与同步",
+    "title": "内存可见性与 volatile",
+    "concept": "内存一致性错误（memory consistency error）是指不同线程看到的共享数据不一致；volatile 关键字保证变量的修改对其他线程立即可见",
+    "oneLiner": "为了性能，CPU 和 JVM 会缓存变量的值、重排指令，一个线程修改了数据，另一个线程可能还在读过期的缓存；volatile 保证读写都直接针对主内存（可见性），并禁止相关的指令重排，但不保证 c++ 这类复合操作的原子性。",
+    "explanation": "A memory consistency error occurs when different threads have inconsistent views of shared data。\nWhy it happens：Modern CPUs and the JVM may cache values or reorder instructions for performance；If thread 1 changes some data, other threads may still see an expired, cached copy of the data。\nvolatile keyword：Declaring a variable as volatile ensures that all reads go directly to main memory (not a thread's cache)；All writes are immediately flushed to main memory（课件的简化说法）。\n更准确地说：volatile 写和之后对同一变量的 volatile 读之间建立 happens-before 关系，保证可见性和有序性；但不保证原子性。\n典型用法：用 volatile boolean running 作为线程停止标志；双重检查锁单例里的 instance 字段。",
+    "question": "volatile 有什么作用？它能保证线程安全吗？",
+    "keyPoints": [
+      "内存一致性错误：线程读到了其他线程修改前的旧值",
+      "原因：CPU 缓存、编译器和 CPU 的指令重排",
+      "volatile 保证可见性：写入后其他线程立即能读到",
+      "volatile 禁止相关的指令重排（有序性）",
+      "volatile 不保证原子性，c++ 仍然不安全，需要 synchronized 或原子类"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "volatile",
+        "synchronized"
+      ],
+      "rows": [
+        [
+          "可见性",
+          "保证",
+          "保证"
+        ],
+        [
+          "原子性",
+          "不保证",
+          "保证"
+        ],
+        [
+          "有序性",
+          "禁止相关重排",
+          "临界区内串行执行"
+        ],
+        [
+          "是否阻塞",
+          "不阻塞",
+          "拿不到锁会阻塞"
+        ],
+        [
+          "修饰对象",
+          "变量",
+          "方法、代码块"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 volatile int count 做多线程计数器",
+        "right": "count++ 不是原子的，要用 AtomicInteger 或加锁"
+      },
+      {
+        "wrong": "认为 volatile 能代替 synchronized",
+        "right": "volatile 只适合\"一个线程写、多个线程读\"或状态标志这类场景"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "不加 volatile 的停止标志会有什么问题？",
+        "a": "工作线程可能一直读自己缓存里的 false，看不到主线程把标志改成 true，导致线程永远停不下来"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "volatile 可以保证一个线程对变量的修改对其他线程立即可见",
+        "correct": true,
+        "why": "这是它的可见性保证"
+      },
+      {
+        "statement": "把计数器声明为 volatile，多个线程同时 count++ 就是线程安全的",
+        "correct": false,
+        "why": "volatile 不保证复合操作的原子性"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-线程安全与同步-synchronized-关键字",
+    "category": "Java多线程/线程安全与同步",
+    "title": "synchronized 关键字",
+    "concept": "synchronized 是 Java 防止线程安全问题的同步工具，可以修饰方法（synchronized method）或代码块（synchronized block）；每个对象都有一把内置锁（intrinsic lock），进入同步代码前必须先拿到这把锁",
+    "oneLiner": "一个线程在执行某个对象的 synchronized 方法时，其他线程调用同一个对象的任何 synchronized 方法都会被阻塞；synchronized 实例方法锁的是 this，static synchronized 方法锁的是类的 Class 对象，同步块可以锁任意指定对象、只锁需要保护的那几行；退出同步代码时建立 happens-before 关系，所以它同时保证原子性和可见性，并且是可重入的。",
+    "explanation": "Synchronization：The tool needed to prevent these thread safety issues；两种方式：Synchronized method、Synchronized block。\n```java\npublic synchronized void increment() {\n    c++;          // 锁 this\n}\npublic void decrement() {\n    synchronized (this) {\n        c--;      // 只锁这一段\n    }\n}\n```\nSynchronized Keyword：When one thread is executing a synchronized method on an object, other threads attempting to invoke any synchronized method on the same object are blocked until the first thread finishes；Upon exiting a synchronized method, a happens-before relationship is established with any subsequent synchronized method calls on the same object；each object has an intrinsic lock, and synchronized methods require acquiring that lock before proceeding。\nSynchronized Block：can be used to perform synchronization on any specific resource of a part of the method；A synchronized method is essentially a special case of a synchronized block that locks on this for the entire method。\n可重入：同一个线程已经持有锁时，再进入同一把锁保护的代码不会把自己锁住。",
+    "question": "synchronized 的原理和用法是什么？修饰实例方法和静态方法有什么区别？",
+    "keyPoints": [
+      "每个对象都有一把内置锁，进入 synchronized 代码前要先获取",
+      "实例方法锁 this，static 方法锁类的 Class 对象，同步块锁指定的对象",
+      "同一时刻只有一个线程能持有同一把锁，其他线程进入 BLOCKED",
+      "保证原子性和可见性（退出时建立 happens-before）",
+      "可重入；同步块锁的范围更小，性能更好"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "锁的是什么"
+      ],
+      "rows": [
+        [
+          "synchronized 实例方法",
+          "当前对象 this"
+        ],
+        [
+          "static synchronized 方法",
+          "类的 Class 对象（Xxx.class）"
+        ],
+        [
+          "synchronized (obj) { }",
+          "指定的对象 obj"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为两个不同对象的 synchronized 实例方法也会互相阻塞",
+        "right": "锁的是各自的 this，不同对象之间互不影响"
+      },
+      {
+        "wrong": "认为 static synchronized 方法和实例 synchronized 方法用的是同一把锁",
+        "right": "一个锁 Class 对象，一个锁 this，可以同时执行"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "synchronized 和 ReentrantLock 有什么区别？",
+        "a": "synchronized 是关键字，自动加锁解锁；ReentrantLock 需要手动 lock / unlock（放在 finally 里），但支持 tryLock、超时、可中断、公平锁和多个条件变量"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Account {\n    private int balance = 0;\n    public synchronized void deposit() { balance++; }\n    public synchronized void depositTwice() { deposit(); deposit(); }\n    public synchronized int getBalance() { return balance; }\n}\nAccount acc = new Account();\nThread t = new Thread(acc::depositTwice);\nt.start();\nt.join();\nSystem.out.println(acc.getBalance());",
+        "options": [
+          "2",
+          "程序死锁，没有输出",
+          "1",
+          "0"
+        ],
+        "answer": 0,
+        "why": "synchronized 是可重入的：线程在 depositTwice 里已经持有 acc 的锁，再调用同一把锁保护的 deposit() 可以直接进入，不会把自己锁住，余额加了两次。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger();\nRunnable task = () -> { for (int i = 0; i < 10000; i++) count.incrementAndGet(); };\nThread t1 = new Thread(task);\nThread t2 = new Thread(task);\nt1.start();\nt2.start();\nt1.join();\nt2.join();\nSystem.out.println(count.get());",
+        "options": [
+          "20000",
+          "不确定，通常小于 20000",
+          "10000",
+          "0"
+        ],
+        "answer": 0,
+        "why": "AtomicInteger 的 incrementAndGet 是原子操作（基于 CAS），不加锁也不会丢失更新，两个线程各加 10000 次，结果一定是 20000。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "synchronized 修饰实例方法时，锁的是当前对象 this",
+        "correct": true,
+        "why": "static 方法锁的是 Class 对象"
+      },
+      {
+        "statement": "一个线程持有某个对象的锁时，不能再次进入这个对象的其他 synchronized 方法",
+        "correct": false,
+        "why": "synchronized 是可重入的"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-并发工具与死锁-java-util-concurrent-常用工具",
+    "category": "Java多线程/并发工具与死锁",
+    "title": "java.util.concurrent 常用工具",
+    "concept": "java.util.concurrent 包提供了并发编程常用的类和接口，比如 ConcurrentHashMap、ReentrantLock、AtomicInteger、BlockingQueue",
+    "oneLiner": "ConcurrentHashMap 是线程安全的高性能 HashMap；ReentrantLock 是比 synchronized 更灵活的可重入锁（tryLock、超时、可中断、公平锁）；AtomicInteger 用 CAS 实现无锁的原子加减；BlockingQueue 在队列满时让 put 等待、空时让 take 等待，天然适合生产者-消费者。",
+    "explanation": "java.util.concurrent：Utility class, includes some useful interfaces in concurrent programming：ConcurrentHashMap、ReentrantLock、AtomicInteger、BlockingQueue。\nReentrantLock 的标准写法：\n```java\nlock.lock();\ntry {\n    // 临界区\n} finally {\n    lock.unlock();   // 一定要在 finally 里释放\n}\n```\nAtomicInteger：incrementAndGet、getAndIncrement、compareAndSet；CAS（Compare-And-Swap）比较内存值和预期值，相等才更新，失败就重试。\nBlockingQueue：ArrayBlockingQueue、LinkedBlockingQueue；put / take 会阻塞，offer / poll 可以带超时。\n这个包里还有线程池（ExecutorService）、CountDownLatch、Semaphore 等，后面的课会讲。",
+    "question": "java.util.concurrent 包里有哪些常用工具？分别解决什么问题？",
+    "keyPoints": [
+      "ConcurrentHashMap：线程安全的 Map，锁粒度细、性能好",
+      "ReentrantLock：可重入锁，支持 tryLock、超时、可中断、公平锁",
+      "AtomicInteger：基于 CAS 的原子操作，适合计数器",
+      "BlockingQueue：满时 put 阻塞、空时 take 阻塞，用于生产者-消费者",
+      "还有线程池、CountDownLatch、Semaphore 等工具"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "工具",
+        "解决的问题"
+      ],
+      "rows": [
+        [
+          "ConcurrentHashMap",
+          "多线程读写 Map"
+        ],
+        [
+          "ReentrantLock",
+          "需要比 synchronized 更灵活的锁"
+        ],
+        [
+          "AtomicInteger",
+          "无锁的原子计数"
+        ],
+        [
+          "BlockingQueue",
+          "线程之间安全地传递数据"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "使用 ReentrantLock 时，unlock 没写在 finally 里",
+        "right": "临界区抛异常时锁不会被释放，其他线程永远拿不到锁"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "CAS 有什么问题？",
+        "a": "ABA 问题（值从 A 变 B 又变回 A，CAS 察觉不到，可以用带版本号的 AtomicStampedReference 解决）；高竞争时自旋重试会浪费 CPU"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "java.util.concurrent.BlockingQueue<Integer> queue = new java.util.concurrent.ArrayBlockingQueue<>(2);\nThread producer = new Thread(() -> {\n    try {\n        for (int i = 1; i <= 4; i++) queue.put(i);\n    } catch (InterruptedException e) { }\n});\nproducer.start();\nint sum = 0;\nfor (int i = 0; i < 4; i++) sum += queue.take();\nproducer.join();\nSystem.out.println(sum + \" \" + queue.size());",
+        "options": [
+          "10 0",
+          "3 2",
+          "10 2",
+          "程序一直阻塞"
+        ],
+        "answer": 0,
+        "why": "队列容量是 2，生产者放满后 put 会阻塞，等主线程 take 走元素再继续放；主线程 take 4 次，拿到 1+2+3+4 = 10，最后队列为空。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "java.util.concurrent.atomic.AtomicInteger n = new java.util.concurrent.atomic.AtomicInteger(5);\nSystem.out.println(n.getAndIncrement() + \" \" + n.incrementAndGet() + \" \" + n.compareAndSet(7, 10) + \" \" + n.compareAndSet(7, 20) + \" \" + n.get());",
+        "options": [
+          "5 7 true false 10",
+          "6 7 true false 10",
+          "5 6 true true 20",
+          "5 7 false false 7"
+        ],
+        "answer": 0,
+        "why": "getAndIncrement 返回旧值 5 再加到 6；incrementAndGet 先加到 7 再返回 7；compareAndSet(7, 10) 当前值是 7，更新成功；compareAndSet(7, 20) 当前值已是 10，失败；最终是 10。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "BlockingQueue 的 take() 在队列为空时会阻塞等待",
+        "correct": true,
+        "why": "适合实现生产者-消费者"
+      },
+      {
+        "statement": "ReentrantLock 在代码块结束时会自动释放锁",
+        "correct": false,
+        "why": "必须手动 unlock，一般写在 finally 里"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-并发工具与死锁-hashmap-的线程安全",
+    "category": "Java多线程/并发工具与死锁",
+    "title": "HashMap 的线程安全",
+    "concept": "HashMap 不是线程安全的；多线程环境下可以用 Hashtable、Collections.synchronizedMap 或 ConcurrentHashMap",
+    "oneLiner": "线程安全是指多个线程同时访问时，不需要额外同步也能得到正确结果；HashMap 并发 put 可能丢数据；Hashtable（Java 1.0 的老类）和 synchronizedMap 都是整张表一把锁，同一时刻只有一个线程能访问；ConcurrentHashMap 锁到 bucket 级别，不同 bucket 可以并发修改，读操作基本不加锁，性能最好，但不允许 null 的 key 和 value。",
+    "explanation": "Is HashMap thread safe in Java？不是；比如两个线程同时 put 到同一个 bucket，可能互相覆盖；同时扩容也可能出问题（Java 7 头插法并发扩容甚至会形成环形链表导致死循环）。\nOther implementations：Hashtable（legacy class from Java 1.0，课件写作 HashTable）；SynchronizedMap（integrated in Collections utility class）；ConcurrentHashMap（bucket-level lock, better performance）。\n课件的图：HashMap 两个线程直接同时进入；Hashtable、SynchronizedMap 整个表一把锁，Thread 2 等 Thread 1；ConcurrentHashMap 多个线程可以同时读，只有写同一段时才需要等待。\nConcurrentHashMap 的实现：Java 7 用分段锁（Segment）；Java 8 改成 CAS + 对 bucket 头节点加 synchronized，锁粒度更细。\n复合操作（先 get 再 put）即使用 ConcurrentHashMap 也不是原子的，要用 putIfAbsent、computeIfAbsent、merge 这类原子方法。",
+    "question": "HashMap 是线程安全的吗？Hashtable、synchronizedMap、ConcurrentHashMap 有什么区别？",
+    "keyPoints": [
+      "HashMap 不是线程安全的，并发 put 可能丢数据",
+      "Hashtable：老类，所有方法加锁，整张表一把锁",
+      "Collections.synchronizedMap：包装任意 Map，同样整张表一把锁",
+      "ConcurrentHashMap：锁到 bucket 级别（Java 8 用 CAS + synchronized），并发性能最好",
+      "Hashtable 和 ConcurrentHashMap 都不允许 null key / value"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "实现",
+        "锁粒度",
+        "null key / value",
+        "性能"
+      ],
+      "rows": [
+        [
+          "HashMap",
+          "无锁，不安全",
+          "允许",
+          "单线程最快"
+        ],
+        [
+          "Hashtable",
+          "整张表",
+          "不允许",
+          "低"
+        ],
+        [
+          "Collections.synchronizedMap",
+          "整张表",
+          "取决于被包装的 Map",
+          "低"
+        ],
+        [
+          "ConcurrentHashMap",
+          "bucket 级别",
+          "不允许",
+          "高"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用了 ConcurrentHashMap 就以为\"先判断再 put\"也是线程安全的",
+        "right": "两步操作之间可能被插入，要用 putIfAbsent / computeIfAbsent / merge"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "ConcurrentHashMap 为什么不允许 null？",
+        "a": "并发环境下 get 返回 null 时无法区分\"key 不存在\"和\"值就是 null\"，又没法像单线程那样先 containsKey 再 get 来确认，所以干脆禁止"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码运行结果是什么？",
+        "lang": "java",
+        "code": "Map<String, Integer> map = new java.util.concurrent.ConcurrentHashMap<>();\nmap.put(\"a\", 1);\nmap.put(null, 2);\nSystem.out.println(map.size());",
+        "options": [
+          "2",
+          "1",
+          "抛出 NullPointerException",
+          "编译错误"
+        ],
+        "answer": 2,
+        "why": "ConcurrentHashMap 不允许 null 作为 key 或 value，put(null, 2) 抛出 NullPointerException；HashMap 才允许一个 null key。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "Map<String, Integer> counts = new java.util.concurrent.ConcurrentHashMap<>();\nRunnable task = () -> { for (int i = 0; i < 1000; i++) counts.merge(\"hits\", 1, Integer::sum); };\nThread t1 = new Thread(task);\nThread t2 = new Thread(task);\nt1.start();\nt2.start();\nt1.join();\nt2.join();\nSystem.out.println(counts.get(\"hits\"));",
+        "options": [
+          "2000",
+          "不确定，通常小于 2000",
+          "1000",
+          "抛出 ConcurrentModificationException"
+        ],
+        "answer": 0,
+        "why": "merge 是 ConcurrentHashMap 提供的原子方法，\"读出旧值、加 1、写回\"作为一个整体完成，不会丢失更新，结果一定是 2000。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "ConcurrentHashMap 比 Hashtable 的并发性能更好",
+        "correct": true,
+        "why": "锁粒度是 bucket 级别，而不是整张表"
+      },
+      {
+        "statement": "HashMap 是线程安全的，只是性能比 ConcurrentHashMap 差",
+        "correct": false,
+        "why": "HashMap 不是线程安全的"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-并发工具与死锁-死锁",
+    "category": "Java多线程/并发工具与死锁",
+    "title": "死锁",
+    "concept": "死锁（Deadlock）是两个或多个线程永远阻塞、互相等待对方释放锁的情况",
+    "oneLiner": "线程 A 持有资源 1 等资源 2，线程 B 持有资源 2 等资源 1，谁也等不到；死锁需要互斥、持有并等待、不可抢占、循环等待四个条件同时满足，破坏其中一个就能避免；常用办法是所有线程按相同顺序加锁、用 tryLock 带超时并重试、尽量减少同时持有的锁。",
+    "explanation": "Deadlock describes a situation where two or more threads are blocked forever, waiting for each other to release the lock。\nNecessary Conditions：\nMutual Exclusion：only 1 process can use a resource at a given time\nHold and Wait：持有一个资源的同时等待另一个\nNo Preemption：资源不能被强行抢走\nCircular Wait：线程之间形成循环等待\nSolutions：Try lock with timeout & retry；Lock Ordering；Minimize number of locks a thread needs at once ...\n排查：用 jstack 或 jconsole 查看线程栈，会提示 \"Found one Java-level deadlock\"。",
+    "question": "什么是死锁？产生死锁的必要条件是什么？怎么避免？",
+    "keyPoints": [
+      "死锁：多个线程互相等待对方释放锁，永远阻塞",
+      "四个必要条件：互斥、持有并等待、不可抢占、循环等待",
+      "按固定顺序加锁，破坏循环等待",
+      "用 tryLock 加超时，拿不到就释放已有的锁并重试",
+      "减少同时持有的锁的数量，缩小锁的范围"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "必要条件",
+        "破坏它的办法"
+      ],
+      "rows": [
+        [
+          "互斥",
+          "用无锁结构（很难完全避免）"
+        ],
+        [
+          "持有并等待",
+          "一次性申请所有需要的锁"
+        ],
+        [
+          "不可抢占",
+          "tryLock 超时后主动释放已持有的锁"
+        ],
+        [
+          "循环等待",
+          "所有线程按相同顺序加锁"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "两个方法分别按 A→B 和 B→A 的顺序加锁",
+        "right": "所有地方都按同一个顺序（比如按账户 id 从小到大）加锁"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "转账时同时锁住转出和转入两个账户，怎么避免死锁？",
+        "a": "按账户 id 排序后再加锁：总是先锁 id 小的账户，再锁 id 大的，这样不会形成循环等待"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "所有线程按相同的顺序获取锁可以避免死锁",
+        "correct": true,
+        "why": "破坏了循环等待条件"
+      },
+      {
+        "statement": "只要满足互斥条件就一定会发生死锁",
+        "correct": false,
+        "why": "必须四个条件同时满足才会死锁"
+      }
+    ]
+  },
+  {
+    "id": "java多线程-单例模式-单例模式-饿汉-懒汉与双重检查锁",
+    "category": "Java多线程/单例模式",
+    "title": "单例模式：饿汉、懒汉与双重检查锁",
+    "concept": "单例（Singleton）是保证一个类同一时间只有一个实例的设计模式；实现方式有饿汉式（类初始化时创建）和懒汉式（第一次调用 getInstance() 时创建）",
+    "oneLiner": "单例的关键是 private 构造器 + 静态的 getInstance()；饿汉式天然线程安全但不管用不用都会创建；懒汉式在多线程下可能创建出多个实例，可以给 getInstance 加 synchronized（简单但每次都加锁），或者用双重检查锁（instance 必须 volatile）；还可以用静态内部类或 enum 实现。",
+    "explanation": "Singleton is a design pattern which ensures that one instance of the singleton class exist at a time。\nTwo ways：Eager initialization – The instance is initialized at the time of creation；Lazy initialization – The instance is initialized when the first time getInstance() method is called。\nWhat could be the problem in multithreading environment？两个线程同时判断 instance == null 都为 true，会各自 new 出一个实例。\nHow to ensure the thread safety？2 approaches：Double check locking for lazily initialized Singleton classes；Synchronized getInstance() method。\n```java\npublic class Singleton {\n    private static volatile Singleton instance;\n    private Singleton() { }\n    public static Singleton getInstance() {\n        if (instance == null) {                  // 第一次检查：已创建就不加锁\n            synchronized (Singleton.class) {\n                if (instance == null) {          // 第二次检查：防止重复创建\n                    instance = new Singleton();\n                }\n            }\n        }\n        return instance;\n    }\n}\n```\n为什么要 volatile：new Singleton() 分为分配内存、初始化、把引用赋给 instance，可能被重排成先赋值后初始化，别的线程会拿到还没初始化完的对象。\nWhy do we need lazy initialization？实例创建代价大、又不一定用到时，延迟到真正需要时再创建，节省启动时间和内存。\n饿汉式的\"创建时机\"是类初始化时，类在第一次被主动使用（比如调用它的静态方法）时才初始化。",
+    "question": "单例模式有哪些实现方式？懒汉式怎么保证线程安全？双重检查锁为什么要加 volatile？",
+    "keyPoints": [
+      "核心：private 构造器 + 静态 getInstance() 返回唯一实例",
+      "饿汉式：类初始化时创建，线程安全，但可能创建了用不到的实例",
+      "懒汉式：第一次使用时创建，多线程下可能创建多个实例",
+      "线程安全的懒汉：synchronized getInstance（每次加锁慢）或双重检查锁（instance 要 volatile）",
+      "静态内部类、enum 也是线程安全的写法，enum 还能防反射和反序列化"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "懒加载",
+        "线程安全",
+        "特点"
+      ],
+      "rows": [
+        [
+          "饿汉式",
+          "否",
+          "是",
+          "最简单"
+        ],
+        [
+          "懒汉式",
+          "是",
+          "否",
+          "多线程会创建多个实例"
+        ],
+        [
+          "synchronized getInstance",
+          "是",
+          "是",
+          "每次调用都加锁，慢"
+        ],
+        [
+          "双重检查锁 + volatile",
+          "是",
+          "是",
+          "只有第一次创建时加锁"
+        ],
+        [
+          "静态内部类",
+          "是",
+          "是",
+          "利用类加载机制"
+        ],
+        [
+          "enum",
+          "否",
+          "是",
+          "防反射、防反序列化"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "双重检查锁的 instance 不加 volatile",
+        "right": "指令重排可能让其他线程拿到未初始化完成的对象"
+      },
+      {
+        "wrong": "认为饿汉式的实例在程序一启动时就创建",
+        "right": "是在类初始化时创建，类第一次被使用时才初始化"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "反射能破坏单例吗？怎么防？",
+        "a": "能，setAccessible(true) 后可以调用 private 构造器；可以在构造器里判断实例已存在就抛异常，或者直接用 enum 单例"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Singleton {\n    private static Singleton instance;\n    private Singleton() { System.out.print(\"create \"); }\n    static Singleton getInstance() {\n        if (instance == null) instance = new Singleton();\n        return instance;\n    }\n}\nSystem.out.print(\"start \");\nSingleton a = Singleton.getInstance();\nSingleton b = Singleton.getInstance();\nSystem.out.println(a == b);",
+        "options": [
+          "start create true",
+          "create start true",
+          "start create create false",
+          "start create false"
+        ],
+        "answer": 0,
+        "why": "懒汉式在第一次调用 getInstance() 时才创建实例，所以 start 先打印；第二次调用直接返回同一个实例，a == b 为 true。"
+      },
+      {
+        "prompt": "下面代码输出什么？",
+        "lang": "java",
+        "code": "class Eager {\n    private static final Eager INSTANCE = new Eager();\n    private Eager() { System.out.print(\"create \"); }\n    static Eager getInstance() { return INSTANCE; }\n    static void hello() { System.out.print(\"hello \"); }\n}\nSystem.out.print(\"start \");\nEager.hello();\nEager.getInstance();\nSystem.out.println(\"end\");",
+        "options": [
+          "start create hello end",
+          "create start hello end",
+          "start hello create end",
+          "start hello end"
+        ],
+        "answer": 0,
+        "why": "饿汉式的实例在类初始化时创建；第一次调用 Eager.hello() 触发了类初始化，先执行静态字段的 new Eager() 打印 create，再执行 hello()；之后 getInstance() 不再创建。"
+      },
+      {
+        "prompt": "下面代码能编译吗？",
+        "lang": "java",
+        "code": "class Singleton {\n    private static final Singleton INSTANCE = new Singleton();\n    private Singleton() { }\n    static Singleton getInstance() { return INSTANCE; }\n}\nSingleton s = new Singleton();\nSystem.out.println(s == Singleton.getInstance());",
+        "options": [
+          "true",
+          "false",
+          "编译错误",
+          "抛出 IllegalStateException"
+        ],
+        "answer": 2,
+        "why": "构造器是 private 的，其他类不能直接 new，编译报错；这正是单例阻止外部创建实例的方式。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "双重检查锁实现单例时，instance 字段需要用 volatile 修饰",
+        "correct": true,
+        "why": "防止指令重排导致拿到未初始化完成的对象"
+      },
+      {
+        "statement": "不加任何同步的懒汉式单例在多线程下也只会创建一个实例",
+        "correct": false,
+        "why": "多个线程可能同时通过 null 判断，各自创建实例"
+      }
+    ]
+  },
+  {
     "id": "java异常与io-异常体系-异常与-throwable-体系",
     "category": "Java异常与IO/异常体系",
     "title": "异常与 Throwable 体系",

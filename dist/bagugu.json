@@ -9583,6 +9583,4190 @@
     ]
   },
   {
+    "id": "mysql查询-多表连接-join-的作用与-inner-join",
+    "category": "MySQL查询/多表连接",
+    "title": "JOIN 的作用与 INNER JOIN",
+    "concept": "JOIN 按某个匹配的列把两张或多张表的行组合在一起；INNER JOIN 只返回两张表里都能匹配上的行，任何一边没有匹配的行都不会出现在结果里",
+    "oneLiner": "JOIN 用匹配列的值把行配对，匹配列不需要同名、也不需要是主键或外键；INNER JOIN（INNER 可以省略）只保留两边都匹配的行；一对多连接时\"一\"那边的行会被重复，再做 SUM 容易重复计算；NATURAL JOIN 自动按所有同名列连接，同名但含义不同的列会被误当成连接条件。",
+    "explanation": "A JOIN clause is used to combine rows from 2 or more tables, based on a matching column；Matching Columns DO NOT have to have the same name；Matching Columns DO NOT need to be keys；Scope: table to table, table to view。\n例子：Customer(id, name)、Order(orderno, name, customer_id)，按 Customer.id = Order.customer_id 找某个客户的订单。\nInner Join returns records that have matching values in both tables；If there are records in one table that do not have matches in the other table these records will not be shown。\n语法：T1 INNER JOIN T2 ON <condition>；T1 JOIN T2 ON <condition>；T1 NATURAL JOIN T2。\n课件例子：STUDENT(NETID, NAME)、ENROLL(NETID, CRN)、COURSE(CRN, NAME)，查每个学生选了哪些课（课件把第三张表又写成了 STUDENT(NETID, NAME)，应为 COURSE(CRN, NAME)）：\n```sql\nSELECT s.NAME, c.NAME\nFROM STUDENT s\nJOIN ENROLL e ON s.NETID = e.NETID\nJOIN COURSE c ON e.CRN = c.CRN;\n```\n没选课的 Betty、Risa 和没人选的 COMP 533 都不出现；Andre 选了两门，出现两行。\n多表连接时每多一个 JOIN 就多一个 ON；忘写 ON 条件会得到笛卡尔积。",
+    "question": "什么是 JOIN？INNER JOIN 返回哪些行？",
+    "keyPoints": [
+      "JOIN 按匹配列把多张表的行组合起来，匹配列不必同名，也不必是键",
+      "INNER JOIN 只返回两边都能匹配的行，没有匹配的行被排除",
+      "JOIN 和 INNER JOIN 是同一个意思",
+      "一对多连接会让\"一\"那边的行重复出现，聚合时要注意重复计算",
+      "NATURAL JOIN 按所有同名列连接，容易误连，一般显式写 ON"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "连接条件",
+        "注意"
+      ],
+      "rows": [
+        [
+          "A JOIN B ON A.x = B.y",
+          "显式指定",
+          "推荐"
+        ],
+        [
+          "A NATURAL JOIN B",
+          "所有同名列自动等值连接",
+          "多出同名列时结果会变"
+        ],
+        [
+          "FROM A, B WHERE A.x = B.y",
+          "写在 WHERE 里",
+          "旧写法，忘写 WHERE 就成了笛卡尔积"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 NATURAL JOIN 连 STUDENT、ENROLL、COURSE，以为会按 NETID 和 CRN 连接",
+        "right": "STUDENT 和 COURSE 都有 NAME 列，NAME 也会被当成连接条件，结果一行都没有"
+      },
+      {
+        "wrong": "订单表和付款表都按客户连接后再分别 SUM 金额",
+        "right": "两个\"多\"的表连在一起会把行数相乘，SUM 被放大，应该先分别聚合再连接"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "JOIN 的连接列一定要建外键吗？",
+        "a": "不需要，JOIN 只看值是否匹配；外键是保证数据正确的约束，和能不能 JOIN 无关，不过连接列上最好有索引"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nCREATE TABLE course (crn INT, name VARCHAR(20));\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nINSERT INTO course VALUES (123, 'COMP 430'), (234, 'COMP 533'), (345, 'COMP 530');\nSELECT s.name, c.name FROM student s JOIN enroll e ON s.netid = e.netid JOIN course c ON e.crn = c.crn ORDER BY s.name, c.name;",
+        "options": [
+          "Andre COMP 430 | Andre COMP 530 | Chris COMP 430",
+          "Andre COMP 430 | Chris COMP 430",
+          "Andre COMP 430 | Andre COMP 530 | Betty NULL | Chris COMP 430 | Risa NULL",
+          "Andre COMP 430 | Andre COMP 530 | Chris COMP 430 | NULL COMP 533"
+        ],
+        "answer": 0,
+        "why": "INNER JOIN 只保留两边都匹配的行：Betty、Risa 没有选课记录，COMP 533 没人选，都不出现；Andre 有两条选课记录，所以出现两行。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nCREATE TABLE course (crn INT, name VARCHAR(20));\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nINSERT INTO course VALUES (123, 'COMP 430'), (234, 'COMP 533'), (345, 'COMP 530');\nSELECT COUNT(*) FROM student NATURAL JOIN enroll NATURAL JOIN course;",
+        "options": [
+          "0",
+          "3",
+          "12",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "student NATURAL JOIN enroll 按同名的 netid 连接，得到 (netid, name, crn) 3 行；再 NATURAL JOIN course 时，同名列有 crn 和 name 两个，要求学生名等于课程名，没有一行满足，结果是 0。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE orders (id INT, customer VARCHAR(10), amount INT);\nCREATE TABLE payments (id INT, customer VARCHAR(10), paid INT);\nINSERT INTO orders VALUES (1, 'Amy', 100), (2, 'Amy', 50);\nINSERT INTO payments VALUES (1, 'Amy', 30), (2, 'Amy', 40), (3, 'Amy', 80);\nSELECT SUM(o.amount), SUM(p.paid) FROM orders o JOIN payments p ON o.customer = p.customer;",
+        "options": [
+          "150 150",
+          "450 300",
+          "150 300",
+          "300 450"
+        ],
+        "answer": 1,
+        "why": "customer 不是键，Amy 的 2 个订单和 3 笔付款两两匹配，连接结果有 2 × 3 = 6 行；每个订单金额被算了 3 次：150 × 3 = 450，每笔付款被算了 2 次：150 × 2 = 300。正确做法是先分别按客户聚合，再连接。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "JOIN 的匹配列不需要同名，也不需要是主键或外键",
+        "correct": true,
+        "why": "课件原话：Matching Columns DO NOT have to have the same name / DO NOT need to be keys"
+      },
+      {
+        "statement": "INNER JOIN 会保留左表中没有匹配的行，并把右表的列填成 NULL",
+        "correct": false,
+        "why": "这是 LEFT JOIN 的行为，INNER JOIN 只保留两边都匹配的行"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-多表连接-cross-join-与笛卡尔积",
+    "category": "MySQL查询/多表连接",
+    "title": "CROSS JOIN 与笛卡尔积",
+    "concept": "CROSS JOIN 返回两张表所有行的两两组合，也就是笛卡尔积：A × B = {(a, b) | a ∈ A and b ∈ B}",
+    "oneLiner": "CROSS JOIN 不需要连接条件，结果行数等于两张表行数的乘积，数据量大而且通常不是想要的结果；FROM A, B 不写 WHERE 也是笛卡尔积；只要有一张表是空的，结果就是 0 行。",
+    "explanation": "Cross Join：Display every possible combination of all values in the designated columns；Cartesian Product；A lot of data, usually not intended。\n语法：T1 CROSS JOIN T2。\n课件例子：A = {x, y, z}，B = {1, 2, 3}，A × B 有 9 个组合；STUDENT 4 行 CROSS JOIN ENROLL 3 行得到 12 行，每个学生都和每条选课记录配了一次，不管 NETID 是否相同。\nINNER JOIN 可以理解成\"先做笛卡尔积，再用 ON 条件筛选\"（数据库实际不会这样执行）。\n有意义的用法：生成所有组合，比如所有尺码 × 所有颜色、每个员工 × 每一天的排班表。",
+    "question": "什么是 CROSS JOIN？结果有多少行？",
+    "keyPoints": [
+      "CROSS JOIN 就是笛卡尔积，每一行和另一张表的每一行组合",
+      "不需要连接条件",
+      "结果行数 = m × n，有一张表为空则结果为 0 行",
+      "FROM A, B 不写 WHERE 条件也是笛卡尔积",
+      "多表 JOIN 漏写 ON 条件会意外得到笛卡尔积，结果行数暴涨"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "写 FROM orders, customers 却忘了 WHERE 连接条件",
+        "right": "得到 订单数 × 客户数 行，既慢又错"
+      },
+      {
+        "wrong": "以为 CROSS JOIN 一张空表会原样返回另一张表",
+        "right": "m × 0 = 0，结果是空的；想保留另一张表的行要用 LEFT JOIN"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "CROSS JOIN 有什么实际用途？",
+        "a": "生成全部组合，比如尺码表 × 颜色表得到所有商品规格，或者员工表 × 日期表生成排班模板，再 LEFT JOIN 实际数据找出缺失的组合"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nCREATE TABLE team (teamname VARCHAR(20));\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nSELECT (SELECT COUNT(*) FROM student CROSS JOIN enroll), (SELECT COUNT(*) FROM student, enroll), (SELECT COUNT(*) FROM student CROSS JOIN team);",
+        "options": [
+          "12 12 0",
+          "12 7 4",
+          "12 12 4",
+          "7 7 0"
+        ],
+        "answer": 0,
+        "why": "4 × 3 = 12；逗号连接不写 WHERE 也是笛卡尔积，同样 12 行；team 表是空的，4 × 0 = 0。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "两张表分别有 m 行和 n 行，CROSS JOIN 的结果有 m × n 行",
+        "correct": true,
+        "why": "笛卡尔积是所有行的两两组合"
+      },
+      {
+        "statement": "CROSS JOIN 必须用 ON 指定连接条件",
+        "correct": false,
+        "why": "CROSS JOIN 不需要连接条件，每一行都和另一张表的每一行组合"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-多表连接-left-join-与-right-join",
+    "category": "MySQL查询/多表连接",
+    "title": "LEFT JOIN 与 RIGHT JOIN",
+    "concept": "LEFT JOIN 返回左表的所有行，以及右表中匹配的行，右表没有匹配时这些列填 NULL；RIGHT JOIN 反过来保留右表的所有行",
+    "oneLiner": "LEFT JOIN 保留左表全部行，右边没匹配上的填 NULL；A RIGHT JOIN B 等价于 B LEFT JOIN A，团队里最好统一用一个方向；右表的过滤条件写在 ON 里，左表仍然全部保留，写在 WHERE 里会把 NULL 行过滤掉，LEFT JOIN 就退化成了 INNER JOIN；LEFT JOIN 之后计数要用 COUNT(右表的列)，COUNT(*) 会把没匹配的那一行也算成 1。",
+    "explanation": "The LEFT JOIN keyword returns all records from the left table and the matching records from the right table；If there is no matching record, NULL will be assigned in the result set；It's a good idea to choose one direction (either LEFT or RIGHT) and use it to maintain consistency。\n```sql\nSELECT column_name(s)\nFROM left_table\nLEFT JOIN right_table\nON left_table.column_name = right_table.column_name;\n```\n课件例子（Query all students and show the enrollment process）：STUDENT s LEFT JOIN ENROLL e ON s.NETID = e.NETID 得到 5 行：abc1 Andre abc1 123；abc1 Andre abc1 345；bcd2 Betty NULL NULL；cde4 Chris cde4 123；rbm2 Risa NULL NULL。\n课件例子（Query all the enrollment status in course）：ENROLL e RIGHT JOIN COURSE c ON e.CRN = c.CRN 得到 4 行，没人选的 234 COMP 533 那一行 NETID、CRN 是 NULL。\n（课件 LEFT JOIN 那一页中间那张 12 行的表其实是 CROSS JOIN 的结果，右边的 RIGHT JOIN 查询属于下一页。）\nON 和 WHERE 的区别：ON 决定\"怎么配对\"，配不上的左表行仍然保留；WHERE 在连接之后过滤整行，右表列为 NULL 的行会被 e.crn = 123 这样的条件过滤掉。\nLEFT OUTER JOIN 和 LEFT JOIN 是同一个意思，OUTER 可以省略。",
+    "question": "LEFT JOIN 和 INNER JOIN 有什么区别？右表的过滤条件写在 ON 里和 WHERE 里有什么不同？",
+    "keyPoints": [
+      "LEFT JOIN 保留左表所有行，右表没匹配的列填 NULL；INNER JOIN 只保留匹配的行",
+      "A RIGHT JOIN B 等价于 B LEFT JOIN A，最好统一用一个方向",
+      "右表条件写在 ON 里：只影响配对，左表行全部保留",
+      "右表条件写在 WHERE 里：NULL 行被过滤，效果等于 INNER JOIN",
+      "LEFT JOIN 后统计数量用 COUNT(右表列)，不能用 COUNT(*)"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "左表没匹配的行",
+        "效果"
+      ],
+      "rows": [
+        [
+          "LEFT JOIN e ON s.id = e.sid AND e.crn = 123",
+          "保留，右边是 NULL",
+          "所有学生 + 是否选了 123"
+        ],
+        [
+          "LEFT JOIN e ON s.id = e.sid WHERE e.crn = 123",
+          "被过滤",
+          "只剩选了 123 的学生"
+        ],
+        [
+          "INNER JOIN e ON s.id = e.sid AND e.crn = 123",
+          "不保留",
+          "只剩选了 123 的学生"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "想列出所有学生和他们 123 课程的成绩，把 e.crn = 123 写在 WHERE 里",
+        "right": "没选 123 的学生被过滤掉了，条件要写在 ON 里"
+      },
+      {
+        "wrong": "LEFT JOIN 后用 COUNT(*) 统计每个学生选了几门课",
+        "right": "没选课的学生也有一行（右边是 NULL），COUNT(*) 得 1，要用 COUNT(e.crn) 得 0"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么建议只用 LEFT JOIN，不用 RIGHT JOIN？",
+        "a": "两者可以互相改写，统一用 LEFT JOIN 时\"主表\"总是写在最前面，多表连接时更容易读懂哪张表的行会全部保留"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nSELECT s.name, e.crn FROM student s LEFT JOIN enroll e ON s.netid = e.netid AND e.crn = 123 ORDER BY s.name;",
+        "options": [
+          "Andre 123 | Betty NULL | Chris 123 | Risa NULL",
+          "Andre 123 | Chris 123",
+          "Andre 123 | Andre 345 | Betty NULL | Chris 123 | Risa NULL",
+          "Andre 123 | Andre NULL | Betty NULL | Chris 123 | Risa NULL"
+        ],
+        "answer": 0,
+        "why": "e.crn = 123 写在 ON 里，只影响配对：Andre 只和 123 那条记录配上，345 那条不参与；Betty、Risa 没有能配上的记录，仍然保留，右边填 NULL。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nSELECT s.name, e.crn FROM student s LEFT JOIN enroll e ON s.netid = e.netid WHERE e.crn = 123 ORDER BY s.name;",
+        "options": [
+          "Andre 123 | Betty NULL | Chris 123 | Risa NULL",
+          "Andre 123 | Chris 123",
+          "Andre 123 | Andre 345 | Chris 123",
+          "查询结果为空"
+        ],
+        "answer": 1,
+        "why": "先 LEFT JOIN 得到 5 行（Betty、Risa 那两行 crn 是 NULL），WHERE e.crn = 123 再过滤整行，NULL 不满足条件，345 那行也不满足，只剩 Andre、Chris，效果和 INNER JOIN 一样。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT);\nINSERT INTO student VALUES ('rbm2', 'Risa'), ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nSELECT s.name, COUNT(*), COUNT(e.crn) FROM student s LEFT JOIN enroll e ON s.netid = e.netid GROUP BY s.name ORDER BY s.name;",
+        "options": [
+          "Andre 2 2 | Betty 1 0 | Chris 1 1 | Risa 1 0",
+          "Andre 2 2 | Betty 0 0 | Chris 1 1 | Risa 0 0",
+          "Andre 2 2 | Chris 1 1",
+          "Andre 2 2 | Betty 1 1 | Chris 1 1 | Risa 1 1"
+        ],
+        "answer": 0,
+        "why": "Betty、Risa 在 LEFT JOIN 结果里各有一行（右边全是 NULL），COUNT(*) 数行数得 1；COUNT(e.crn) 不数 NULL，得 0，这才是选课数。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "A RIGHT JOIN B 和 B LEFT JOIN A 返回相同的行",
+        "correct": true,
+        "why": "两者都保留 B 的所有行，只是结果里列的顺序不同"
+      },
+      {
+        "statement": "LEFT JOIN 中右表的过滤条件写在 WHERE 里和写在 ON 里效果一样",
+        "correct": false,
+        "why": "写在 WHERE 里会把右表为 NULL 的行过滤掉，LEFT JOIN 退化成 INNER JOIN"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-多表连接-反连接-查找没有匹配的行",
+    "category": "MySQL查询/多表连接",
+    "title": "反连接：查找没有匹配的行",
+    "concept": "反连接（anti join）是找出\"在一张表里、但在另一张表里没有对应记录\"的行，常用 LEFT JOIN（或 RIGHT JOIN）加 WHERE 另一边的连接列 IS NULL 实现",
+    "oneLiner": "外连接没匹配上时，另一边的所有列都是 NULL，所以 LEFT JOIN B ... WHERE B.key IS NULL 就能找出 A 有、B 没有的行；判断时要用连接列或主键这类不会为 NULL 的列，不能用本来就可能为 NULL 的普通列；同样的需求也可以用 NOT EXISTS 写。",
+    "explanation": "课件韦恩图：SELECT <select_list> FROM TableA A LEFT JOIN TableB B ON A.Key = B.Key WHERE B.Key IS NULL（只要 A 去掉交集的部分）；RIGHT JOIN ... WHERE A.Key IS NULL（只要 B 去掉交集的部分）；FULL OUTER JOIN ... WHERE A.Key IS NULL OR B.Key IS NULL（两边各自独有的部分）。\n课件例子：查没人选的课：\n```sql\nSELECT *\nFROM ENROLL e\nRIGHT JOIN COURSE c ON e.CRN = c.CRN\nWHERE e.CRN IS NULL;\n```\n结果只有 NULL NULL 234 COMP 533 一行。\n典型需求：没下过单的客户、没有员工的部门、没被引用的商品。\n等价写法：WHERE NOT EXISTS (SELECT 1 FROM enroll e WHERE e.crn = c.crn)。不要用 NOT IN，子查询结果里有 NULL 时会一行都查不出来。",
+    "question": "怎么查出\"在 A 表中但在 B 表中没有对应记录\"的行？",
+    "keyPoints": [
+      "A LEFT JOIN B ON 连接条件 WHERE B.连接列 IS NULL",
+      "没匹配上时 B 的所有列都是 NULL，用连接列判断最可靠",
+      "不能用 B 中本来就可能为 NULL 的普通列判断",
+      "也可以写成 NOT EXISTS 相关子查询",
+      "避免用 NOT IN，子查询里有 NULL 时结果为空"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "用 WHERE e.grade IS NULL 判断学生有没有选课",
+        "right": "选了课但还没出成绩的学生 grade 也是 NULL，会被误判；要用 e.netid IS NULL"
+      },
+      {
+        "wrong": "把 IS NULL 条件写进 ON：LEFT JOIN e ON s.netid = e.netid AND e.netid IS NULL",
+        "right": "这样所有学生都配不上，全部保留，起不到过滤作用；IS NULL 要写在 WHERE 里"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "LEFT JOIN ... IS NULL 和 NOT EXISTS 哪个好？",
+        "a": "结果相同，MySQL 8.0 的优化器通常会把两者都优化成反连接，性能差不多；NOT EXISTS 语义更直观，LEFT JOIN 写法在老版本里更常见"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE enroll (netid VARCHAR(10), crn INT);\nCREATE TABLE course (crn INT, name VARCHAR(20));\nINSERT INTO enroll VALUES ('abc1', 123), ('abc1', 345), ('cde4', 123);\nINSERT INTO course VALUES (123, 'COMP 430'), (234, 'COMP 533'), (345, 'COMP 530');\nSELECT c.crn, c.name FROM enroll e RIGHT JOIN course c ON e.crn = c.crn WHERE e.crn IS NULL;",
+        "options": [
+          "234 COMP 533",
+          "123 COMP 430 | 345 COMP 530",
+          "NULL NULL",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "RIGHT JOIN 保留 course 的所有行，234 没有选课记录，那一行 e.crn 是 NULL；WHERE e.crn IS NULL 只留下没人选的课。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE enroll (netid VARCHAR(10), crn INT, grade VARCHAR(2));\nINSERT INTO student VALUES ('abc1', 'Andre'), ('bcd2', 'Betty'), ('cde4', 'Chris');\nINSERT INTO enroll VALUES ('abc1', 123, 'A'), ('cde4', 123, NULL);\nSELECT s.name FROM student s LEFT JOIN enroll e ON s.netid = e.netid WHERE e.grade IS NULL ORDER BY s.name;",
+        "options": [
+          "Betty | Chris",
+          "Betty",
+          "Chris",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "Betty 没选课，grade 是 NULL；Chris 选了课但 grade 本来就是 NULL，也被选中了。想找没选课的学生要判断连接列 e.netid IS NULL，结果才只有 Betty。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "LEFT JOIN 后用 WHERE 右表连接列 IS NULL，可以找出左表中没有匹配的行",
+        "correct": true,
+        "why": "没匹配上时右表的所有列都被填成 NULL"
+      },
+      {
+        "statement": "判断\"没有匹配\"时，WHERE 里检查右表任意一列 IS NULL 都可以",
+        "correct": false,
+        "why": "右表中本来就可能为 NULL 的普通列会把匹配上的行也误判进来"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-多表连接-自连接-self-join",
+    "category": "MySQL查询/多表连接",
+    "title": "自连接（Self Join）",
+    "concept": "自连接是同一张表和自己做 JOIN，给这张表起两个不同的别名，当成两张表使用，常用于表内的层级关系，比如员工和经理",
+    "oneLiner": "同一张表用两个别名（F 和 MGR），按 F.MGRNETID = MGR.NETID 连接就能查出每个人的经理；用 INNER JOIN 时没有经理的人（MGRNETID 是 NULL）不会出现，想列出所有人要用 LEFT JOIN；不起别名时 MySQL 会报 Not unique table/alias。",
+    "explanation": "Self Join is used when a JOIN is used on the same table。\n课件例子：FACULTY(NETID, NAME, MGRNETID)：rbm2 Risa bcd2；abc1 Andre bcd2；bcd2 Betty cde4；cde4 Chris NULL。\n```sql\nSELECT F.NAME AS EMPLOYEE, MGR.NAME AS MANAGER\nFROM FACULTY F JOIN FACULTY MGR\nON F.MGRNETID = MGR.NETID;\n```\n结果：Andre Betty；Betty Chris；Risa Betty。Chris 没有经理，不在结果里。\n别名 F 表示\"员工\"这一份，MGR 表示\"经理\"这一份；连接方向反了（F.NETID = MGR.MGRNETID）就会变成\"每个人和他的下属\"。\n这种表叫自引用表：MGRNETID 引用同一张表的主键 NETID，是一元（unary）的一对多关系。",
+    "question": "什么是自连接？怎么查出每个员工的经理？",
+    "keyPoints": [
+      "自连接是同一张表和自己连接",
+      "必须给两份表起不同的别名，区分\"员工\"和\"经理\"",
+      "连接条件：员工.经理编号 = 经理.编号",
+      "INNER JOIN 会漏掉没有经理的人，要全部列出用 LEFT JOIN",
+      "常用于层级结构：员工 - 经理、分类 - 父分类"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "用 INNER JOIN 列出\"所有员工和经理\"",
+        "right": "最高层的人经理是 NULL，会被漏掉，要用 LEFT JOIN"
+      },
+      {
+        "wrong": "写成 ON F.NETID = MGR.MGRNETID 还以为查的是经理",
+        "right": "方向反了，查出来的是每个人的下属"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "自连接能查出所有层级的上级（经理的经理……）吗？",
+        "a": "一次自连接只能往上查一层，查多层要连多次；层级不固定时用 MySQL 8.0 的递归 CTE（WITH RECURSIVE）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE faculty (netid VARCHAR(10), name VARCHAR(20), mgrnetid VARCHAR(10));\nINSERT INTO faculty VALUES ('rbm2', 'Risa', 'bcd2'), ('abc1', 'Andre', 'bcd2'), ('bcd2', 'Betty', 'cde4'), ('cde4', 'Chris', NULL);\nSELECT f.name, m.name FROM faculty f LEFT JOIN faculty m ON f.mgrnetid = m.netid ORDER BY f.name;",
+        "options": [
+          "Andre Betty | Betty Chris | Chris NULL | Risa Betty",
+          "Andre Betty | Betty Chris | Risa Betty",
+          "Andre Betty | Betty Chris | Chris Chris | Risa Betty",
+          "Betty Andre | Chris Betty | Betty Risa"
+        ],
+        "answer": 0,
+        "why": "LEFT JOIN 保留所有员工；Chris 的 mgrnetid 是 NULL，配不上任何经理，经理名是 NULL。用 INNER JOIN 就只有 3 行，Chris 不出现。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE faculty (netid VARCHAR(10), name VARCHAR(20), mgrnetid VARCHAR(10));\nINSERT INTO faculty VALUES ('rbm2', 'Risa', 'bcd2'), ('abc1', 'Andre', 'bcd2'), ('bcd2', 'Betty', 'cde4'), ('cde4', 'Chris', NULL);\nSELECT m.name, COUNT(*) FROM faculty f JOIN faculty m ON f.mgrnetid = m.netid GROUP BY m.name ORDER BY m.name;",
+        "options": [
+          "Betty 2 | Chris 1",
+          "Andre 1 | Betty 1 | Risa 1",
+          "Betty 2 | Chris 1 | NULL 1",
+          "Betty 3"
+        ],
+        "answer": 0,
+        "why": "按经理分组统计直接下属：Risa、Andre 的经理是 Betty，Betty 的经理是 Chris；Chris 自己没有经理，INNER JOIN 时不参与，也不会出现 NULL 组。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "自连接时要给同一张表起两个不同的别名",
+        "correct": true,
+        "why": "否则 MySQL 报 Not unique table/alias，也无法区分两份表的列"
+      },
+      {
+        "statement": "自连接只能使用 INNER JOIN",
+        "correct": false,
+        "why": "自连接也可以用 LEFT JOIN，比如把没有经理的员工也列出来"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-多表连接-full-outer-join-及其在-mysql-中的实现",
+    "category": "MySQL查询/多表连接",
+    "title": "FULL OUTER JOIN 及其在 MySQL 中的实现",
+    "concept": "FULL OUTER JOIN 保留两张表的所有行，能匹配的拼在一起，任何一边没有匹配的行另一边填 NULL；MySQL 不支持 FULL OUTER JOIN，用 LEFT JOIN 和 RIGHT JOIN 的结果做 UNION 来实现",
+    "oneLiner": "MySQL 里写 A LEFT JOIN B UNION A RIGHT JOIN B 模拟全外连接；必须用 UNION 去重，因为两边都匹配的行在左右两个结果里各出现一次；想用更快的 UNION ALL，第二段要加 WHERE A.key IS NULL，只取右表独有的行。",
+    "explanation": "Full Outer (MySQL doesn't support)：Display ALL values, matching and non-matching (In MySQL it can be achieved by using left join and right join)。\nUsed to match up tuples from different relations；Includes all the relations from both sides（这里的 relations 应该是 tuples，两边的行都保留）；If there is no matching tuple, shows NULL。\n课件例子：STUDENT(ghi8 Gary, hij2 Holly, ijk12 Isabel)，TEAM(Peanut butter 队长 ghi8，Jelly 队长 NULL)：\n```sql\nSELECT s.NAME, t.TEAMNAME\nFROM STUDENT s LEFT OUTER JOIN TEAM t ON s.NETID = t.CAPTAINNETID\nUNION\nSELECT s.NAME, t.TEAMNAME\nFROM STUDENT s RIGHT OUTER JOIN TEAM t ON s.NETID = t.CAPTAINNETID;\n```\n结果 4 行：Gary Peanut butter；NULL Jelly；Holly NULL；Isabel NULL（课件结果表的第二列表头写成了 NAME，应为 TEAMNAME）。\nUNION ALL 写法：LEFT JOIN 的结果 UNION ALL（RIGHT JOIN ... WHERE s.NETID IS NULL），避免去重的开销。\nPostgreSQL、SQL Server、Oracle 支持 FULL OUTER JOIN；MySQL 8.x 仍然不支持。",
+    "question": "MySQL 不支持 FULL OUTER JOIN，怎么实现？",
+    "keyPoints": [
+      "FULL OUTER JOIN 保留两边所有行，没匹配的一边填 NULL",
+      "MySQL 用 LEFT JOIN 结果 UNION RIGHT JOIN 结果实现",
+      "必须用 UNION 去重，两边都匹配的行会在两段里各出现一次",
+      "用 UNION ALL 时，第二段只取右表独有的行（WHERE 左表键 IS NULL）",
+      "两段 SELECT 的列数、列顺序要一致"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "Gary Peanut butter 出现几次",
+        "结果行数"
+      ],
+      "rows": [
+        [
+          "LEFT JOIN UNION RIGHT JOIN",
+          "1",
+          "4"
+        ],
+        [
+          "LEFT JOIN UNION ALL RIGHT JOIN",
+          "2",
+          "5"
+        ],
+        [
+          "LEFT JOIN UNION ALL (RIGHT JOIN WHERE s.NETID IS NULL)",
+          "1",
+          "4"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "在 MySQL 里直接写 FULL OUTER JOIN",
+        "right": "MySQL 不支持，会报语法错误，要用 LEFT JOIN UNION RIGHT JOIN"
+      },
+      {
+        "wrong": "为了快把 UNION 换成 UNION ALL，其他不改",
+        "right": "两边都匹配的行会重复，要同时给第二段加 WHERE 左表键 IS NULL"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "用 UNION 模拟全外连接，有没有可能把本来就重复的行也去掉？",
+        "a": "有可能：如果左表本身就有两行完全相同的数据，UNION 会把它们合并成一行；用 UNION ALL 加 IS NULL 条件的写法能保留这种重复"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE team (teamname VARCHAR(20), captainnetid VARCHAR(10));\nINSERT INTO student VALUES ('ghi8', 'Gary'), ('hij2', 'Holly'), ('ijk12', 'Isabel');\nINSERT INTO team VALUES ('Peanut butter', 'ghi8'), ('Jelly', NULL);\nSELECT s.name AS sname, t.teamname AS tname FROM student s LEFT JOIN team t ON s.netid = t.captainnetid UNION SELECT s.name, t.teamname FROM student s RIGHT JOIN team t ON s.netid = t.captainnetid ORDER BY sname, tname;",
+        "options": [
+          "NULL Jelly | Gary Peanut butter | Holly NULL | Isabel NULL",
+          "Gary Peanut butter | Holly NULL | Isabel NULL",
+          "Gary Peanut butter | NULL Jelly",
+          "NULL Jelly | Gary Peanut butter | Gary Peanut butter | Holly NULL | Isabel NULL"
+        ],
+        "answer": 0,
+        "why": "LEFT JOIN 部分得到 Gary、Holly、Isabel 三行，RIGHT JOIN 部分得到 Gary 和 Jelly 两行，UNION 把重复的 Gary Peanut butter 去掉，共 4 行；升序排序时 NULL 排在最前面。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE student (netid VARCHAR(10), name VARCHAR(20));\nCREATE TABLE team (teamname VARCHAR(20), captainnetid VARCHAR(10));\nINSERT INTO student VALUES ('ghi8', 'Gary'), ('hij2', 'Holly'), ('ijk12', 'Isabel');\nINSERT INTO team VALUES ('Peanut butter', 'ghi8'), ('Jelly', NULL);\nSELECT COUNT(*) FROM (SELECT s.name, t.teamname FROM student s LEFT JOIN team t ON s.netid = t.captainnetid UNION ALL SELECT s.name, t.teamname FROM student s RIGHT JOIN team t ON s.netid = t.captainnetid) x;",
+        "options": [
+          "4",
+          "5",
+          "3",
+          "6"
+        ],
+        "answer": 1,
+        "why": "LEFT JOIN 3 行 + RIGHT JOIN 2 行，UNION ALL 不去重，Gary Peanut butter 出现了两次，共 5 行；换成 UNION 才是正确的全外连接结果 4 行。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "MySQL 不支持 FULL OUTER JOIN，可以把 LEFT JOIN 和 RIGHT JOIN 的结果用 UNION 合并来实现",
+        "correct": true,
+        "why": "课件原话：In MySQL it can be achieved by using left join and right join"
+      },
+      {
+        "statement": "直接用 UNION ALL 合并 LEFT JOIN 和 RIGHT JOIN 的结果，就和 FULL OUTER JOIN 完全一样",
+        "correct": false,
+        "why": "两边都匹配的行会出现两次，要用 UNION，或者给第二段加 WHERE 左表键 IS NULL"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-集合运算-union-与-union-all",
+    "category": "MySQL查询/集合运算",
+    "title": "UNION 与 UNION ALL",
+    "concept": "UNION 把两个 SELECT 的结果合并成一个结果集并去掉重复行，UNION ALL 合并但不去重；两个 SELECT 的列数必须相同、对应列的类型应当一致，结果的列名取自第一个 SELECT",
+    "oneLiner": "UNION 去重（要排序或哈希，比较慢），UNION ALL 原样保留所有行（快）；去重是对整个结果做的，连同一个 SELECT 内部的重复行也会去掉；列数不同直接报错；ORDER BY 写在最后，对整个结果排序，用第一个 SELECT 的列名或别名。",
+    "explanation": "Set Operations：Results are unordered. It could be useful to perform operations on these: Union、Intersection、Difference；Different RDBMS provide different levels of support。\nUNION - eliminates duplicates；UNION ALL - does NOT eliminate duplicates；Uses the column names from the first result set；Data types must match；Number of attributes must match。\n课件例子：R(RName) = {Risa, Chris, Bob, Sarah}，S(SName) = {Risa, John, Jorge, Max, Chris}：\n```sql\nSELECT * FROM R\nUNION\nSELECT * FROM S;\n```\nR UNION S 有 7 行（Risa、Chris 只留一份），R UNION ALL S 有 9 行，结果的列名都是 RName。\nMySQL 里对应列类型不同时不会报错，会按所有值推断出结果列的类型（隐式转换），但最好保持一致。\n要对某一个 SELECT 单独排序或 LIMIT，MySQL 要求把它放进括号里；写在最后的 ORDER BY / LIMIT 作用于整个 UNION 结果。",
+    "question": "UNION 和 UNION ALL 有什么区别？使用时有什么要求？",
+    "keyPoints": [
+      "UNION 去掉重复行，UNION ALL 保留所有行",
+      "UNION 要去重，性能比 UNION ALL 差；确定没有重复或允许重复时用 UNION ALL",
+      "各个 SELECT 的列数必须相同，对应列的类型应当一致",
+      "结果的列名取自第一个 SELECT",
+      "ORDER BY 写在最后，对整个结果排序"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "UNION",
+        "UNION ALL"
+      ],
+      "rows": [
+        [
+          "重复行",
+          "去掉",
+          "保留"
+        ],
+        [
+          "性能",
+          "慢（要去重）",
+          "快"
+        ],
+        [
+          "R(4 行) 和 S(5 行) 有 2 个相同",
+          "7 行",
+          "9 行"
+        ],
+        [
+          "适用",
+          "需要集合语义",
+          "明确不会重复，或者重复有意义"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 UNION 只去掉\"两边之间\"的重复",
+        "right": "UNION 对整个结果去重，第一个表自己内部的重复行也会被合并"
+      },
+      {
+        "wrong": "在 UNION 之后的 ORDER BY 里用第二个 SELECT 的列名",
+        "right": "结果的列名来自第一个 SELECT，ORDER BY 应该用第一个 SELECT 的列名或别名"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么能用 UNION ALL 时尽量不用 UNION？",
+        "a": "UNION 要对整个结果做排序或哈希去重，数据量大时会用到临时表，开销明显；如果两边本来就不会有重复（比如按不同条件拆开的同一张表），UNION ALL 结果一样但更快"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Risa'), ('Chris'), ('Bob'), ('Sarah');\nINSERT INTO s VALUES ('Risa'), ('John'), ('Jorge'), ('Max'), ('Chris');\nSELECT (SELECT COUNT(*) FROM (SELECT rname FROM r UNION SELECT sname FROM s) t1), (SELECT COUNT(*) FROM (SELECT rname FROM r UNION ALL SELECT sname FROM s) t2);",
+        "options": [
+          "7 9",
+          "9 9",
+          "7 7",
+          "9 7"
+        ],
+        "answer": 0,
+        "why": "Risa 和 Chris 两边都有，UNION 去重后 4 + 5 - 2 = 7 行；UNION ALL 全部保留，4 + 5 = 9 行。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Bob'), ('Bob'), ('Risa');\nINSERT INTO s VALUES ('Max');\nSELECT rname FROM r UNION SELECT sname FROM s ORDER BY rname;",
+        "options": [
+          "Bob | Max | Risa",
+          "Bob | Bob | Max | Risa",
+          "Max",
+          "Bob | Bob | Risa | Max"
+        ],
+        "answer": 0,
+        "why": "两边之间没有相同的值，但 r 自己有两个 Bob；UNION 对整个结果去重，只留一个 Bob；ORDER BY 作用于整个结果，用的是第一个 SELECT 的列名 rname。"
+      },
+      {
+        "prompt": "下面 SQL 执行结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10), age INT);\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Bob', 20);\nINSERT INTO s VALUES ('Max');\nSELECT rname, age FROM r UNION SELECT sname FROM s;",
+        "options": [
+          "Bob 20 | Max NULL",
+          "Bob 20 | Max",
+          "执行报错",
+          "查询结果为空"
+        ],
+        "answer": 2,
+        "why": "第一个 SELECT 有 2 列，第二个只有 1 列，列数不同，UNION 直接报错，不会自动补 NULL；需要的话要在第二个 SELECT 里显式写 SELECT sname, NULL。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "UNION 结果集的列名取自第一个 SELECT 语句",
+        "correct": true,
+        "why": "课件：Uses the column names from the first result set"
+      },
+      {
+        "statement": "UNION ALL 会自动去掉结果中的重复行",
+        "correct": false,
+        "why": "UNION ALL 不去重，去重的是 UNION"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-集合运算-交集-intersect",
+    "category": "MySQL查询/集合运算",
+    "title": "交集（INTERSECT）",
+    "concept": "交集返回同时出现在两个查询结果中的行；标准 SQL 用 INTERSECT，MySQL 从 8.0.31 才支持，之前的版本用 INNER JOIN 或 IN 子查询实现",
+    "oneLiner": "课件说 MySQL 不直接支持交集，可以用 INNER JOIN 实现（这是 8.0.31 之前的情况）；INTERSECT 自带去重，而 INNER JOIN 遇到重复值会产生重复行，要加 DISTINCT；也可以写成 SELECT DISTINCT ... WHERE x IN (SELECT ...)。",
+    "explanation": "Intersection：MySQL doesn't support intersection directly, but INNER JOIN can be used to implement intersection。\n```sql\nSELECT R.RName\nFROM R\nINNER JOIN S ON R.RName = S.SName;\n```\n课件结果：Chris、Risa。\nMySQL 8.0.31+：SELECT RName FROM R INTERSECT SELECT SName FROM S;\nINNER JOIN 写法的两个差别：一是重复值会相乘（R 里有两个 Chris，结果就有两个 Chris），要 SELECT DISTINCT；二是 INTERSECT 把两个 NULL 视为相同，而 JOIN 的 = 遇到 NULL 不成立。\n多列交集：INNER JOIN 的 ON 里把每一列都写成相等条件，或者用 (a, b) IN (SELECT a, b ...)。",
+    "question": "MySQL 怎么求两个查询结果的交集？",
+    "keyPoints": [
+      "MySQL 8.0.31 起支持 INTERSECT",
+      "旧版本用 INNER JOIN 按所有列相等连接",
+      "或者用 SELECT DISTINCT ... WHERE x IN (子查询)",
+      "INNER JOIN 写法遇到重复值会产生重复行，要加 DISTINCT",
+      "INTERSECT 自带去重，并且把 NULL 当作相同的值"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "用 INNER JOIN 求交集，不加 DISTINCT",
+        "right": "某一边有重复值时结果也会重复，INTERSECT 的语义是集合，要 SELECT DISTINCT"
+      },
+      {
+        "wrong": "两个结果都有多列（比如姓名 + 生日），用 INNER JOIN 求交集时只在 ON 里比较了姓名",
+        "right": "交集要求整行相同，ON 里要把每一列都写成相等条件"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "求交集用 INNER JOIN 好还是 IN 子查询好？",
+        "a": "结果一样（加了 DISTINCT 的话），MySQL 的优化器会把 IN 子查询转成半连接（semi-join），一般性能相近；IN 写法天然不会因为右边的重复而产生重复行"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Risa'), ('Chris'), ('Bob'), ('Chris');\nINSERT INTO s VALUES ('Risa'), ('John'), ('Chris');\nSELECT r.rname FROM r INNER JOIN s ON r.rname = s.sname ORDER BY r.rname;",
+        "options": [
+          "Chris | Chris | Risa",
+          "Chris | Risa",
+          "Bob | Chris | Risa",
+          "Risa"
+        ],
+        "answer": 0,
+        "why": "r 里有两个 Chris，各自和 s 的 Chris 匹配一次，所以结果有两行 Chris；要得到集合意义上的交集，写 SELECT DISTINCT r.rname，或者用 INTERSECT。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "MySQL 8.0.31 之前不支持 INTERSECT，可以用 INNER JOIN 或 IN 子查询实现交集",
+        "correct": true,
+        "why": "课件：INNER JOIN can be used to implement intersection"
+      },
+      {
+        "statement": "用 INNER JOIN 实现交集时，结果会像 INTERSECT 一样自动去重",
+        "correct": false,
+        "why": "INNER JOIN 遇到重复值会产生重复行，需要 DISTINCT"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-集合运算-差集-except",
+    "category": "MySQL查询/集合运算",
+    "title": "差集（EXCEPT）",
+    "concept": "差集返回在第一个查询结果中、但不在第二个查询结果中的行；标准 SQL 用 EXCEPT（Oracle 叫 MINUS），MySQL 从 8.0.31 才支持，之前用 NOT EXISTS 或 LEFT JOIN ... IS NULL 实现",
+    "oneLiner": "R EXCEPT S 就是 R 减去在 S 里出现过的值，不满足交换律；旧版本 MySQL 用 NOT EXISTS 或者 LEFT JOIN 加 WHERE 右表列 IS NULL；不要用 NOT IN，S 的结果里只要有一个 NULL，NOT IN 就一行都查不出来。",
+    "explanation": "Difference Implemented via EXCEPT：Display the values in the first select statement MINUS any values found in the second select statement。\n```sql\nSELECT * FROM R\nEXCEPT\nSELECT * FROM S;\n```\n课件结果：Bob、Sarah（课件截图来自 SQL Server；MySQL 8.0.31 起才支持 EXCEPT）。\n旧版本写法：\n```sql\nSELECT r.RName FROM R r\nWHERE NOT EXISTS (SELECT 1 FROM S s WHERE s.SName = r.RName);\n\nSELECT r.RName FROM R r\nLEFT JOIN S s ON r.RName = s.SName\nWHERE s.SName IS NULL;\n```\nNOT IN 的问题：x NOT IN (a, NULL) 等价于 x <> a AND x <> NULL，后半部分永远是 UNKNOWN，整个条件不可能为 TRUE；NOT EXISTS 只看有没有匹配的行，不受 NULL 影响。",
+    "question": "MySQL 怎么求差集？为什么不推荐用 NOT IN？",
+    "keyPoints": [
+      "差集：在第一个结果中、不在第二个结果中的行；MySQL 8.0.31 起支持 EXCEPT",
+      "旧版本用 NOT EXISTS 相关子查询",
+      "或者用 LEFT JOIN ... WHERE 右表列 IS NULL",
+      "NOT IN 遇到子查询结果里有 NULL 时，结果为空",
+      "差集不满足交换律，R - S 和 S - R 不同"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "子查询结果里有 NULL 时"
+      ],
+      "rows": [
+        [
+          "NOT IN (SELECT ...)",
+          "一行都查不出来"
+        ],
+        [
+          "NOT EXISTS (SELECT ... WHERE 相等)",
+          "正常"
+        ],
+        [
+          "LEFT JOIN ... WHERE 右表列 IS NULL",
+          "正常"
+        ],
+        [
+          "EXCEPT（8.0.31+）",
+          "正常，并且自带去重"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 WHERE rname NOT IN (SELECT sname FROM s) 求差集",
+        "right": "s.sname 里有 NULL 时结果为空，改用 NOT EXISTS，或者在子查询里加 WHERE sname IS NOT NULL"
+      },
+      {
+        "wrong": "以为 R EXCEPT S 和 S EXCEPT R 一样",
+        "right": "R - S = {Bob, Sarah}，S - R = {John, Jorge, Max}"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "NOT IN 一定不能用吗？",
+        "a": "子查询的列定义为 NOT NULL，或者子查询里过滤掉了 NULL，NOT IN 就是安全的；但不能保证时用 NOT EXISTS 更稳"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Risa'), ('Chris'), ('Bob'), ('Sarah');\nINSERT INTO s VALUES ('Risa'), ('John'), ('Jorge'), ('Max'), ('Chris');\nSELECT r.rname FROM r LEFT JOIN s ON r.rname = s.sname WHERE s.sname IS NULL ORDER BY r.rname;",
+        "options": [
+          "Bob | Sarah",
+          "John | Jorge | Max",
+          "Chris | Risa",
+          "Bob | John | Jorge | Max | Sarah"
+        ],
+        "answer": 0,
+        "why": "LEFT JOIN 后，Risa、Chris 在 s 里有匹配，Bob、Sarah 没有，右边是 NULL；WHERE s.sname IS NULL 留下 R 独有的值，就是 R - S。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Risa'), ('Chris'), ('Bob'), ('Sarah');\nINSERT INTO s VALUES ('Risa'), ('Chris'), (NULL);\nSELECT rname FROM r WHERE rname NOT IN (SELECT sname FROM s) ORDER BY rname;",
+        "options": [
+          "Bob | Sarah",
+          "Bob | NULL | Sarah",
+          "查询结果为空",
+          "执行报错"
+        ],
+        "answer": 2,
+        "why": "对 Bob 来说，条件是 'Bob' <> 'Risa' AND 'Bob' <> 'Chris' AND 'Bob' <> NULL，最后一项是 UNKNOWN，整个条件不是 TRUE；每一行都这样，所以结果为空。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE r (rname VARCHAR(10));\nCREATE TABLE s (sname VARCHAR(10));\nINSERT INTO r VALUES ('Risa'), ('Chris'), ('Bob'), ('Sarah');\nINSERT INTO s VALUES ('Risa'), ('Chris'), (NULL);\nSELECT rname FROM r WHERE NOT EXISTS (SELECT 1 FROM s WHERE s.sname = r.rname) ORDER BY rname;",
+        "options": [
+          "Bob | Sarah",
+          "查询结果为空",
+          "Chris | Risa",
+          "Bob | NULL | Sarah"
+        ],
+        "answer": 0,
+        "why": "NOT EXISTS 只看子查询有没有返回行：Bob、Sarah 在 s 里找不到相等的值，子查询为空，NOT EXISTS 为真；s 里的 NULL 和谁都不相等，不影响结果。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "R EXCEPT S 返回在 R 中出现、但不在 S 中出现的行",
+        "correct": true,
+        "why": "课件：the values in the first select statement MINUS any values found in the second select statement"
+      },
+      {
+        "statement": "R EXCEPT S 和 S EXCEPT R 的结果相同",
+        "correct": false,
+        "why": "差集不满足交换律，课件例子中 R - S = {Bob, Sarah}，S - R = {John, Jorge, Max}"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-子查询与视图-子查询的分类与规则",
+    "category": "MySQL查询/子查询与视图",
+    "title": "子查询的分类与规则",
+    "concept": "子查询是嵌套在 SELECT、INSERT、UPDATE、DELETE 语句或另一个子查询里的查询，必须写在括号里；按返回结果分为标量子查询、列子查询和表子查询，按是否引用外层查询的列分为非相关子查询和相关子查询",
+    "oneLiner": "标量子查询返回一行一列，可以直接和值比较（score > (SELECT AVG(score) ...)）；列子查询返回一列多行，配合 IN 使用；表子查询放在 FROM 里当临时表；子查询能出现在 WHERE、FROM、SELECT 列表，也能用在 INSERT ... SELECT、UPDATE、DELETE 里；MySQL 不允许在 UPDATE / DELETE 的子查询里直接查询正在修改的那张表。",
+    "explanation": "A subquery is a query that is nested inside a SELECT, INSERT, UPDATE, DELETE statement or inside another subquery；Subqueries must be written in parentheses；Subqueries must include the SELECT clause and the FROM clause（一般如此；MySQL 里 (SELECT 1) 这种不带 FROM 的标量子查询其实也合法）。\n课件用的表：LIKES(ID, DRINKER, COFFEE)、FREQUENTS(ID, DRINKER, CAFE)、SERVES(CAFE, COFFEE)。\n标量子查询返回了多行时，MySQL 报错 Subquery returns more than 1 row；和多行比较要用 IN、EXISTS，或者先聚合成一个值。\n非相关子查询：不依赖外层，可以单独执行，只算一次；相关子查询：引用外层的列，外层每一行都要重新算一次。\nMySQL 的限制：DELETE FROM rates WHERE score < (SELECT AVG(score) FROM rates) 会报错（You can't specify target table for update in FROM clause），要把子查询再包一层派生表，或者先把值查出来。",
+    "question": "子查询有哪几种？分别用在什么地方？",
+    "keyPoints": [
+      "子查询写在括号里，可以嵌套在 SELECT、INSERT、UPDATE、DELETE 和其他子查询中",
+      "标量子查询（一行一列）：直接用 =、>、< 比较",
+      "列子查询（一列多行）：配合 IN / NOT IN / EXISTS",
+      "表子查询：放在 FROM 中当派生表，必须起别名",
+      "非相关子查询只执行一次；相关子查询引用外层列，外层每行执行一次"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "类型",
+        "返回",
+        "常见位置",
+        "例子"
+      ],
+      "rows": [
+        [
+          "标量子查询",
+          "一行一列",
+          "WHERE、SELECT 列表",
+          "score > (SELECT AVG(score) FROM rates)"
+        ],
+        [
+          "列子查询",
+          "一列多行",
+          "WHERE ... IN",
+          "drinker IN (SELECT drinker FROM likes ...)"
+        ],
+        [
+          "表子查询",
+          "多行多列",
+          "FROM",
+          "FROM (SELECT ...) AS t"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "用 = 去比较一个会返回多行的子查询",
+        "right": "MySQL 会报 Subquery returns more than 1 row，要改用 IN，或者让子查询只返回一个值"
+      },
+      {
+        "wrong": "在 DELETE / UPDATE 的子查询里直接查询要修改的同一张表",
+        "right": "MySQL 不允许，要把子查询包成派生表：WHERE score < (SELECT a FROM (SELECT AVG(score) AS a FROM rates) t)"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "SELECT 列表里的子查询有什么要求？",
+        "a": "只能是标量子查询，每一行只能返回一个值；如果是相关子查询，外层每一行都会执行一次，数据量大时可以考虑改成 JOIN + GROUP BY"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT id FROM rates WHERE score > (SELECT AVG(score) FROM rates) ORDER BY id;",
+        "options": [
+          "3 | 4 | 5",
+          "3 | 5",
+          "1 | 2",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "标量子查询先算出平均分 (2 + 1 + 5 + 4 + 5) / 5 = 3.4，外层再找分数大于 3.4 的行：5、4、5 分，对应 id 3、4、5。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nCREATE TABLE top_rates (id INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nINSERT INTO top_rates SELECT id FROM rates WHERE score = (SELECT MAX(score) FROM rates);\nSELECT COUNT(*) FROM top_rates;",
+        "options": [
+          "2",
+          "1",
+          "5",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "子查询也能用在 INSERT 里：最高分是 5，有 id 3 和 id 5 两行，INSERT ... SELECT 把它们都插进 top_rates，所以是 2。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "子查询必须写在括号里",
+        "correct": true,
+        "why": "课件：Subqueries must be written in parentheses"
+      },
+      {
+        "statement": "子查询只能出现在 SELECT 语句的 WHERE 子句中",
+        "correct": false,
+        "why": "子查询还能出现在 FROM、SELECT 列表中，也能嵌套在 INSERT、UPDATE、DELETE 里"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-子查询与视图-in-与非相关子查询",
+    "category": "MySQL查询/子查询与视图",
+    "title": "IN 与非相关子查询",
+    "concept": "非相关子查询（non-correlated subquery）不引用外层查询的列，可以单独执行，数据库只需要执行一次，再拿结果给外层用，常和 IN 搭配",
+    "oneLiner": "课件例子\"谁同时喜欢 Cold Brew 和 Espresso\"：外层找喜欢 Cold Brew 的人，再用 IN 检查他是否在\"喜欢 Espresso 的人\"这个子查询结果里；不能写成 coffee = 'Cold Brew' AND coffee = 'Espresso'（同一行不可能等于两个值），也不能写成 IN ('Cold Brew', 'Espresso')（那是喜欢任意一种）；很多子查询可以改写成 JOIN。",
+    "explanation": "Subquery Example 1 with IN (non-correlated subquery)：Who likes 'Cold Brew' and 'Espresso'?\n```sql\nSELECT DISTINCT l.drinker\nFROM likes l\nWHERE l.coffee = 'Cold Brew'\n  AND l.drinker IN (\n    SELECT l2.drinker\n    FROM likes l2\n    WHERE l2.coffee = 'Espresso');\n```\n数据：1 Simon Mocha；2 Ethan Cappuccino；3 Kason Cold Brew；4 Kason Espresso；5 Fiona Mocha。结果：Kason。\nMany subqueries can be written as JOIN：\n```sql\nSELECT DISTINCT l.drinker\nFROM likes l\nJOIN likes l2 ON l.drinker = l2.drinker\nWHERE l.coffee = 'Cold Brew' AND l2.coffee = 'Espresso';\n```\n\"同时满足两个条件\"涉及同一个人的两行数据，单行的 WHERE 做不到，要用子查询、自连接，或者 GROUP BY drinker HAVING COUNT(DISTINCT coffee) = 2。",
+    "question": "什么是非相关子查询？\"同时喜欢两种咖啡的人\"该怎么查？",
+    "keyPoints": [
+      "非相关子查询不引用外层的列，可以单独运行",
+      "只执行一次，结果交给外层的 IN 使用",
+      "\"同时满足\"涉及多行，用 IN 子查询、自连接或 GROUP BY + HAVING",
+      "coffee = A AND coffee = B 对单行永远不成立",
+      "很多 IN 子查询可以改写成 JOIN，结果一样"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "含义",
+        "结果"
+      ],
+      "rows": [
+        [
+          "coffee = 'Cold Brew' AND coffee = 'Espresso'",
+          "同一行同时等于两个值",
+          "空"
+        ],
+        [
+          "coffee IN ('Cold Brew', 'Espresso')",
+          "喜欢其中任意一种",
+          "Kason（两行）"
+        ],
+        [
+          "coffee = 'Cold Brew' AND drinker IN (喜欢 Espresso 的人)",
+          "两种都喜欢",
+          "Kason"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把\"同时喜欢 A 和 B\"写成 WHERE coffee = 'A' AND coffee = 'B'",
+        "right": "一行只有一个 coffee 值，结果永远为空，要跨行判断"
+      },
+      {
+        "wrong": "用 IN 子查询但不加 DISTINCT，以为一个人只会出现一次",
+        "right": "外层表里同一个人有多行满足条件时会重复出现，需要的话加 DISTINCT"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "IN 子查询和 JOIN 改写，结果一定一样吗？",
+        "a": "不一定：JOIN 时右表有重复值会让左表的行重复，IN 不会；所以 JOIN 改写通常要加 DISTINCT"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE likes (id INT, drinker VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO likes VALUES (1, 'Simon', 'Mocha'), (2, 'Ethan', 'Cappuccino'), (3, 'Kason', 'Cold Brew'), (4, 'Kason', 'Espresso'), (5, 'Fiona', 'Mocha');\nSELECT DISTINCT l.drinker FROM likes l WHERE l.coffee = 'Cold Brew' AND l.drinker IN (SELECT l2.drinker FROM likes l2 WHERE l2.coffee = 'Espresso');",
+        "options": [
+          "Kason",
+          "Kason | Kason",
+          "查询结果为空",
+          "Fiona | Kason | Simon"
+        ],
+        "answer": 0,
+        "why": "子查询单独执行，得到喜欢 Espresso 的人 {Kason}；外层只看 coffee 是 Cold Brew 的行（id 3，Kason），Kason 在子查询结果里，所以结果是 Kason。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE likes (id INT, drinker VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO likes VALUES (1, 'Simon', 'Mocha'), (2, 'Ethan', 'Cappuccino'), (3, 'Kason', 'Cold Brew'), (4, 'Kason', 'Espresso'), (5, 'Fiona', 'Mocha');\nSELECT drinker FROM likes WHERE coffee = 'Cold Brew' AND coffee = 'Espresso';",
+        "options": [
+          "Kason",
+          "Kason | Kason",
+          "查询结果为空",
+          "执行报错"
+        ],
+        "answer": 2,
+        "why": "WHERE 是对每一行单独判断的，一行的 coffee 不可能同时等于 Cold Brew 和 Espresso，所以没有任何行满足条件；Kason 喜欢两种咖啡的信息分布在两行里，要用子查询或自连接。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "非相关子查询可以脱离外层查询单独执行",
+        "correct": true,
+        "why": "它不引用外层的列，只需要执行一次"
+      },
+      {
+        "statement": "IN 子查询都不能改写成 JOIN",
+        "correct": false,
+        "why": "课件：Many subqueries can be written as JOIN"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-子查询与视图-exists-与相关子查询",
+    "category": "MySQL查询/子查询与视图",
+    "title": "EXISTS 与相关子查询",
+    "concept": "相关子查询（correlated subquery）引用了外层查询的列，外层每处理一行，子查询就要按这一行的值重新执行一次；EXISTS 只判断子查询有没有返回行，有就为真",
+    "oneLiner": "课件例子\"谁去了卖 Cold Brew 的咖啡店\"：子查询里的 f.cafe = s.cafe 引用了外层的 f，所以是相关子查询；EXISTS 不关心子查询 SELECT 了什么，写 SELECT 1、SELECT *、SELECT NULL 都一样，只要有一行就是真；NOT EXISTS 不受 NULL 影响，比 NOT IN 安全。",
+    "explanation": "Subquery Example 2 with EXISTS (correlated subquery)：Who goes to a cafe that serves 'Cold Brew'?\n```sql\nSELECT DISTINCT f.drinker\nFROM frequents f\nWHERE EXISTS (\n  SELECT s.cafe\n  FROM serves s\n  WHERE s.coffee = 'Cold Brew' AND f.cafe = s.cafe);\n```\nFREQUENTS：Simon Cafe A；Ethan Cafe B；Kason Cafe C；Fiona Cafe C；Kason Cafe B。SERVES：Cafe A Mocha；Cafe B Cappuccino；Cafe C Cold Brew；Cafe B Cold Brew。\n逐行判断：Simon 去的 Cafe A 不卖 Cold Brew；Ethan（Cafe B）、Kason（Cafe C）、Fiona（Cafe C）、Kason（Cafe B）都卖；DISTINCT 去掉重复的 Kason，结果：Ethan、Kason、Fiona。\n相关子查询也可以是标量的：找出比同一种咖啡平均分高的评分，WHERE score > (SELECT AVG(r2.score) FROM rates r2 WHERE r2.coffee = r.coffee)。",
+    "question": "什么是相关子查询？IN 和 EXISTS 有什么区别？",
+    "keyPoints": [
+      "相关子查询引用外层查询的列，外层每一行都要重新执行一次",
+      "EXISTS 只看子查询是否返回了行，不关心返回的内容",
+      "IN 判断值是否在子查询结果集中，一般配非相关子查询",
+      "NOT IN 遇到子查询结果里有 NULL 会查不出任何行，NOT EXISTS 不会",
+      "相关子查询数据量大时可能很慢，可以考虑改写成 JOIN"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "IN",
+        "EXISTS"
+      ],
+      "rows": [
+        [
+          "判断什么",
+          "值是否在结果集中",
+          "子查询是否有行"
+        ],
+        [
+          "子查询类型",
+          "一般是非相关",
+          "一般是相关"
+        ],
+        [
+          "SELECT 列表",
+          "必须是要比较的列",
+          "写什么都一样"
+        ],
+        [
+          "取反时遇到 NULL",
+          "NOT IN 结果为空",
+          "NOT EXISTS 正常"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 EXISTS (SELECT NULL FROM ...) 永远为假",
+        "right": "EXISTS 只看有没有行，返回的是 NULL 也算有一行，结果为真"
+      },
+      {
+        "wrong": "相关子查询的条件里忘了引用外层的列（漏写 f.cafe = s.cafe）",
+        "right": "子查询变成了非相关的，只要 serves 里有 Cold Brew，每个人都满足"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "IN 和 EXISTS 哪个快？",
+        "a": "老说法是\"子查询结果小用 IN、外层表小用 EXISTS\"；MySQL 8.0 的优化器会把 IN 和 EXISTS 都转成半连接（semi-join）统一优化，多数情况下差别不大，以 EXPLAIN 为准"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE frequents (id INT, drinker VARCHAR(10), cafe VARCHAR(10));\nCREATE TABLE serves (id INT, cafe VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO frequents VALUES (1, 'Simon', 'Cafe A'), (2, 'Ethan', 'Cafe B'), (3, 'Kason', 'Cafe C'), (4, 'Fiona', 'Cafe C'), (5, 'Kason', 'Cafe B');\nINSERT INTO serves VALUES (1, 'Cafe A', 'Mocha'), (2, 'Cafe B', 'Cappuccino'), (3, 'Cafe C', 'Cold Brew'), (4, 'Cafe B', 'Cold Brew');\nSELECT DISTINCT f.drinker FROM frequents f WHERE EXISTS (SELECT s.cafe FROM serves s WHERE s.coffee = 'Cold Brew' AND f.cafe = s.cafe) ORDER BY f.drinker;",
+        "options": [
+          "Ethan | Fiona | Kason",
+          "Ethan | Fiona | Kason | Kason",
+          "Simon",
+          "Fiona | Kason"
+        ],
+        "answer": 0,
+        "why": "Cafe B 和 Cafe C 卖 Cold Brew；外层每一行都执行一次子查询，只有 Simon（Cafe A）的子查询没有返回行；Kason 满足两次，DISTINCT 去重后只剩一个。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE frequents (id INT, drinker VARCHAR(10), cafe VARCHAR(10));\nCREATE TABLE serves (id INT, cafe VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO frequents VALUES (1, 'Simon', 'Cafe A'), (2, 'Ethan', 'Cafe B'), (3, 'Kason', 'Cafe C'), (4, 'Fiona', 'Cafe C'), (5, 'Kason', 'Cafe B');\nINSERT INTO serves VALUES (1, 'Cafe A', 'Mocha'), (2, 'Cafe B', 'Cappuccino'), (3, 'Cafe C', 'Cold Brew'), (4, 'Cafe B', 'Cold Brew');\nSELECT COUNT(*) FROM frequents f WHERE EXISTS (SELECT NULL FROM serves s WHERE s.cafe = f.cafe AND s.coffee = 'Mocha');",
+        "options": [
+          "1",
+          "0",
+          "5",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "只有 Cafe A 卖 Mocha，去 Cafe A 的只有 Simon 一行；EXISTS 只看子查询有没有返回行，SELECT NULL 返回了一行 NULL，仍然算\"存在\"，所以计数是 1。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT r.id FROM rates r WHERE r.score > (SELECT AVG(r2.score) FROM rates r2 WHERE r2.coffee = r.coffee) ORDER BY r.id;",
+        "options": [
+          "4 | 5",
+          "3 | 4 | 5",
+          "3 | 5",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "子查询引用了外层的 r.coffee，每一行都和\"同一种咖啡的平均分\"比较：Cold Brew 平均 10 / 3 ≈ 3.33，4 分和 5 分高于平均；Espresso、Turkish Coffee 都只有一条评分，等于自己的平均分，不满足大于。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "相关子查询引用了外层查询的列，外层每处理一行都要重新执行一次",
+        "correct": true,
+        "why": "课件 EXISTS 例子中子查询用到了外层的 f.cafe"
+      },
+      {
+        "statement": "EXISTS 子查询的 SELECT 列表返回 NULL 时，EXISTS 的结果为假",
+        "correct": false,
+        "why": "EXISTS 只判断子查询有没有返回行，不关心返回的值"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-子查询与视图-from-子句中的子查询-派生表",
+    "category": "MySQL查询/子查询与视图",
+    "title": "FROM 子句中的子查询（派生表）",
+    "concept": "写在 FROM 子句里的子查询会被当成一张临时表使用，MySQL 称为派生表（derived table），必须给它起别名",
+    "oneLiner": "派生表让我们\"先算出一个中间结果，再在上面查询\"，比如课件里先查出卖 Cold Brew 的店，再和 frequents 连接；MySQL 要求派生表必须有别名，否则报 Every derived table must have its own alias；聚合函数不能直接嵌套（MAX(COUNT(*)) 会报错），\"聚合的聚合\"要先用派生表算出第一层。",
+    "explanation": "Subqueries in FROM Clause：Treat the subquery in FROM clause as a temporary table；MUST be assigned an alias。\n课件例子（Who goes to a cafe that serves 'Cold Brew'?）：\n```sql\nSELECT DISTINCT f.drinker\nFROM frequents f,\n  (SELECT s.cafe FROM serves s\n    WHERE s.coffee = 'Cold Brew') s2\nWHERE f.cafe = s2.cafe;\n```\ns2 = {Cafe C, Cafe B}，和 frequents 连接后得到 Ethan、Kason、Fiona、Kason 四行，DISTINCT 后三人。\n聚合的聚合：\n```sql\nSELECT MAX(cnt)\nFROM (SELECT drinker, COUNT(*) AS cnt FROM likes GROUP BY drinker) t;\n```\n派生表里的列名用别名（cnt）引用，外层查询只能看到派生表 SELECT 出来的列。\nMySQL 8.0 还支持 WITH 子句（CTE），可以把派生表提到前面写，更好读，还能在同一条语句里引用多次。",
+    "question": "FROM 子句里的子查询有什么要求？什么时候必须用它？",
+    "keyPoints": [
+      "FROM 中的子查询被当成临时表（派生表）",
+      "MySQL 中必须起别名",
+      "外层通过别名引用派生表的列，计算列要起列别名",
+      "聚合函数不能嵌套，\"聚合的聚合\"要借助派生表",
+      "也可以用 CTE（WITH ... AS）改写，更清晰"
+    ],
+    "compare": null,
+    "compareTable": null,
+    "traps": [
+      {
+        "wrong": "写 SELECT MAX(COUNT(*)) FROM likes GROUP BY drinker 求\"喜欢咖啡最多的人喜欢几种\"",
+        "right": "聚合函数不能嵌套，会报错，要先在派生表里 GROUP BY 算出 COUNT，再在外层求 MAX"
+      },
+      {
+        "wrong": "派生表和外表连接后忘了 DISTINCT，以为每个人只出现一次",
+        "right": "一个人匹配上派生表的多行就会出现多次（课件例子里 Kason 出现两次）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "派生表和视图有什么区别？",
+        "a": "派生表只在当前这一条语句里存在；视图是保存在数据库里的查询定义，可以被很多语句反复使用"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE frequents (id INT, drinker VARCHAR(10), cafe VARCHAR(10));\nCREATE TABLE serves (id INT, cafe VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO frequents VALUES (1, 'Simon', 'Cafe A'), (2, 'Ethan', 'Cafe B'), (3, 'Kason', 'Cafe C'), (4, 'Fiona', 'Cafe C'), (5, 'Kason', 'Cafe B');\nINSERT INTO serves VALUES (1, 'Cafe A', 'Mocha'), (2, 'Cafe B', 'Cappuccino'), (3, 'Cafe C', 'Cold Brew'), (4, 'Cafe B', 'Cold Brew');\nSELECT COUNT(*), COUNT(DISTINCT f.drinker) FROM frequents f, (SELECT s.cafe FROM serves s WHERE s.coffee = 'Cold Brew') s2 WHERE f.cafe = s2.cafe;",
+        "options": [
+          "4 3",
+          "3 3",
+          "4 4",
+          "5 3"
+        ],
+        "answer": 0,
+        "why": "派生表 s2 = {Cafe C, Cafe B}；和 frequents 连接后匹配上 Ethan(B)、Kason(C)、Fiona(C)、Kason(B) 共 4 行，去重后 3 个人。"
+      },
+      {
+        "prompt": "下面 SQL 执行结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE likes (id INT, drinker VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO likes VALUES (1, 'Simon', 'Mocha'), (2, 'Ethan', 'Cappuccino'), (3, 'Kason', 'Cold Brew'), (4, 'Kason', 'Espresso'), (5, 'Fiona', 'Mocha');\nSELECT MAX(COUNT(*)) FROM likes GROUP BY drinker;",
+        "options": [
+          "2",
+          "1",
+          "执行报错",
+          "查询结果为空"
+        ],
+        "answer": 2,
+        "why": "聚合函数不能直接嵌套，MAX(COUNT(*)) 会报错；要先用派生表按 drinker 算出每人的数量，再在外层求 MAX。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE likes (id INT, drinker VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO likes VALUES (1, 'Simon', 'Mocha'), (2, 'Ethan', 'Cappuccino'), (3, 'Kason', 'Cold Brew'), (4, 'Kason', 'Espresso'), (5, 'Fiona', 'Mocha');\nSELECT MAX(cnt) FROM (SELECT drinker, COUNT(*) AS cnt FROM likes GROUP BY drinker) t;",
+        "options": [
+          "2",
+          "5",
+          "1",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "派生表 t 里每人一行：Simon 1、Ethan 1、Kason 2、Fiona 1；外层对 cnt 求最大值得 2。派生表起了别名 t，在 MySQL 中这是必须的。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "MySQL 中 FROM 子句里的子查询必须起别名",
+        "correct": true,
+        "why": "课件：MUST be assigned an alias，否则报 Every derived table must have its own alias"
+      },
+      {
+        "statement": "聚合函数可以直接嵌套使用，比如 MAX(COUNT(*))",
+        "correct": false,
+        "why": "聚合函数不能嵌套，要先用派生表算出内层的聚合结果"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-子查询与视图-视图-view",
+    "category": "MySQL查询/子查询与视图",
+    "title": "视图（View）",
+    "concept": "视图是一张虚拟表（virtual table），保存的是一条 SELECT 查询的定义而不是数据；每次查询视图时都会重新执行这条 SELECT，所以总能看到基表的最新数据",
+    "oneLiner": "视图本身不存数据，基表变了视图马上跟着变；可以把复杂查询封装起来复用，也能只暴露部分行和列，提高安全性；对视图做 DML 实际改的是基表，但只有简单视图（没有聚合、DISTINCT、GROUP BY、UNION 等）才能更新，计算出来的列（比如 CONCAT 拼出的全名）也不能改。",
+    "explanation": "A view is often seen as a virtual table；It is updated every time [it] is referred to；It displays data that you choose, but does not actually hold any data；Good for security since you can prevent showing extra data；DML operations just happen on the table: You can modify data on view level, and the source data will be updated as well。\n课件例子：\n```sql\nCREATE VIEW hr_employees AS\nSELECT CONCAT(first_name, ' ', last_name) AS full_name, salary\nFROM employees\nWHERE department = 'HR';\n```\n课件还用视图解决了\"谁去了卖 Cold Brew 的店\"：CREATE VIEW CB_COFFEE AS SELECT s.CAFE FROM SERVES s WHERE s.COFFEE = 'Cold Brew'；再 SELECT DISTINCT f.DRINKER FROM FREQUENTS f, CB_COFFEE c WHERE f.CAFE = c.CAFE。\n可更新视图的条件：视图里的每一行能对应回基表的唯一一行；有聚合函数、DISTINCT、GROUP BY、HAVING、UNION、SELECT 列表里的子查询等都会让视图不可更新；hr_employees 的 salary 可以通过视图修改，full_name 不行。\nWITH CHECK OPTION：禁止通过视图插入或修改出\"不满足视图 WHERE 条件\"的行。\nMySQL 没有物化视图，视图的查询每次都会执行，不会因为建了视图就变快。",
+    "question": "什么是视图？视图有什么优点？能通过视图修改数据吗？",
+    "keyPoints": [
+      "视图是虚拟表，只保存查询定义，不存数据",
+      "每次查询视图都重新执行定义，总是反映基表的最新数据",
+      "优点：封装复杂查询、复用；只暴露需要的行和列，提高安全性",
+      "简单视图可以 DML，修改的是基表；带聚合、DISTINCT、GROUP BY、UNION 的视图不能更新",
+      "MySQL 没有物化视图，视图本身不会提升查询性能"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "视图",
+        "表"
+      ],
+      "rows": [
+        [
+          "存什么",
+          "查询定义",
+          "实际数据"
+        ],
+        [
+          "数据从哪来",
+          "每次查询时从基表现算",
+          "直接读取"
+        ],
+        [
+          "修改数据",
+          "简单视图可以，改的是基表",
+          "可以"
+        ],
+        [
+          "删除",
+          "不影响基表",
+          "数据一起删除"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为视图会保存创建那一刻的数据快照",
+        "right": "视图不存数据，基表之后的修改都能通过视图看到"
+      },
+      {
+        "wrong": "以为建了视图查询就会变快",
+        "right": "MySQL 的视图每次都执行原始查询，性能和直接写这条 SELECT 差不多"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么说视图有利于安全？",
+        "a": "可以只把视图的权限授给用户，用户只能看到视图暴露的行和列（比如只看 HR 部门、看不到身份证号），而不能直接访问基表"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE serves (id INT, cafe VARCHAR(10), coffee VARCHAR(20));\nINSERT INTO serves VALUES (1, 'Cafe A', 'Mocha'), (2, 'Cafe B', 'Cappuccino'), (3, 'Cafe C', 'Cold Brew'), (4, 'Cafe B', 'Cold Brew');\nCREATE VIEW cb_coffee AS SELECT cafe FROM serves WHERE coffee = 'Cold Brew';\nINSERT INTO serves VALUES (5, 'Cafe A', 'Cold Brew');\nSELECT COUNT(*) FROM cb_coffee;",
+        "options": [
+          "3",
+          "2",
+          "5",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "视图不保存数据，每次查询都会重新执行它的 SELECT；创建视图之后插入的 Cafe A Cold Brew 也会出现在视图里，所以是 3。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE employees (id INT, first_name VARCHAR(20), last_name VARCHAR(20), department VARCHAR(10), salary INT);\nINSERT INTO employees VALUES (1, 'Amy', 'Lee', 'HR', 5000), (2, 'Bob', 'Wu', 'IT', 7000), (3, 'Cat', 'Ng', 'HR', 6000);\nCREATE VIEW hr_employees AS SELECT CONCAT(first_name, ' ', last_name) AS full_name, salary FROM employees WHERE department = 'HR';\nUPDATE employees SET salary = 6500 WHERE id = 3;\nSELECT full_name, salary FROM hr_employees ORDER BY full_name;",
+        "options": [
+          "Amy Lee 5000 | Cat Ng 6500",
+          "Amy Lee 5000 | Cat Ng 6000",
+          "Amy Lee 5000 | Bob Wu 7000 | Cat Ng 6500",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "视图只暴露 HR 部门的全名和工资，看不到 Bob；基表里 Cat 的工资改成 6500 之后，查询视图时重新计算，看到的就是新值。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "视图本身不存储数据，每次查询视图都会重新执行它的定义",
+        "correct": true,
+        "why": "课件：virtual table，does not actually hold any data，updated every time it is referred to"
+      },
+      {
+        "statement": "任何视图都可以通过 UPDATE 修改基表的数据",
+        "correct": false,
+        "why": "只有简单视图可以更新，带聚合函数、DISTINCT、GROUP BY、UNION 的视图不行"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-聚合与分组-聚合函数与-null",
+    "category": "MySQL查询/聚合与分组",
+    "title": "聚合函数与 NULL",
+    "concept": "聚合函数（COUNT、AVG、SUM、MAX、MIN）把多行数据汇总成一个值；COUNT(*) 统计所有行，其他聚合函数和 COUNT(列) 都会忽略 NULL",
+    "oneLiner": "COUNT(*) 和 COUNT(1) 数所有行（包括 NULL），COUNT(列) 只数非 NULL，COUNT(DISTINCT 列) 去重后再数；AVG 是非 NULL 值的和除以非 NULL 值的个数，不是除以总行数；一行数据都没有时，COUNT 返回 0，而 SUM、AVG、MAX、MIN 返回 NULL，需要 0 时用 COALESCE(SUM(x), 0)。",
+    "explanation": "Aggregate functions are built-in functions that used to perform simple statistics：COUNT()、AVG()、SUM()、MAX()、MIN()。\nThe COUNT() function returns the number of rows that matches a specified criterion；The AVG() function returns the average value of a numeric column；The SUM() function returns the total sum；The MIN() and MAX() functions return the smallest and largest values of the selected columns respectively。\nHow does aggregate functions handle NULL value?：COUNT(*) or COUNT(1) gives the total number of records in the table including NULL values；COUNT(column_name) counts rows where the column contains a Not-NULL value；AVG, MIN, MAX, etc. ignore NULL values；GROUP BY includes a row for null。\n例子：score 为 2、1、NULL、4、5 时，COUNT(*) = 5，COUNT(score) = 4，SUM = 12，AVG = 12 / 4 = 3（如果想把 NULL 当 0 算，要写 AVG(COALESCE(score, 0)) = 12 / 5）。\nMySQL 对整数列求 AVG 返回 DECIMAL（默认保留 4 位小数，比如 3.3333），SUM 整数列返回 DECIMAL。",
+    "question": "聚合函数是怎么处理 NULL 的？没有任何行时聚合函数返回什么？",
+    "keyPoints": [
+      "COUNT(*) / COUNT(1) 统计所有行，包括含 NULL 的行",
+      "COUNT(列) 只统计该列非 NULL 的行，COUNT(DISTINCT 列) 先去重",
+      "SUM、AVG、MAX、MIN 都忽略 NULL；AVG 的分母是非 NULL 值的个数",
+      "没有行时 COUNT 返回 0，SUM / AVG / MAX / MIN 返回 NULL",
+      "需要默认值时用 COALESCE(SUM(x), 0)"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "表达式",
+        "score 为 2、1、NULL、4、5",
+        "没有任何行"
+      ],
+      "rows": [
+        [
+          "COUNT(*)",
+          "5",
+          "0"
+        ],
+        [
+          "COUNT(score)",
+          "4",
+          "0"
+        ],
+        [
+          "SUM(score)",
+          "12",
+          "NULL"
+        ],
+        [
+          "AVG(score)",
+          "3（12 / 4）",
+          "NULL"
+        ],
+        [
+          "MAX(score)",
+          "5",
+          "NULL"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 AVG 会把 NULL 当成 0 参与计算",
+        "right": "AVG 忽略 NULL，分母只算非 NULL 的行；要当 0 算得写 AVG(COALESCE(score, 0))"
+      },
+      {
+        "wrong": "以为没有数据时 SUM 返回 0",
+        "right": "SUM 返回 NULL，程序里直接用可能出空指针，要写 COALESCE(SUM(x), 0)"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "COUNT(*)、COUNT(1)、COUNT(主键) 有区别吗？",
+        "a": "结果都是总行数；在 MySQL InnoDB 中 COUNT(*) 和 COUNT(1) 的处理方式相同，优化器会选最小的索引来数；COUNT(可为 NULL 的列) 才会不一样"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5), (6, 'Mia', 'Mocha', NULL);\nSELECT COUNT(*), COUNT(score), COUNT(DISTINCT score), MIN(score), MAX(score) FROM rates;",
+        "options": [
+          "6 5 4 1 5",
+          "6 6 5 1 5",
+          "6 5 5 1 5",
+          "5 5 4 NULL 5"
+        ],
+        "answer": 0,
+        "why": "COUNT(*) 数所有 6 行；COUNT(score) 不数 Mia 的 NULL，得 5；非 NULL 的分数是 2、1、5、4、5，去重后 {1, 2, 4, 5} 共 4 个；MIN、MAX 忽略 NULL，分别是 1 和 5。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1);\nSELECT COUNT(*), SUM(score), MAX(score), COALESCE(SUM(score), 0) FROM rates WHERE coffee = 'Latte';",
+        "options": [
+          "0 NULL NULL 0",
+          "0 0 0 0",
+          "查询结果为空",
+          "NULL NULL NULL 0"
+        ],
+        "answer": 0,
+        "why": "WHERE 过滤后一行都没有；没有 GROUP BY 的聚合查询总会返回一行：COUNT 得 0，SUM、MAX 得 NULL，COALESCE 把 NULL 换成 0。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "AVG 计算平均值时会忽略 NULL",
+        "correct": true,
+        "why": "课件：AVG, MIN, MAX, etc. ignore NULL values，分母只算非 NULL 的行"
+      },
+      {
+        "statement": "对没有任何行的结果求 SUM 会返回 0",
+        "correct": false,
+        "why": "没有行时 SUM 返回 NULL，只有 COUNT 返回 0"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-聚合与分组-group-by-分组规则",
+    "category": "MySQL查询/聚合与分组",
+    "title": "GROUP BY 分组规则",
+    "concept": "GROUP BY 把某一列（或多列）值相同的行分成一组，常和聚合函数一起使用，对每一组分别统计；SELECT 中没有被聚合的列都必须出现在 GROUP BY 里",
+    "oneLiner": "每个分组在结果里只有一行，所以 SELECT 里只能放分组列和聚合函数，否则一组里有多个不同的值不知道显示哪个（MySQL 5.7 起默认开启 ONLY_FULL_GROUP_BY，会直接报错）；可以按多列分组，组合相同才算一组；分组列里的 NULL 会单独成为一组，多个 NULL 归到同一组。",
+    "explanation": "The GROUP BY clause is used to form the groups of records；It is often used with aggregate functions to group the result set by one or more columns；Any non-aggregate columns called in the SELECT statement must be in group by（课件用红字强调）。\n课件问题：What is the average rating for each coffee? RATES(ID, DRINKER, COFFEE, SCORE)：\n```sql\nSELECT coffee, AVG(score)\nFROM rates\nGROUP BY coffee;\n```\n结果：Cold Brew 3.3333（(1 + 4 + 5) / 3）；Espresso 2.0000；Turkish Coffee 5.0000。\nONLY_FULL_GROUP_BY：SELECT drinker, coffee, AVG(score) ... GROUP BY coffee 会报错，因为 Cold Brew 这一组里 drinker 有 Aiden 和 Ivan 两个值；MySQL 允许 SELECT 中出现\"函数依赖于分组列\"的列（比如按主键分组时选同一行的其他列）。\nGROUP BY 多列：GROUP BY drinker, coffee 表示 (drinker, coffee) 的组合相同才是一组。\nNULL：GROUP BY 把所有 NULL 视为同一组；这一组的 COUNT(分组列) 是 0，因为 COUNT(列) 不数 NULL。",
+    "question": "使用 GROUP BY 时 SELECT 里能写哪些列？NULL 会怎么分组？",
+    "keyPoints": [
+      "GROUP BY 把分组列值相同的行合成一组，每组输出一行",
+      "SELECT 里只能写分组列和聚合函数（以及依赖于分组列的列）",
+      "MySQL 5.7 起默认 ONLY_FULL_GROUP_BY，违反会报错",
+      "可以按多列分组，组合相同才是同一组",
+      "NULL 单独成为一组，所有 NULL 在同一组"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "每组",
+        "结果行数（课件 RATES）"
+      ],
+      "rows": [
+        [
+          "GROUP BY coffee",
+          "一种咖啡",
+          "3"
+        ],
+        [
+          "GROUP BY drinker",
+          "一个人",
+          "2"
+        ],
+        [
+          "GROUP BY drinker, coffee",
+          "一个人 + 一种咖啡",
+          "4"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "SELECT drinker, coffee, AVG(score) FROM rates GROUP BY coffee",
+        "right": "drinker 既没聚合也没分组，开启 ONLY_FULL_GROUP_BY 时报错；关掉后会随便取一个值，结果不可靠"
+      },
+      {
+        "wrong": "以为 GROUP BY 会把 NULL 的行丢掉",
+        "right": "NULL 会单独成为一组（课件：GROUP BY includes a row for null）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "GROUP BY 之后结果一定是按分组列排好序的吗？",
+        "a": "不一定；MySQL 8.0 起 GROUP BY 不再隐式排序，需要顺序时必须写 ORDER BY"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT coffee, COUNT(*), SUM(score) FROM rates GROUP BY coffee ORDER BY coffee;",
+        "options": [
+          "Cold Brew 3 10 | Espresso 1 2 | Turkish Coffee 1 5",
+          "Cold Brew 1 1 | Cold Brew 1 4 | Cold Brew 1 5 | Espresso 1 2 | Turkish Coffee 1 5",
+          "Cold Brew 3 10",
+          "Espresso 1 2 | Cold Brew 3 10 | Turkish Coffee 1 5"
+        ],
+        "answer": 0,
+        "why": "按 coffee 分成 3 组，每组一行：Cold Brew 有 3 条评分，1 + 4 + 5 = 10；Espresso、Turkish Coffee 各 1 条；最后按 coffee 升序排列。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE emp (id INT, dept VARCHAR(10));\nINSERT INTO emp VALUES (1, 'IT'), (2, NULL), (3, 'HR'), (4, NULL), (5, 'IT');\nSELECT dept, COUNT(*), COUNT(dept) FROM emp GROUP BY dept ORDER BY dept;",
+        "options": [
+          "NULL 2 0 | HR 1 1 | IT 2 2",
+          "HR 1 1 | IT 2 2",
+          "NULL 1 0 | NULL 1 0 | HR 1 1 | IT 2 2",
+          "NULL 2 2 | HR 1 1 | IT 2 2"
+        ],
+        "answer": 0,
+        "why": "两个 NULL 被分到同一组；这一组 COUNT(*) 数行数得 2，COUNT(dept) 不数 NULL 得 0；升序排序时 NULL 排在最前面。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT drinker, coffee, COUNT(*) FROM rates GROUP BY drinker, coffee ORDER BY drinker, coffee;",
+        "options": [
+          "Aiden Cold Brew 1 | Aiden Turkish Coffee 1 | Ivan Cold Brew 2 | Ivan Espresso 1",
+          "Aiden 2 | Ivan 3",
+          "Cold Brew 3 | Espresso 1 | Turkish Coffee 1",
+          "Aiden Cold Brew 1 | Ivan Cold Brew 2"
+        ],
+        "answer": 0,
+        "why": "按 (drinker, coffee) 的组合分组，共 4 组；Ivan 给 Cold Brew 评了两次，所以 Ivan Cold Brew 这一组是 2。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "开启 ONLY_FULL_GROUP_BY 时，SELECT 中既没有被聚合、也没有出现在 GROUP BY 中的列会导致报错",
+        "correct": true,
+        "why": "课件：Any non-aggregate columns called in the SELECT statement must be in group by，MySQL 5.7 起默认开启该模式"
+      },
+      {
+        "statement": "GROUP BY 时分组列为 NULL 的行会被丢弃，不形成分组",
+        "correct": false,
+        "why": "课件：GROUP BY includes a row for null，所有 NULL 归为一组"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-聚合与分组-having-与-where-的配合",
+    "category": "MySQL查询/聚合与分组",
+    "title": "HAVING 与 WHERE 的配合",
+    "concept": "WHERE 在分组之前过滤原始行，HAVING 在分组之后过滤分组；一条查询可以同时使用两者，HAVING 中可以使用聚合函数，WHERE 中不行",
+    "oneLiner": "执行时先 WHERE 去掉不需要的行，再 GROUP BY 分组、算聚合，然后 HAVING 去掉不满足条件的组；所以 WHERE 改变的是参与统计的数据，HAVING 改变的是留下哪些组；HAVING 里可以用多个聚合条件组合，ORDER BY 里也可以直接按聚合值排序。",
+    "explanation": "Having clause is used to filter out grouping records, it's like the WHERE clause. The difference is WHERE clause CANNOT be used with aggregate functions, whereas Having clause can work with；Having clause MUST come after GROUP BY clause and before ORDER BY clause。\n课件问题：What is the highest rated type of coffee, on average, considering only coffees that have at least 3 ratings.\n```sql\nSELECT coffee, AVG(score) AS avg_score\nFROM rates\nGROUP BY coffee\nHAVING COUNT(*) >= 3\nORDER BY avg_score DESC\nLIMIT 1;\n```\n结果：Cold Brew 3.3333；Turkish Coffee 平均 5 分最高，但只有 1 条评分，被 HAVING 过滤掉。\n同一个条件如果不涉及聚合（比如 coffee <> 'Mocha'），写在 WHERE 里更好：先减少行数，分组的工作量更小。\nWHERE score >= 4 和 HAVING MIN(score) >= 4 不一样：前者是只拿高分评分去统计，后者是只保留\"所有评分都 ≥ 4\"的组。",
+    "question": "一条查询里同时有 WHERE 和 HAVING 时是怎么执行的？",
+    "keyPoints": [
+      "先 WHERE 过滤原始行，不能用聚合函数",
+      "再 GROUP BY 分组并计算聚合值",
+      "然后 HAVING 过滤分组，可以用聚合函数，也可以组合多个聚合条件",
+      "HAVING 写在 GROUP BY 之后、ORDER BY 之前",
+      "不涉及聚合的条件尽量写在 WHERE 里，减少参与分组的行"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "含义",
+        "课件 RATES 的结果"
+      ],
+      "rows": [
+        [
+          "WHERE score >= 4 GROUP BY coffee",
+          "只统计 4 分以上的评分",
+          "Cold Brew 2 条、Turkish Coffee 1 条"
+        ],
+        [
+          "GROUP BY coffee HAVING MIN(score) >= 4",
+          "只保留所有评分都 ≥ 4 的咖啡",
+          "Turkish Coffee"
+        ],
+        [
+          "GROUP BY coffee HAVING COUNT(*) >= 3",
+          "只保留评分数 ≥ 3 的咖啡",
+          "Cold Brew"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把\"至少 3 条评分\"写成 WHERE COUNT(*) >= 3",
+        "right": "WHERE 执行时还没分组，聚合条件必须写在 HAVING 里"
+      },
+      {
+        "wrong": "以为先 WHERE 再 HAVING 和只写 HAVING 结果一样",
+        "right": "WHERE 去掉的行不参与统计，COUNT、SUM 的值都会变"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "不写 GROUP BY 能用 HAVING 吗？",
+        "a": "可以，这时整张表被当成一组，比如 SELECT COUNT(*) FROM rates HAVING COUNT(*) > 3；但一般没什么必要"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT coffee FROM rates GROUP BY coffee HAVING COUNT(*) >= 3 ORDER BY AVG(score) DESC LIMIT 1;",
+        "options": [
+          "Cold Brew",
+          "Turkish Coffee",
+          "Espresso",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "这就是课件的问题：HAVING COUNT(*) >= 3 只留下有 3 条评分的 Cold Brew；Turkish Coffee 平均分最高，但只有 1 条评分，已经被过滤掉了。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT coffee, COUNT(*) FROM rates WHERE score >= 4 GROUP BY coffee HAVING COUNT(*) >= 2 ORDER BY coffee;",
+        "options": [
+          "Cold Brew 2",
+          "Cold Brew 3",
+          "Cold Brew 2 | Turkish Coffee 1",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "WHERE 先去掉 1 分和 2 分的评分，剩下 Turkish Coffee 5、Cold Brew 4、Cold Brew 5；分组后 Cold Brew 2 条、Turkish Coffee 1 条；HAVING 只留下至少 2 条的 Cold Brew。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT drinker, COUNT(*) FROM rates GROUP BY drinker HAVING COUNT(DISTINCT coffee) >= 2 AND MIN(score) >= 2 ORDER BY drinker;",
+        "options": [
+          "Ivan 3",
+          "Aiden 2 | Ivan 3",
+          "Aiden 2",
+          "查询结果为空"
+        ],
+        "answer": 0,
+        "why": "Aiden 评了 2 种咖啡，但最低分是 1，不满足 MIN(score) >= 2；Ivan 评了 Espresso 和 Cold Brew 2 种，最低分 2，两个条件都满足，他一共有 3 条评分。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "一条查询可以同时使用 WHERE 和 HAVING：WHERE 先过滤行，HAVING 再过滤分组",
+        "correct": true,
+        "why": "WHERE 在 GROUP BY 之前执行，HAVING 在 GROUP BY 之后执行"
+      },
+      {
+        "statement": "HAVING 子句可以写在 GROUP BY 之前",
+        "correct": false,
+        "why": "课件：Having clause MUST come after GROUP BY clause and before ORDER BY clause"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-聚合与分组-order-by-与-limit",
+    "category": "MySQL查询/聚合与分组",
+    "title": "ORDER BY 与 LIMIT",
+    "concept": "ORDER BY 对结果按一列或多列排序，默认升序（ASC），降序用 DESC；LIMIT 限制返回的行数，常和 ORDER BY 一起实现 Top N 和分页",
+    "oneLiner": "多列排序时 ASC / DESC 只修饰紧挨在它前面的那一列，ORDER BY a DESC, b 中 b 仍是升序；MySQL 升序时 NULL 排在最前面；LIMIT n 取前 n 行，LIMIT n OFFSET m 跳过 m 行再取 n 行，MySQL 的 LIMIT m, n 第一个数是偏移量；排序列有重复值时要加第二排序列，否则顺序不确定。",
+    "explanation": "The ORDER BY clause is used to sort the result in ascending or descending order；ORDER BY clause sorts the result in ascending order by default. To sort the result by descending order, use the DESC keyword；The ORDER BY must come after WHERE, GROUP BY, and HAVING clause if present in the query（课件把 GROUP BY 写成了 GROUPBY）；Can be used with LIMIT。\n```sql\nSELECT column1, column2, ...columnN\nFROM table_name\n[WHERE]\n[GROUP BY]\n[HAVING]\nORDER BY column ASC/DESC;\n```\n求第二高的分数：SELECT DISTINCT score FROM rates ORDER BY score DESC LIMIT 1 OFFSET 1（等价于 LIMIT 1, 1）。\n分页：第 p 页、每页 n 条是 LIMIT n OFFSET (p - 1) * n；OFFSET 很大时 MySQL 仍要先扫过前面所有行，深分页要改成\"记住上一页最后一个 id，WHERE id > ? LIMIT n\"。\n没有 ORDER BY 时，结果的顺序是不确定的，不能依赖插入顺序。",
+    "question": "ORDER BY 多列排序是什么规则？LIMIT 怎么用？",
+    "keyPoints": [
+      "默认升序 ASC，降序用 DESC",
+      "多列排序先按第一列，相同时再按第二列；ASC / DESC 只作用于紧挨的那一列",
+      "MySQL 升序时 NULL 排在最前面，降序时排在最后",
+      "LIMIT n 取前 n 行；LIMIT n OFFSET m 和 LIMIT m, n 都是跳过 m 行取 n 行",
+      "ORDER BY 写在 WHERE、GROUP BY、HAVING 之后，LIMIT 最后"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "含义"
+      ],
+      "rows": [
+        [
+          "ORDER BY drinker DESC, score",
+          "drinker 降序，同一个人内部 score 升序"
+        ],
+        [
+          "ORDER BY drinker DESC, score DESC",
+          "两列都降序"
+        ],
+        [
+          "LIMIT 3",
+          "前 3 行"
+        ],
+        [
+          "LIMIT 3 OFFSET 2",
+          "跳过 2 行，取 3 行"
+        ],
+        [
+          "LIMIT 2, 3",
+          "同上（MySQL 写法，偏移量在前）"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 ORDER BY a, b DESC 两列都是降序",
+        "right": "只有 b 降序，a 仍是默认的升序"
+      },
+      {
+        "wrong": "把 LIMIT 2, 3 理解成\"取第 2 到第 3 行\"",
+        "right": "是跳过 2 行，再取 3 行（第 3 到第 5 行）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "怎么求第二高的分数？如果最高分有并列呢？",
+        "a": "SELECT DISTINCT score ... ORDER BY score DESC LIMIT 1 OFFSET 1，DISTINCT 保证并列的最高分只算一个；如果不存在第二高，结果为空，需要 NULL 时可以把它包成标量子查询 SELECT (SELECT ...)"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT drinker, score FROM rates ORDER BY drinker DESC, score;",
+        "options": [
+          "Ivan 2 | Ivan 4 | Ivan 5 | Aiden 1 | Aiden 5",
+          "Ivan 5 | Ivan 4 | Ivan 2 | Aiden 5 | Aiden 1",
+          "Aiden 1 | Aiden 5 | Ivan 2 | Ivan 4 | Ivan 5",
+          "Aiden 5 | Aiden 1 | Ivan 5 | Ivan 4 | Ivan 2"
+        ],
+        "answer": 0,
+        "why": "DESC 只修饰 drinker，所以 Ivan 排在 Aiden 前面；同一个人内部按 score 的默认升序排列。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT DISTINCT score FROM rates ORDER BY score DESC LIMIT 1, 1;",
+        "options": [
+          "4",
+          "5",
+          "5 | 4",
+          "2"
+        ],
+        "answer": 0,
+        "why": "去重后的分数降序是 5、4、2、1；LIMIT 1, 1 的第一个数是偏移量，跳过 1 行再取 1 行，得到第二高的 4（等价于 LIMIT 1 OFFSET 1）。不加 DISTINCT 的话，两个 5 分会让第二行还是 5。"
+      },
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE t (name VARCHAR(10), score INT);\nINSERT INTO t VALUES ('Amy', 3), ('Bob', NULL), ('Cat', 1);\nSELECT name FROM t ORDER BY score;",
+        "options": [
+          "Bob | Cat | Amy",
+          "Cat | Amy | Bob",
+          "Cat | Amy",
+          "Amy | Bob | Cat"
+        ],
+        "answer": 0,
+        "why": "ORDER BY 默认升序，MySQL 把 NULL 当作最小的值，升序时排在最前面，所以 Bob 第一；NULL 行不会被排序丢掉。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "ORDER BY 默认按升序排列",
+        "correct": true,
+        "why": "课件：ORDER BY clause sorts the result in ascending order by default"
+      },
+      {
+        "statement": "ORDER BY a DESC, b 会让 a 和 b 都按降序排列",
+        "correct": false,
+        "why": "DESC 只修饰紧挨在前面的 a，b 仍按默认的升序"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-聚合与分组-sql-语句的执行顺序",
+    "category": "MySQL查询/聚合与分组",
+    "title": "SQL 语句的执行顺序",
+    "concept": "SQL 的书写顺序是 SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY，而逻辑上的处理顺序是 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY，加上 DISTINCT 和 LIMIT 时，DISTINCT 在 SELECT 之后，LIMIT 最后",
+    "oneLiner": "先 FROM / JOIN 确定数据来源，WHERE 过滤行，GROUP BY 分组，HAVING 过滤组，然后才 SELECT 计算列和别名，接着 DISTINCT 去重、ORDER BY 排序，最后 LIMIT 截取；所以 WHERE 不能用聚合函数和 SELECT 里的别名，ORDER BY 可以用别名，LIMIT 是在排好序的结果上取前几行。",
+    "explanation": "课件 DQL Execution Order 表：Logic 列是 SELECT、FROM、WHERE、GROUP BY、HAVING、ORDER BY；Actual 列是 FROM、WHERE、GROUP BY、HAVING、SELECT、ORDER BY。\n课件表头的 Logic 指的是\"书写顺序\"，Actual 才是平常说的逻辑处理顺序（logical query processing order），容易看反。\n完整顺序：\n```\nFROM / JOIN ... ON → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT\n```\n推论：WHERE 里不能用 COUNT 等聚合函数（还没分组）；WHERE 里不能用 SELECT 的列别名（MySQL 报 Unknown column）；HAVING、ORDER BY 在分组之后，可以用聚合函数；ORDER BY 在 SELECT 之后，可以用别名；LIMIT 最后执行，先排序再截取。\n这是逻辑顺序：优化器实际执行时可以调整（比如把条件下推、用索引避免排序），但结果必须和逻辑顺序一致。",
+    "question": "SQL 语句的执行顺序是怎样的？为什么 WHERE 不能用 SELECT 中的别名？",
+    "keyPoints": [
+      "书写顺序：SELECT、FROM、WHERE、GROUP BY、HAVING、ORDER BY、LIMIT",
+      "处理顺序：FROM → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT",
+      "WHERE 在 SELECT 之前，不能用 SELECT 的别名，也不能用聚合函数",
+      "ORDER BY 在 SELECT 之后，可以用别名",
+      "LIMIT 最后执行，所以总是对排好序的结果截取"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "子句",
+        "能用聚合函数",
+        "能用 SELECT 别名（MySQL）"
+      ],
+      "rows": [
+        [
+          "WHERE",
+          "不能",
+          "不能"
+        ],
+        [
+          "GROUP BY",
+          "不能",
+          "能（MySQL 扩展）"
+        ],
+        [
+          "HAVING",
+          "能",
+          "能（MySQL 扩展）"
+        ],
+        [
+          "ORDER BY",
+          "能",
+          "能"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 LIMIT 先取出前几行，再对这几行排序",
+        "right": "ORDER BY 先对全部结果排序，LIMIT 最后截取"
+      },
+      {
+        "wrong": "在 WHERE 里写 SELECT 中定义的别名，比如 WHERE cnt > 1",
+        "right": "WHERE 执行时别名还不存在，MySQL 报 Unknown column；要重复写表达式，聚合条件改到 HAVING"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "逻辑执行顺序和数据库真正的执行过程是一回事吗？",
+        "a": "不是；逻辑顺序决定了\"结果应该是什么\"，优化器可以改变实际的执行方式（比如先走索引过滤、把条件下推到子查询），只要结果相同"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？（每行用 | 隔开）",
+        "lang": "sql",
+        "code": "CREATE TABLE rates (id INT, drinker VARCHAR(10), coffee VARCHAR(20), score INT);\nINSERT INTO rates VALUES (1, 'Ivan', 'Espresso', 2), (2, 'Aiden', 'Cold Brew', 1), (3, 'Aiden', 'Turkish Coffee', 5), (4, 'Ivan', 'Cold Brew', 4), (5, 'Ivan', 'Cold Brew', 5);\nSELECT coffee, COUNT(*) AS cnt FROM rates WHERE score >= 2 GROUP BY coffee ORDER BY cnt DESC, coffee LIMIT 2;",
+        "options": [
+          "Cold Brew 2 | Espresso 1",
+          "Cold Brew 3 | Espresso 1",
+          "Espresso 1 | Turkish Coffee 1",
+          "Cold Brew 2 | Espresso 1 | Turkish Coffee 1"
+        ],
+        "answer": 0,
+        "why": "WHERE 先去掉 1 分那条，Cold Brew 只剩 2 条；分组后按 cnt 降序、cnt 相同再按 coffee 升序：Cold Brew 2、Espresso 1、Turkish Coffee 1；LIMIT 最后执行，取前 2 行。ORDER BY 里用了 SELECT 的别名 cnt。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "ORDER BY 子句中可以使用 SELECT 里定义的列别名",
+        "correct": true,
+        "why": "ORDER BY 在 SELECT 之后执行，别名已经存在"
+      },
+      {
+        "statement": "SQL 按书写顺序执行，先执行 SELECT 再执行 FROM",
+        "correct": false,
+        "why": "课件的 Actual 列：先 FROM、WHERE、GROUP BY、HAVING，然后才是 SELECT"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-存储过程与触发器-存储过程的概念与优缺点",
+    "category": "MySQL查询/存储过程与触发器",
+    "title": "存储过程的概念与优缺点",
+    "concept": "存储过程（Stored Procedure）是一组预先编写好、存放在数据库里的 SQL 语句，用 CREATE PROCEDURE 创建、用 CALL 执行，可以接收输入参数、返回输出参数和结果集",
+    "oneLiner": "存储过程把多条 SQL 封装成数据库里的一个对象，应用只要 CALL 一下就能执行整段逻辑；好处是减少网络往返、逻辑复用、可以只授予执行权限；坏处是业务逻辑放进数据库后不好调试、不好做版本管理和单元测试，语法和数据库绑定、难以迁移，所以互联网项目里一般少用。",
+    "explanation": "A stored procedure is a set of SQL statements that are pre-compiled and stored in the database；To create a stored procedure you need to use CREATE PROCEDURE statement；It accepts input and output parameters (Parameter declaration: IN, OUT)；It executes the SQL statements, and returns a result set if any；To execute a stored procedure you need to use CALL statement。\nBenefits of SP：Performance Improvement；Code Reusability。\n关于\"预编译\"：这是 SQL Server 等数据库的说法；MySQL 是在每个连接第一次调用某个存储过程时解析并放进该连接的缓存，之后同一连接再调用不用重新解析，不同连接之间不共享。\n性能提升主要来自：一次 CALL 执行多条语句，减少客户端和服务器之间的网络往返；以及解析结果的复用。\n安全：可以只给用户 EXECUTE 权限，不给表的直接读写权限，用户只能按存储过程规定的方式操作数据。\n存储过程和函数（FUNCTION）的区别：函数必须 RETURN 一个值，可以在 SELECT 里直接调用；存储过程用 CALL 调用，通过 OUT 参数或结果集返回数据。",
+    "question": "什么是存储过程？有什么优缺点？",
+    "keyPoints": [
+      "存储过程是存放在数据库里的一组 SQL，CREATE PROCEDURE 创建，CALL 执行",
+      "可以有 IN、OUT 参数，可以返回结果集",
+      "优点：减少网络往返、提高性能，代码复用，可以只授予执行权限",
+      "缺点：调试和版本管理困难，和具体数据库绑定、难迁移，业务逻辑分散",
+      "和函数的区别：函数 RETURN 一个值并可以在 SQL 表达式中使用，存储过程用 CALL 调用"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "存储过程",
+        "函数",
+        "应用代码里的 SQL"
+      ],
+      "rows": [
+        [
+          "存放位置",
+          "数据库",
+          "数据库",
+          "应用程序"
+        ],
+        [
+          "调用方式",
+          "CALL",
+          "在 SELECT 等表达式中",
+          "程序逐条发送"
+        ],
+        [
+          "返回",
+          "OUT 参数、结果集",
+          "一个返回值",
+          "每条语句的结果"
+        ],
+        [
+          "网络往返",
+          "一次",
+          "随语句",
+          "每条语句一次"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为把所有业务逻辑都写成存储过程一定更好",
+        "right": "存储过程难调试、难测试、难迁移，现在多数项目把业务逻辑放在应用层，只在批量数据处理等场景使用"
+      },
+      {
+        "wrong": "以为 MySQL 的存储过程在创建时就被编译成机器码",
+        "right": "MySQL 是在每个连接第一次调用时解析并缓存，\"预编译\"主要是 SQL Server 的说法"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "存储过程为什么能提高性能？",
+        "a": "一次 CALL 就能在服务器端执行多条语句，省掉了多次网络往返；同一个连接里重复调用时，解析结果会被缓存复用"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "存储过程存放在数据库中，用 CREATE PROCEDURE 创建、用 CALL 执行",
+        "correct": true,
+        "why": "课件：To create ... use CREATE PROCEDURE；To execute ... use CALL"
+      },
+      {
+        "statement": "每次执行存储过程，客户端都要把过程里的全部 SQL 语句重新发送给服务器",
+        "correct": false,
+        "why": "存储过程保存在数据库里，客户端只需要发送一条 CALL 语句"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-存储过程与触发器-存储过程的参数与-delimiter",
+    "category": "MySQL查询/存储过程与触发器",
+    "title": "存储过程的参数与 DELIMITER",
+    "concept": "MySQL 存储过程的参数有三种模式：IN（调用方传入）、OUT（过程内赋值后传回调用方）、INOUT（既传入又传出）；创建时要用 DELIMITER 临时修改语句结束符",
+    "oneLiner": "IN 参数把值传进过程，OUT 参数用 SELECT ... INTO 赋值，调用时传一个会话变量（@total），CALL 之后用 SELECT @total 读出来；过程体里有多条以分号结尾的语句，所以要先 DELIMITER // 改掉结束符，写完再改回分号；MySQL 的存储过程参数不支持默认值，每个参数调用时都必须传。",
+    "explanation": "Parameters for Stored Procedures：Input Parameters：Specify variables to be taken in when using a stored procedure；Output Parameters：Used to output multiple values；Output value can be used in the stored procedure or batch that calls it；Default Parameter：Assigns the parameter with a default value（\"batch\"和参数默认值都是 SQL Server 的概念，MySQL 的存储过程不支持参数默认值）。\n课件例子 1（IN 参数）：\n```sql\nDELIMITER //\nCREATE PROCEDURE GetOfficeByCountry(\n    IN countryName VARCHAR(255)\n)\nBEGIN\n    SELECT * FROM offices WHERE country = countryName;\nEND //\nDELIMITER ;\n\nCALL GetOfficeByCountry('USA');\n```\n返回 San Francisco、Boston、NYC 三个办公室。\n课件例子 2（OUT 参数）：\n```sql\nDELIMITER $$\nCREATE PROCEDURE GetOrderCountByStatus (\n    IN  orderStatus VARCHAR(25),\n    OUT total INT\n)\nBEGIN\n    SELECT COUNT(orderNumber) INTO total FROM orders WHERE status = orderStatus;\nEND$$\nDELIMITER ;\n\nCALL GetOrderCountByStatus('Shipped', @total);\nSELECT @total;\n```\n结果 @total = 303。\nDELIMITER 是 mysql 客户端的命令，不是 SQL 语句：客户端看到结束符就把前面的内容发给服务器，不改的话 CREATE PROCEDURE 会在第一个分号处被截断。\n@total 是用户定义的会话变量，只在当前连接里有效。",
+    "question": "MySQL 存储过程有哪几种参数？OUT 参数怎么使用？为什么要写 DELIMITER？",
+    "keyPoints": [
+      "IN：调用方传入，过程内只读使用",
+      "OUT：过程内用 SELECT ... INTO 或 SET 赋值，调用方用会话变量接收",
+      "INOUT：既传入也传出",
+      "调用：CALL p('Shipped', @total); 再 SELECT @total;",
+      "DELIMITER 临时改变客户端的语句结束符，防止过程体中的分号把 CREATE PROCEDURE 截断"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "模式",
+        "方向",
+        "调用时传什么"
+      ],
+      "rows": [
+        [
+          "IN",
+          "调用方 → 过程",
+          "值或变量"
+        ],
+        [
+          "OUT",
+          "过程 → 调用方",
+          "会话变量（@x）"
+        ],
+        [
+          "INOUT",
+          "双向",
+          "会话变量（@x），先赋好初值"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "在 MySQL 里给存储过程参数写默认值，调用时省略参数",
+        "right": "MySQL 不支持参数默认值，参数个数必须和定义一致，否则报错；可以传 NULL，再在过程里用 IFNULL 处理"
+      },
+      {
+        "wrong": "不写 DELIMITER，直接在命令行里粘贴 CREATE PROCEDURE",
+        "right": "第一个分号就会让客户端把不完整的语句发出去，报语法错误"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "OUT 参数和直接在过程里 SELECT 返回结果集有什么区别？",
+        "a": "OUT 参数适合返回少量单个值（比如一个总数），调用方可以把它当变量继续计算；SELECT 返回的是结果集，适合返回多行数据"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "OUT 参数可以把存储过程里算出的值传回调用方，比如 CALL GetOrderCountByStatus('Shipped', @total) 之后执行 SELECT @total",
+        "correct": true,
+        "why": "课件例子，结果是 303"
+      },
+      {
+        "statement": "MySQL 存储过程的参数可以像 SQL Server 一样设置默认值，调用时省略",
+        "correct": false,
+        "why": "MySQL 不支持参数默认值，每个参数调用时都必须传"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-存储过程与触发器-触发器-trigger",
+    "category": "MySQL查询/存储过程与触发器",
+    "title": "触发器（Trigger）",
+    "concept": "触发器是和一张表关联的命名数据库对象，当表上发生指定的事件（INSERT、UPDATE、DELETE）时自动执行；由事件（Event）、时机（Timing：BEFORE 或 AFTER）和触发动作（Triggered Action）三部分组成",
+    "oneLiner": "触发器不需要调用，表上发生 INSERT / UPDATE / DELETE 时自动执行；MySQL 的触发器是行级的（FOR EACH ROW），改了几行就触发几次；用 NEW 访问新值、OLD 访问旧值，BEFORE 触发器可以修改 NEW；常用于补充约束之外的规则、自动格式化数据、写审计日志，缺点是逻辑隐藏、难调试、影响写性能。",
+    "explanation": "A trigger is a named database object that's associated with a table and activates when a particular event (INSERT, UPDATE, DELETE) occurs for the table。\nComponents：Event：The type of action (INSERT, UPDATE, DELETE) that will activate the trigger；Timing：Specifies when the trigger will be executed: BEFORE or AFTER the event；Triggered Action：The set of statements to execute when the trigger activates。\nTriggers are often used to：Ensure data integrity rules beyond the standard constraints；Automatically format or transform data。\nMySQL 例子：\n```sql\nDELIMITER //\nCREATE TRIGGER trg_orders_before_insert\nBEFORE INSERT ON orders\nFOR EACH ROW\nBEGIN\n    SET NEW.status = UPPER(NEW.status);\nEND //\nDELIMITER ;\n```\nNEW 和 OLD：INSERT 只有 NEW，DELETE 只有 OLD，UPDATE 两者都有；BEFORE 触发器可以 SET NEW.列 改写将要写入的值，AFTER 触发器只能读。\n在 BEFORE 触发器里用 SIGNAL SQLSTATE '45000' 可以拒绝这次操作，实现 CHECK 做不到的复杂校验。\nMySQL 触发器不能对同一张表再做 INSERT / UPDATE / DELETE（会报错），也不能返回结果集。",
+    "question": "什么是触发器？由哪几部分组成？常用来做什么？",
+    "keyPoints": [
+      "触发器绑定在一张表上，表上发生 INSERT、UPDATE、DELETE 时自动执行",
+      "三个组成部分：Event（哪种操作）、Timing（BEFORE / AFTER）、Triggered Action（执行的语句）",
+      "MySQL 触发器是行级的（FOR EACH ROW），用 NEW、OLD 访问新旧值",
+      "用途：标准约束之外的完整性规则、自动格式化或转换数据、审计日志",
+      "缺点：逻辑隐藏、难调试，大量使用会拖慢写操作"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "存储过程",
+        "触发器"
+      ],
+      "rows": [
+        [
+          "执行方式",
+          "主动 CALL",
+          "表上的事件发生时自动执行"
+        ],
+        [
+          "参数",
+          "IN、OUT、INOUT",
+          "没有参数，用 NEW、OLD"
+        ],
+        [
+          "返回结果集",
+          "可以",
+          "不可以"
+        ],
+        [
+          "绑定对象",
+          "不绑定表",
+          "绑定一张表的一种事件"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为一条 UPDATE 改了 100 行，触发器只执行一次",
+        "right": "MySQL 只支持行级触发器，每一行都会触发一次"
+      },
+      {
+        "wrong": "在 AFTER UPDATE 触发器里 SET NEW.col = ... 想修改要写入的值",
+        "right": "只有 BEFORE 触发器能修改 NEW，AFTER 时数据已经写入"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "用触发器做审计日志要注意什么？",
+        "a": "用 AFTER INSERT / UPDATE / DELETE 把 OLD、NEW 和操作时间写进日志表；触发器和原操作在同一个事务里，原操作回滚时日志也会回滚，并且每次写都会多一次插入，要考虑性能"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "触发器由 INSERT、UPDATE、DELETE 事件自动激活，可以指定在事件之前（BEFORE）或之后（AFTER）执行",
+        "correct": true,
+        "why": "课件：Event 和 Timing 两个组成部分"
+      },
+      {
+        "statement": "触发器需要像存储过程一样用 CALL 手动调用",
+        "correct": false,
+        "why": "触发器在表上发生对应事件时自动执行，不能被 CALL"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-查询的执行过程与-explain",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "查询的执行过程与 EXPLAIN",
+    "concept": "一条 SQL 在数据库里大致经过三步：解析器（Parser）检查语法并生成解析树，查询优化器（Query Optimizer）选出代价最低的执行计划，执行引擎按计划调用存储引擎读取数据；EXPLAIN 可以查看优化器选出的执行计划",
+    "oneLiner": "SQL → 解析（语法检查、拆成 token、生成解析树）→ 优化（决定走哪个索引、多表按什么顺序连接）→ 执行（存储引擎真正读写数据）；在语句前面加 EXPLAIN 看执行计划，重点看 type（ALL 表示全表扫描）、key（实际用的索引）、rows（估计扫描行数）和 Extra（Using index、Using filesort、Using temporary）。",
+    "explanation": "Query Execution：Step 1：Parser check query syntax；Break query to token（课件写成 intermediate files，实际是在内存里生成解析树）。Step 2：Query Optimizer creates the best possible execution plan based on current resource utilization。Step 3：DB engine → Run the query。\nExecution Plan：EXPLAIN [Your_SQL]。\n课件例子：film、inventory、rental、customer、address 五表 JOIN，WHERE f.title = 'Some Movie Title'；MySQL Workbench 的可视化执行计划显示：film 是 Full Table Scan（1000 rows，红色），inventory 走 idx_fk_film_id、rental 走 idx_fk_inventory_id（Non-Unique Key Lookup），customer、address 走 PRIMARY（Unique Key Lookup），各表之间用 nested loop（嵌套循环）连接，Query cost 8813.61。\nMySQL 的架构：连接器 → 分析器（Parser）→ 优化器 → 执行器 → 存储引擎（InnoDB）；MySQL 8.0 删除了查询缓存。\n优化器是基于代价（cost-based）的：根据表的统计信息估算每种方案要读多少行、多少页，选总代价最低的；统计信息不准时可能选错索引，可以 ANALYZE TABLE 更新统计信息。\nEXPLAIN ANALYZE（MySQL 8.0.18+）会真正执行语句，并给出每一步实际的行数和耗时。",
+    "question": "一条 SQL 在 MySQL 中是怎么执行的？怎么看执行计划？",
+    "keyPoints": [
+      "解析器检查语法、生成解析树",
+      "优化器根据统计信息估算代价，选出执行计划（用哪个索引、表的连接顺序）",
+      "执行器按计划调用存储引擎（InnoDB）读写数据",
+      "EXPLAIN 查看执行计划：type、key、rows、Extra",
+      "type 为 ALL 表示全表扫描，key 为 NULL 表示没用上索引，通常是优化的重点"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "type",
+        "含义",
+        "例子"
+      ],
+      "rows": [
+        [
+          "ALL",
+          "全表扫描",
+          "条件列上没有索引"
+        ],
+        [
+          "index",
+          "扫描整棵索引树",
+          "只查索引列但没有过滤条件"
+        ],
+        [
+          "range",
+          "索引范围扫描",
+          "WHERE id BETWEEN 1 AND 100"
+        ],
+        [
+          "ref",
+          "非唯一索引等值查找",
+          "课件里的 Non-Unique Key Lookup"
+        ],
+        [
+          "eq_ref",
+          "连接时用主键或唯一索引，每次最多一行",
+          "课件里的 Unique Key Lookup"
+        ],
+        [
+          "const",
+          "主键或唯一索引等值查找，最多一行",
+          "WHERE id = 5"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为 EXPLAIN 会把查询执行一遍，可以用来看真实耗时",
+        "right": "普通 EXPLAIN 只显示计划和估算值，不执行；要真实数据用 EXPLAIN ANALYZE"
+      },
+      {
+        "wrong": "看到 key 列有值就认为查询已经很快",
+        "right": "还要看 type 和 rows：type = index 也是扫描整棵索引树，rows 很大时照样慢"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Extra 里出现 Using filesort 和 Using temporary 说明什么？",
+        "a": "Using filesort 表示排序没法利用索引的顺序，需要额外排序；Using temporary 表示用了临时表（常见于 GROUP BY、DISTINCT、UNION）；两者在大数据量时都很耗资源，通常要通过合适的索引消除"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "查询优化器会估算不同方案的代价，选出执行计划，可以用 EXPLAIN 查看",
+        "correct": true,
+        "why": "课件：Query Optimizer creates the best possible execution plan；Execution Plan：EXPLAIN [Your_SQL]"
+      },
+      {
+        "statement": "EXPLAIN 结果中 type 为 ALL 表示查询用上了表上的所有索引",
+        "correct": false,
+        "why": "ALL 表示全表扫描，是最差的访问方式"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-索引与-b-树",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "索引与 B+ 树",
+    "concept": "索引（Index）是为了加快数据检索而建立的数据结构，原理类似书的目录；MySQL InnoDB 的索引用 B+ 树实现，没有任何索引的表查数据只能全表扫描",
+    "oneLiner": "没有索引时数据无序堆放，查一行要扫描整张表（O(n)）；B+ 树是多路平衡树，非叶子节点只存键用来导航，数据都在叶子节点，叶子节点之间用链表相连；一个节点能存很多键，树很矮（千万级数据一般 3~4 层），查一次只需要几次磁盘 IO，并且叶子链表让范围查询和排序很高效。",
+    "explanation": "Indexes are used to speed up the retrieval of data from a database by providing quick access paths to the data；Operate similar to index in a book；Commonly implemented using a B+ Tree (some DBMS use B-Tree)。\nIf a table has no index at all, when new data is inserted, they are added wherever there is free space, and in no particular order；If you want to look up some data, you need to scan the entire table（Unordered Data Stored On Heap）。\nEach clustered index composed of 3 main levels：Root Level、Intermediate Level、Leaf Page Level（Leaf pages are linked）；Leaf pages store index records and contain：Header（metadata）、Actual row data、Pointers。\"3 层\"只是常见情况，层数取决于数据量。\n为什么用 B+ 树：\n二叉搜索树 / 红黑树：每个节点只有两个分支，数据量大时树很高，每层一次磁盘 IO，太慢。\nB 树：每个节点都存数据，节点能放的键变少，树更高；范围查询要在树里来回遍历。\nB+ 树：非叶子节点只存键，扇出大、树矮；所有数据在叶子层，叶子用链表连接，范围查询找到起点后顺序往后读。\n哈希索引：等值查找 O(1)，但不支持范围查询和排序。",
+    "question": "索引为什么能提高查询速度？MySQL 为什么用 B+ 树做索引？",
+    "keyPoints": [
+      "没有索引时只能全表扫描，O(n)；有索引时沿树查找，O(log n)",
+      "B+ 树是多路平衡树，非叶子节点只存键，扇出大，树很矮（一般 3~4 层）",
+      "每层一次磁盘 IO，查一行只需要几次 IO",
+      "叶子节点用链表相连，范围查询和按索引排序都很高效",
+      "相比二叉树更矮，相比 B 树扇出更大且范围查询更好，相比哈希支持范围和排序"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "结构",
+        "等值查找",
+        "范围查询",
+        "树高 / 问题"
+      ],
+      "rows": [
+        [
+          "二叉搜索树",
+          "O(log n)",
+          "要中序遍历",
+          "太高，可能退化成链表"
+        ],
+        [
+          "B 树",
+          "快",
+          "要在树里来回遍历",
+          "节点存数据，扇出小"
+        ],
+        [
+          "B+ 树",
+          "快",
+          "叶子链表顺序读",
+          "矮，InnoDB 采用"
+        ],
+        [
+          "哈希",
+          "O(1)",
+          "不支持",
+          "不支持排序"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 B+ 树就是\"平衡二叉树\"",
+        "right": "B+ 树是多路平衡树，一个节点（一页，InnoDB 默认 16KB）能放上百个键"
+      },
+      {
+        "wrong": "认为数据量增长 1000 倍，查询要多走 1000 倍的步数",
+        "right": "B+ 树的高度随数据量对数增长，可能只多一层"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "InnoDB 一棵 3 层的 B+ 树大概能存多少行？",
+        "a": "一页 16KB，假设主键是 BIGINT（8 字节）加 6 字节指针，一个非叶子页能放约 1170 个指针；叶子页每行按 1KB 算能放 16 行；3 层约 1170 × 1170 × 16 ≈ 2000 万行"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "InnoDB 的 B+ 树索引中，叶子节点之间用链表相连，适合范围查询",
+        "correct": true,
+        "why": "课件：Leaf Page Level：Leaf pages are linked"
+      },
+      {
+        "statement": "没有任何索引的表，查找某一行只需要扫描一部分数据页",
+        "correct": false,
+        "why": "课件：If you want to look up some data, you need to scan the entire table"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-聚集索引与非聚集索引",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "聚集索引与非聚集索引",
+    "concept": "聚集索引（Clustered Index）的叶子节点存放完整的行数据，表的数据按聚集键的顺序存储，一张表只能有一个；非聚集索引（Non-Clustered Index，InnoDB 叫二级索引）的叶子节点只存索引列和指向行的定位信息，一张表可以有多个",
+    "oneLiner": "InnoDB 中主键就是聚集索引，表本身就是一棵按主键排序的 B+ 树；没有主键时用第一个 NOT NULL 的唯一索引，再没有就用隐藏的 row id，所以 InnoDB 的表一定有聚集索引；二级索引的叶子存的是主键值，通过二级索引查整行要先查到主键、再回聚集索引查一次（回表）。",
+    "explanation": "Clustered Index is associated with PK, it determines the physical order of data in a table；Non-clustered Index is associated with Unique Keys, it stores data pointer to the data in the table（不只是唯一键，CREATE INDEX 建的普通索引也是非聚集索引）；Tables without a Clustered Index are called HEAP Tables（堆表是 SQL Server 的概念，InnoDB 的表一定有聚集索引）。\nClustered Indexes store actual row data in Leaf Pages and sort them based on the Key values of the column you choose；Non-Clustered Indexes will NOT store data in the Leaf Pages, instead they store pointers to the row they reference。\nA clustered index organizes table data directly within its balanced B+Tree structure；The table rows are physically stored in the leaf pages of the index, so the logical order of the index matches the physical order of the data ⇒ rows are sorted by clustering key in ascending order；Because data can only be physically ordered once, a table can have only one clustered index。\nNon-Clustered Index：Does not physically store data, so there can be many non-clustered index on a single table（课件说 up to 999，这是 SQL Server 的上限；InnoDB 一张表最多 64 个二级索引）。\nInnoDB 二级索引的叶子存的是主键值而不是物理地址：数据页分裂、行移动时二级索引不用改；代价是回表要再查一次聚集索引。\n主键建议用自增整数：新行总是追加在 B+ 树最右边，不会频繁页分裂；用 UUID 这类随机值做主键会导致插入位置随机、页分裂多，而且每个二级索引都要存一份较长的主键。",
+    "question": "聚集索引和非聚集索引有什么区别？InnoDB 的聚集索引是怎么选的？",
+    "keyPoints": [
+      "聚集索引的叶子节点存整行数据，表数据按聚集键排序存放",
+      "一张表只能有一个聚集索引，可以有多个非聚集索引",
+      "InnoDB：有主键用主键；没有就用第一个 NOT NULL 的 UNIQUE 列；都没有就用隐藏的 row id",
+      "InnoDB 二级索引的叶子存索引列 + 主键值，查整行要回表",
+      "主键最好用自增整数，避免页分裂，也让二级索引更小"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "聚集索引",
+        "非聚集索引（二级索引）"
+      ],
+      "rows": [
+        [
+          "叶子节点存什么",
+          "整行数据",
+          "索引列 + 主键值"
+        ],
+        [
+          "每张表数量",
+          "只能 1 个",
+          "多个（InnoDB 最多 64 个）"
+        ],
+        [
+          "InnoDB 中对应",
+          "主键",
+          "唯一索引、普通索引"
+        ],
+        [
+          "查整行",
+          "直接拿到",
+          "需要回表"
+        ],
+        [
+          "数据顺序",
+          "决定行的物理顺序",
+          "不影响行的存放"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 InnoDB 没定义主键的表是没有聚集索引的堆表",
+        "right": "InnoDB 会用第一个 NOT NULL 的唯一索引，或者自动生成隐藏的 row id 作为聚集索引"
+      },
+      {
+        "wrong": "认为 InnoDB 二级索引的叶子存的是行的物理地址",
+        "right": "存的是主键值，拿主键再到聚集索引里查整行"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么不推荐用 UUID 做 InnoDB 的主键？",
+        "a": "UUID 是随机的，新行会插到 B+ 树中间的随机位置，频繁页分裂、页利用率低；而且 UUID 比整数长，每个二级索引的叶子都要存一份主键，索引变大"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "一张表只能有一个聚集索引",
+        "correct": true,
+        "why": "课件：Because data can only be physically ordered once, a table can have only one clustered index"
+      },
+      {
+        "statement": "InnoDB 二级索引的叶子节点存储完整的行数据",
+        "correct": false,
+        "why": "只有聚集索引的叶子存整行，二级索引的叶子存索引列和主键值"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-回表与覆盖索引",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "回表与覆盖索引",
+    "concept": "通过二级索引找到主键后，再到聚集索引里取整行数据的过程叫回表；如果查询需要的列都已经包含在二级索引里，就不需要回表，这种情况叫覆盖索引（covering index）",
+    "oneLiner": "按主键查（WHERE id = 5）直接走聚集索引，一次拿到整行；按二级索引列查时先在二级索引里找到主键，再回聚集索引取整行，要走两棵 B+ 树；如果只 SELECT 二级索引里已有的列（加上主键），就不用回表，EXPLAIN 的 Extra 显示 Using index；这也是不要随手写 SELECT * 的原因之一。",
+    "explanation": "Query situation：The SQL uses the clustered index field (e.g, where ID = XXX)：Clustered index is used directly；The SQL uses the non-clustered index fields：DB navigates to the non-clustered index on the given field；Finds the matching entry and retrieves the PK；Use the PK to look up the full row on clustered index。\n课件例子：\n```sql\ncreate table zookeeper(\n    id int auto_increment primary key,\n    email varchar(20) unique,\n    name varchar(20)\n);\ncreate index indexname on zookeeper(name);\n\nSELECT * FROM zookeeper WHERE id = 5;\nSELECT email FROM zookeeper WHERE email = 'abc@example.com';\n```\n这张表有 3 个索引：id 的聚集索引、email 的唯一索引（UNIQUE 自动创建）、name 的普通索引。\n第一条按主键查，直接走聚集索引；第二条走 email 的二级索引，而且只要 email 这一列，二级索引里就有，不需要回表，是覆盖索引。\n课件的 Data Retrieval 图：找 last_name = Semorad，先在 last_name 的非聚集索引里一路找到叶子，拿到 id，再到 id 的聚集索引里找到数据页。\n联合索引可以把常用的查询列都放进去，让更多查询变成覆盖索引，比如 INDEX(name, email) 能覆盖 SELECT email FROM zookeeper WHERE name = ?。",
+    "question": "什么是回表？什么是覆盖索引？",
+    "keyPoints": [
+      "按主键查询直接走聚集索引，拿到整行",
+      "按二级索引列查询：先在二级索引找到主键，再到聚集索引取整行，这一步叫回表",
+      "查询的列全部在二级索引中（包括主键）时不需要回表，叫覆盖索引",
+      "覆盖索引在 EXPLAIN 的 Extra 中显示 Using index",
+      "只查需要的列、合理设计联合索引，可以减少回表"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "查询（zookeeper）",
+        "用到的索引",
+        "是否回表"
+      ],
+      "rows": [
+        [
+          "SELECT * WHERE id = 5",
+          "聚集索引",
+          "不需要"
+        ],
+        [
+          "SELECT email WHERE email = ?",
+          "email 唯一索引",
+          "不需要（覆盖索引）"
+        ],
+        [
+          "SELECT id, name WHERE name = ?",
+          "name 普通索引",
+          "不需要（二级索引里有主键）"
+        ],
+        [
+          "SELECT * WHERE name = ?",
+          "name 普通索引",
+          "需要"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为只要走了索引，就不会再访问表数据",
+        "right": "走二级索引时，SELECT 了索引里没有的列就要回表，匹配行多时回表次数也多"
+      },
+      {
+        "wrong": "习惯写 SELECT *",
+        "right": "本来能用覆盖索引的查询被迫回表，还会读取、传输不需要的列"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "SELECT id, name FROM zookeeper WHERE name = 'Amy' 需要回表吗？",
+        "a": "不需要；InnoDB 的二级索引叶子里存着索引列 name 和主键 id，要的两列都在，属于覆盖索引"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "查询需要的列都包含在二级索引中时，不需要回表，这叫覆盖索引",
+        "correct": true,
+        "why": "课件例子 SELECT email FROM zookeeper WHERE email = 'abc@example.com' 只需要 email 的二级索引"
+      },
+      {
+        "statement": "只要查询条件用的是二级索引，就一定需要回表",
+        "correct": false,
+        "why": "要的列都在二级索引里（覆盖索引）时不需要回表"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-键-key-与索引-index",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "键（Key）与索引（Index）",
+    "concept": "键是逻辑上的约束，用来保证数据的唯一性和引用关系（主键、唯一键、外键）；索引是物理上的数据结构，用来加快查找；数据库通常借助索引来实现主键和唯一约束，但索引不一定是键",
+    "oneLiner": "课件说 Keys ≠ Indexes：主键、唯一键在 MySQL 中会自动建对应的索引来检查唯一性，外键列 InnoDB 也会自动建索引；但 CREATE INDEX 建的普通索引只是为了加速，允许重复值，不保证唯一，也不表示任何约束；想要唯一就建 UNIQUE 约束或唯一索引。",
+    "explanation": "课件：Keys ≠ Indexes。\n键（约束）：PRIMARY KEY（唯一且非空）、UNIQUE（唯一，允许 NULL）、FOREIGN KEY（引用另一张表的键）。\n索引（结构）：主键索引（InnoDB 中就是聚集索引）、唯一索引、普通索引、联合索引、全文索引等。\n关系：MySQL 定义 PRIMARY KEY、UNIQUE 时会自动创建同名的唯一索引来执行检查；InnoDB 要求外键列上有索引，没有会自动创建。\n课件 zookeeper 例子：email varchar(20) unique 是唯一约束，会自动带一个唯一索引；create index indexname on zookeeper(name) 是普通索引，name 可以重复。\n建唯一索引时如果表里已有重复值，CREATE UNIQUE INDEX 会失败。",
+    "question": "键和索引有什么区别和联系？",
+    "keyPoints": [
+      "键是逻辑约束：主键、唯一键、外键，保证数据正确",
+      "索引是物理结构：B+ 树，加快查找",
+      "MySQL 用唯一索引来实现主键和唯一约束，外键列会自动建索引",
+      "普通索引允许重复值，只用于加速，不是键",
+      "唯一索引会拒绝重复值，作用和 UNIQUE 约束相同"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "PRIMARY KEY",
+        "UNIQUE",
+        "普通 INDEX"
+      ],
+      "rows": [
+        [
+          "是否约束",
+          "是",
+          "是",
+          "否"
+        ],
+        [
+          "允许重复",
+          "否",
+          "否",
+          "是"
+        ],
+        [
+          "允许 NULL",
+          "否",
+          "是（可以多个）",
+          "是"
+        ],
+        [
+          "每表数量",
+          "1 个",
+          "多个",
+          "多个"
+        ],
+        [
+          "背后的索引",
+          "聚集索引（InnoDB）",
+          "唯一二级索引",
+          "普通二级索引"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "以为给列建了普通索引，就能防止重复数据",
+        "right": "普通索引允许重复，要用 UNIQUE 约束或 CREATE UNIQUE INDEX"
+      },
+      {
+        "wrong": "以为主键和\"主键上的索引\"是两个需要分别创建的东西",
+        "right": "定义 PRIMARY KEY 时数据库会自动建好对应的索引"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "外键列需要自己建索引吗？",
+        "a": "InnoDB 要求外键列上有索引，没有时会自动创建；这样删除或更新父表记录时检查子表，不用全表扫描"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面 SQL 执行后，最后一条查询的结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE zookeeper (id INT PRIMARY KEY, email VARCHAR(20), name VARCHAR(20));\nCREATE INDEX idx_name ON zookeeper(name);\nINSERT INTO zookeeper VALUES (1, 'a@x.com', 'Amy'), (2, 'b@x.com', 'Amy');\nSELECT COUNT(*) FROM zookeeper WHERE name = 'Amy';",
+        "options": [
+          "2",
+          "1",
+          "0",
+          "执行报错"
+        ],
+        "answer": 0,
+        "why": "idx_name 是普通索引，只用来加快按 name 查找，不限制重复值，两个 Amy 都能插入。"
+      },
+      {
+        "prompt": "下面 SQL 执行结果是什么？",
+        "lang": "sql",
+        "code": "CREATE TABLE zookeeper (id INT PRIMARY KEY, email VARCHAR(20), name VARCHAR(20));\nCREATE UNIQUE INDEX idx_email ON zookeeper(email);\nINSERT INTO zookeeper VALUES (1, 'a@x.com', 'Amy');\nINSERT INTO zookeeper VALUES (2, 'a@x.com', 'Bob');\nSELECT COUNT(*) FROM zookeeper;",
+        "options": [
+          "2",
+          "1",
+          "执行报错",
+          "查询结果为空"
+        ],
+        "answer": 2,
+        "why": "唯一索引会拒绝重复值，第二条 INSERT 的 email 和第一条相同，执行报错；这就是 UNIQUE 约束在数据库内部的实现方式。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "键是逻辑约束，索引是加快查找的物理结构，普通索引允许重复值",
+        "correct": true,
+        "why": "课件：Keys ≠ Indexes"
+      },
+      {
+        "statement": "用 CREATE INDEX 给某列建普通索引后，这一列就不能再出现重复值",
+        "correct": false,
+        "why": "只有唯一索引（UNIQUE）才限制重复，普通索引只负责加速"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-索引的代价与失效",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "索引的代价与失效",
+    "concept": "索引能加快查询，但不是越多越好：每个索引都要占空间，并且在每次写入时同步维护；有些查询写法或数据分布还会让索引用不上（索引失效），优化器可能宁愿全表扫描",
+    "oneLiner": "面试题\"索引一定能提高性能吗\"的答案是不一定：INSERT / UPDATE / DELETE 都要同时维护所有相关索引，写变慢、占空间；表很小、区分度低（比如性别）、要返回大部分行时，走索引加回表反而比全表扫描慢；对索引列用函数或计算、LIKE 以 % 开头、隐式类型转换、联合索引不满足最左前缀，都会让索引失效。",
+    "explanation": "Interviews Questions：How does Index improve the performance? Hint: Index lookup vs. Table Scan；Will Index always improve the performance? Hint: Index adds maintenance overhead。\nIndex lookup vs Table Scan：全表扫描逐行检查，O(n)；索引查找沿 B+ 树从根到叶子，O(log n)，再顺着叶子链表做范围扫描。\n维护开销：插入一行要在每个索引的 B+ 树里插入一项，可能引起页分裂；更新索引列要删旧项、插新项；删除也要同步。\n常见的索引失效：\nWHERE YEAR(created_at) = 2024：对索引列用函数，改成 created_at >= '2024-01-01' AND created_at < '2025-01-01'。\nWHERE name LIKE '%abc'：以通配符开头，B+ 树无法定位起点；LIKE 'abc%' 可以用索引。\nWHERE phone = 13800000000：phone 是字符串列却和数字比较，会对列做类型转换。\n联合索引 INDEX(a, b, c)：WHERE b = 1 不满足最左前缀，用不上；WHERE a = 1 AND c = 1 只能用到 a。\nOR 连接的条件里有一个列没有索引，可能整体放弃索引。\n建索引的原则：WHERE、JOIN、ORDER BY、GROUP BY 常用的列；区分度高的列；联合索引把等值条件、区分度高的列放前面；避免冗余索引（有了 (a, b) 就不需要单独的 (a)）。",
+    "question": "索引一定能提高性能吗？哪些情况下索引会失效？",
+    "keyPoints": [
+      "不一定：索引要占空间，每次写操作都要维护，写多的表索引太多会拖慢写入",
+      "小表、区分度低的列、要返回大部分行的查询，全表扫描可能更快",
+      "对索引列使用函数或表达式会导致索引失效",
+      "LIKE 以 % 开头、隐式类型转换也会让索引失效",
+      "联合索引要满足最左前缀原则"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "写法",
+        "能否用 INDEX(created_at) / INDEX(name)"
+      ],
+      "rows": [
+        [
+          "WHERE YEAR(created_at) = 2024",
+          "不能（列上用了函数）"
+        ],
+        [
+          "WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01'",
+          "能（范围扫描）"
+        ],
+        [
+          "WHERE name LIKE 'Am%'",
+          "能"
+        ],
+        [
+          "WHERE name LIKE '%my'",
+          "不能"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "给表的每一列都建上索引，认为查询会全面变快",
+        "right": "写入要维护所有索引，变慢、占空间，优化器也可能选错；只给常用查询条件建索引"
+      },
+      {
+        "wrong": "给性别、状态这种只有几个取值的列单独建索引",
+        "right": "区分度太低，走索引还要大量回表，优化器多半还是全表扫描"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "联合索引 INDEX(a, b) 对 WHERE b = 1 AND a = 2 有用吗？",
+        "a": "有用；最左前缀看的是条件里有没有 a，不是书写顺序，优化器会自动调整，所以 a、b 都能用上"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "索引会降低 INSERT、UPDATE、DELETE 的速度，因为写入时要同时维护索引",
+        "correct": true,
+        "why": "课件 Hint：Index adds maintenance overhead"
+      },
+      {
+        "statement": "只要建了索引，查询就一定比全表扫描快",
+        "correct": false,
+        "why": "小表、低区分度、返回大量行或索引失效时，全表扫描可能更快"
+      }
+    ]
+  },
+  {
+    "id": "mysql查询-执行计划与索引-查询优化",
+    "category": "MySQL查询/执行计划与索引",
+    "title": "查询优化",
+    "concept": "从数据库角度提升应用性能，通常从看执行计划、建合适的索引、优化 JOIN、尽早过滤和只取需要的列、合理的表设计几个方面入手",
+    "oneLiner": "先用 EXPLAIN 找到慢在哪（全表扫描、filesort、扫描行数太多）；给 WHERE、JOIN、ORDER BY 用到的列建合适的索引；大表 JOIN 要保证连接列有索引、先过滤再连接；尽早用 WHERE 减少行数，不写 SELECT * 只取需要的列；表结构按范式设计，读多写少的场景再适当反规范化。",
+    "explanation": "Question: How to improve the performance of your application? (Database version)\nExecution Plan：Look into execution plan to analyze the performance of your query。\nIndex：Ensure the tables are properly indexed。\nOptimize JOINs：Try to avoid using JOIN statements on large tables if possible。\nFilter early: avoid SELECT *, only get the needed information（其实是两件事：尽早用 WHERE 减少参与后续计算的行；只取需要的列，减少 IO 和网络传输，还可能用上覆盖索引）。\nDatabase Design：ensure the data is normalized（上一份课件也讲了，读多写少时会反规范化，用少量冗余换更少的 JOIN）。\n补充：开启慢查询日志（slow_query_log）找出慢 SQL；深分页 LIMIT 100000, 10 改成按上一页最后的 id 继续查；批量插入代替逐条插入；避免在循环里一条条查询（N+1 问题）；能用 UNION ALL 就不用 UNION。",
+    "question": "从数据库的角度，怎么提升应用的性能？",
+    "keyPoints": [
+      "用慢查询日志和 EXPLAIN 找出慢 SQL，分析执行计划",
+      "给常用的查询条件、连接列、排序列建合适的索引，避免索引失效",
+      "优化 JOIN：连接列有索引，先过滤再连接，避免大表之间不必要的 JOIN",
+      "尽早过滤，只查需要的列，不写 SELECT *",
+      "表结构合理（规范化，必要时反规范化），配合分页优化、批量操作、缓存"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方法",
+        "解决的问题"
+      ],
+      "rows": [
+        [
+          "EXPLAIN",
+          "定位全表扫描、错误的索引、额外排序"
+        ],
+        [
+          "索引",
+          "把全表扫描变成索引查找"
+        ],
+        [
+          "优化 JOIN",
+          "减少参与连接的行数和扫描次数"
+        ],
+        [
+          "只查需要的列",
+          "减少 IO、网络传输，争取覆盖索引"
+        ],
+        [
+          "规范化 / 反规范化",
+          "在写入一致性和读取速度之间取舍"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "一遇到慢查询就先加索引",
+        "right": "先 EXPLAIN 看原因：可能是索引失效、写法问题或者返回的数据太多，加索引不一定有用"
+      },
+      {
+        "wrong": "分页一直用 LIMIT 很大的偏移量",
+        "right": "MySQL 要先扫过前面所有的行再丢掉，偏移量越大越慢，改成按上一页最后一个 id 继续查"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么说\"Filter early\"？",
+        "a": "WHERE 越早把不需要的行过滤掉，后面的 JOIN、GROUP BY、ORDER BY 要处理的数据就越少；能在 WHERE 里写的条件不要放到 HAVING 里"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "只查询需要的列而不是 SELECT *，可以减少读取和传输的数据量，还可能用上覆盖索引",
+        "correct": true,
+        "why": "课件：Filter early: avoid SELECT *, only get the needed information"
+      },
+      {
+        "statement": "为了让所有查询都变快，应该给表的每一列都建索引",
+        "correct": false,
+        "why": "索引有维护开销，太多会拖慢写入，只应该给常用的查询条件建索引"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-web应用架构-web-应用与客户端-服务器模型",
+    "category": "Web与Servlet/Web应用架构",
+    "title": "Web 应用与客户端-服务器模型",
+    "concept": "Web 应用（web app）是通过浏览器、经由网络访问的软件程序；大多数 Web 应用遵循客户端-服务器（Client-Server）模型：服务器端负责数据的存储和读取，客户端负责把信息展示给用户",
+    "oneLiner": "Web 应用分成客户端（前端）和服务器端（后端）：前端用 HTML、CSS、JavaScript 在浏览器里展示界面、收集用户输入；后端用 Java 等语言处理业务逻辑、读写文件和数据库；两者通过 HTTP 的请求和响应通信；UI 运行在客户端，但它展示的数据来自服务器。",
+    "explanation": "A web application, often called a web app, is a software program accessed through a web browser over the internet。\nClient-Server model：Server-side language (such as Java) to handle the storage and retrieval of the information；client-side (HTML, CSS, JavaScript, etc.) to present information to the users；User Interface (UI)：The visual layer and controls the user interacts with (buttons, forms, tables, etc.)，Lives on the client but is built from data provided by the server。\n课件的架构图：User → Collect Data → Frontend（What the User Sees & Interacts with：HTML, CSS, JavaScript）→ Request → Backend（Contains App Logic：PHP, JavaScript, Python, Java；Web Server 读写 File System 和 Database）→ Response → Frontend → Display Results → User。\n课件的分层图：Client side（Presentation Layer：HTML5、JS、CSS3；Browser；Local Storage：Cookies、IndexedDB、localStorage、File API；Operating System）⇄ Communication Channel（Application Layer：HTTP/1.1、HTTP/2）⇄ Server side（Logic Layer；Web Server Layer：Nginx、Tomcat、Apache；Storage Layer：MySQL、Oracle、PostgreSQL；Operating System；Infrastructure）。\n这门课的技术栈：前端 HTML、CSS、JavaScript，后端 Java Servlet 跑在 Tomcat 里，数据存在 MySQL。",
+    "question": "什么是 Web 应用？客户端-服务器模型中客户端和服务器分别负责什么？",
+    "keyPoints": [
+      "Web 应用是通过浏览器、经由网络访问的软件，不需要单独安装客户端",
+      "客户端（前端）负责展示信息、收集用户输入，技术是 HTML、CSS、JavaScript",
+      "服务器端（后端）负责业务逻辑和数据的存储、读取，比如 Java + 数据库",
+      "客户端发 HTTP 请求，服务器返回 HTTP 响应",
+      "UI 运行在客户端，但用服务器提供的数据搭建"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "客户端（Frontend）",
+        "服务器端（Backend）"
+      ],
+      "rows": [
+        [
+          "运行在哪",
+          "用户的浏览器",
+          "服务器"
+        ],
+        [
+          "负责",
+          "展示、交互",
+          "业务逻辑、存储和读取数据"
+        ],
+        [
+          "技术",
+          "HTML、CSS、JavaScript",
+          "Java、Python、PHP 等 + 数据库"
+        ],
+        [
+          "存储",
+          "Cookie、localStorage、IndexedDB",
+          "文件系统、MySQL 等"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 HTML、CSS、JavaScript 在服务器上执行，再把画面发给浏览器",
+        "right": "它们作为文件被发送到浏览器，由浏览器解析、渲染和执行"
+      },
+      {
+        "wrong": "认为前端页面可以直接读写服务器上的数据库",
+        "right": "前端只能发 HTTP 请求，由后端程序访问数据库，再把结果放进响应"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么不让前端直接连数据库？",
+        "a": "数据库的账号密码会暴露在浏览器里，任何人都能随意读写；业务校验和权限控制也必须放在后端，前端的校验可以被绕过"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "在客户端-服务器模型中，用户界面运行在客户端，但它展示的数据由服务器提供",
+        "correct": true,
+        "why": "课件：UI lives on the client but is built from data provided by the server"
+      },
+      {
+        "statement": "Web 应用的前端代码（HTML、CSS、JavaScript）运行在服务器上",
+        "correct": false,
+        "why": "前端代码由浏览器下载后在客户端解析和执行"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-web应用架构-html-与-css",
+    "category": "Web与Servlet/Web应用架构",
+    "title": "HTML 与 CSS",
+    "concept": "HTML（Hyper Text Markup Language，超文本标记语言）描述网页的结构，由一系列用标签表示的元素组成；CSS（Cascading Style Sheet，层叠样式表）描述 HTML 元素怎么显示，控制颜色、字体、布局、间距等",
+    "oneLiner": "HTML 用 `<tagName>content</tagName>` 这样的标签告诉浏览器内容的结构，浏览器不会把标签显示出来，而是用它们渲染页面；CSS 有行内（标签的 style 属性）、内部（`<head>` 里的 `<style>`）、外部（单独的 .css 文件）三种写法，后两种用选择器指定样式作用在哪些元素上；\"层叠\"指多条样式可以同时作用在一个元素上，按优先级决定谁生效。",
+    "explanation": "HTML stands for Hyper Text Markup Language：Describes the structure of a web page；Consists of a series of elements。\nHTML elements are represented by tags：`<tagName>content</tagName>`；Tell the browser how to display the content；Browsers do not display the HTML tags directly, but use them to render the content of the page。\n课件的例子：`<title>This is the tab name</title>` 显示在浏览器的标签页上，`<h1>Hello, world!</h1>` 显示为页面上的大标题；`<head>` 放标题、样式、编码等元信息，`<body>` 放真正显示在页面上的内容。\nCSS stands for Cascading Style Sheet：describes how HTML elements are to be displayed；Cascading：Multiple styles can apply, with rules for which takes priority；Style：Controls color, font, layout, spacing, etc.\nWays to Apply CSS：Inline – directly in the tag `<p style=\"color:red;\">Text</p>`；Internal (in-page) – inside `<style>` in the `<head>`；External – separate .css file。\nCSS Selectors：In the last two methods, selectors are used to define which HTML elements the styles apply to（课件原文用 \"~\" 代替了 selectors）。\n优先级（补充）：!important > 行内样式 > id 选择器（#header）> 类选择器（.title）> 元素选择器（p）；优先级相同时，后写的覆盖先写的。\n实际项目推荐外部样式表：结构和样式分离，多个页面共用一份，浏览器还能缓存 .css 文件。",
+    "question": "HTML 和 CSS 分别负责什么？CSS 有哪几种引入方式，优先级怎样？",
+    "keyPoints": [
+      "HTML 是超文本标记语言，描述页面结构，由元素组成",
+      "元素用 `<tagName>content</tagName>` 标签表示，浏览器不显示标签，而是用它渲染内容",
+      "CSS 是层叠样式表，控制颜色、字体、布局、间距",
+      "CSS 有行内、内部（`<head>` 里的 `<style>`）、外部（.css 文件）三种写法，后两种要用选择器",
+      "层叠：多条样式作用于同一元素时按优先级决定，不考虑 !important 时行内样式优先级最高"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方式",
+        "写在哪",
+        "要不要选择器",
+        "适用"
+      ],
+      "rows": [
+        [
+          "Inline 行内",
+          "标签的 style 属性",
+          "不要",
+          "临时改单个元素"
+        ],
+        [
+          "Internal 内部",
+          "`<head>` 里的 `<style>`",
+          "要",
+          "单个页面的样式"
+        ],
+        [
+          "External 外部",
+          "单独的 .css 文件",
+          "要",
+          "多个页面共用，推荐"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 `<head>` 里的内容会显示在页面正文里",
+        "right": "`<head>` 放元信息，`<title>` 显示在浏览器标签页上；正文内容放在 `<body>` 里"
+      },
+      {
+        "wrong": "认为行内样式也要写选择器",
+        "right": "行内样式直接写在元素的 style 属性上，只作用于这个元素；内部和外部样式才需要选择器"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么一般推荐外部样式表，而不是行内样式？",
+        "a": "结构和样式分离，多个页面可以共用同一个 .css 文件，浏览器还能缓存它；行内样式难维护、不能复用，而且优先级太高，不好被覆盖"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "浏览器不会直接显示 HTML 标签，而是用标签来渲染页面内容",
+        "correct": true,
+        "why": "课件：Browsers do not display the HTML tags directly, but use them to render the content of the page"
+      },
+      {
+        "statement": "同一个元素上，外部 .css 文件里的样式优先级高于标签上的行内样式",
+        "correct": false,
+        "why": "不考虑 !important 时，行内样式的优先级最高"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-web应用架构-javascript-与静态-动态网页",
+    "category": "Web与Servlet/Web应用架构",
+    "title": "JavaScript 与静态、动态网页",
+    "concept": "JavaScript 是 HTML 和 Web 的编程语言；只用 HTML 和 CSS 只能做出静态（static）网页，JavaScript 可以根据用户交互等事件动态地渲染页面",
+    "oneLiner": "HTML 管结构、CSS 管样式、JavaScript 管行为；静态网页的内容事先写死，每个人看到的都一样；动态内容有两种来源：浏览器里的 JavaScript 根据用户操作修改页面（客户端动态），或者服务器端程序（比如 Servlet）根据请求现场生成内容（服务器端动态）。",
+    "explanation": "JavaScript is the programming language of HTML and the Web。\nHTML and CSS will only produce static web pages。\nJavaScript can help render the web pages dynamically based on events such as user interactions（点击按钮、输入文字、滚动页面等）。\n三者分工：HTML → 结构（有什么），CSS → 样式（长什么样），JavaScript → 行为（怎么动）。\n客户端动态：浏览器执行 JavaScript，修改页面上的元素（DOM），或者用 fetch / AJAX 向服务器要数据后局部刷新页面。\n服务器端动态：浏览器请求一个 URL，服务器上的 Java 程序（Servlet）查询数据库、拼出 HTML 或 JSON 再返回，不同用户、不同时间拿到的内容可以不同。\nJavaScript 不只能跑在浏览器里：课件在 Web 服务器软件里提到 Node.js (with Express) 是 JavaScript 运行时，常用来写服务器。\nJavaScript 和 Java 是两门不同的语言，只是名字相似。",
+    "question": "HTML、CSS 和 JavaScript 分别负责什么？什么是静态网页和动态网页？",
+    "keyPoints": [
+      "HTML 描述页面结构，CSS 描述样式，JavaScript 描述行为",
+      "只有 HTML 和 CSS 只能做静态网页，内容是写死的",
+      "JavaScript 可以根据用户交互等事件动态修改页面",
+      "服务器端程序（比如 Servlet）也可以根据请求动态生成内容",
+      "JavaScript 也能通过 Node.js 在服务器端运行，它和 Java 是不同的语言"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "静态网页",
+        "客户端动态",
+        "服务器端动态"
+      ],
+      "rows": [
+        [
+          "内容从哪来",
+          "事先写好的 HTML 文件",
+          "浏览器里的 JavaScript 修改页面",
+          "服务器程序根据请求生成"
+        ],
+        [
+          "典型技术",
+          "HTML、CSS",
+          "JavaScript",
+          "Servlet、JSP 等"
+        ],
+        [
+          "每个用户看到的",
+          "一样",
+          "随操作变化",
+          "随请求、用户、数据变化"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为动态网页一定要靠浏览器里的 JavaScript",
+        "right": "服务器端程序（比如 Servlet）根据请求生成 HTML 也是动态内容，这正是 Servlet 要做的事"
+      },
+      {
+        "wrong": "认为 JavaScript 是 Java 的脚本版本",
+        "right": "两者是不同的语言，语法和运行环境都不同，只是名字相似"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Servlet 返回的页面和浏览器里 JavaScript 渲染的页面有什么区别？",
+        "a": "Servlet 在服务器上把内容生成好再发给浏览器（服务器端渲染）；JavaScript 是浏览器拿到页面或数据后在本地修改页面（客户端渲染）；前者的内容直接就在响应里，后者可以只刷新局部、不用整页重新加载"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "只用 HTML 和 CSS 只能做出静态网页",
+        "correct": true,
+        "why": "课件：HTML and CSS will only produce static web pages，需要 JavaScript 或服务器端程序才能动态变化"
+      },
+      {
+        "statement": "JavaScript 只能在浏览器里运行",
+        "correct": false,
+        "why": "课件提到 Node.js 是 JavaScript 运行时，常用来写服务器"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-http-协议与请求-响应模型",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "HTTP 协议与请求-响应模型",
+    "concept": "HTTP（Hypertext Transfer Protocol，超文本传输协议）规定了客户端和服务器在互联网上怎样通信：数据通过请求（request）和响应（response）组织和传输，客户端发出的每个请求都必须有服务器的一个响应",
+    "oneLiner": "HTTP 是基于请求-响应模型的应用层协议：通信由客户端（通常是浏览器）发起，服务器返回响应，一个请求对应一个响应；HTTP 本身是无状态的，服务器不记得之前的请求，要靠 Cookie、Session、Token 维持登录状态；HTTP/1.x 的报文是文本格式，HTTP/2 改成了二进制分帧。",
+    "explanation": "HTTP stands for Hypertext Transfer Protocol：It is used to structure communication between clients and servers over the internet；It defines how data is structured and transmitted via requests and responses；Each HTTP request sent by a client must be followed by an HTTP response from the server, ensuring a complete exchange of data over the network。\nHTTP Request：a packet of binary data sent by the Client to server；HTTP Response：a packet of binary data in reply to a request（课件的说法；面试里一般说 HTTP/1.x 的报文是人能读懂的文本格式，HTTP/2 才是二进制分帧）。\n课件的图：Client (Web Browser) ── Request ──→ Server，Server ── Response ──→ Client。\n无状态（stateless）：每个请求都是独立的，服务器不会自动记住同一个用户上一次请求了什么；登录状态靠 Cookie + Session 或 Token 维持。\n课件分层图里，HTTP 位于 Communication Channel 的 Application Layer（HTTP/1.1、HTTP/2）；HTTP 跑在 TCP 之上，HTTPS = HTTP + TLS 加密。",
+    "question": "HTTP 是什么？它的通信模型有什么特点？",
+    "keyPoints": [
+      "HTTP 是超文本传输协议，规定客户端和服务器之间怎么通信",
+      "请求-响应模型：客户端发请求，服务器回响应，一个请求对应一个响应",
+      "通信由客户端发起，服务器被动响应",
+      "HTTP 是无状态的，要靠 Cookie、Session、Token 维持状态",
+      "HTTP 是应用层协议，基于 TCP；HTTPS 在它下面加了 TLS 加密"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "HTTP/1.1",
+        "HTTP/2"
+      ],
+      "rows": [
+        [
+          "报文格式",
+          "文本",
+          "二进制分帧"
+        ],
+        [
+          "一个连接上的多个请求",
+          "基本按顺序一个接一个",
+          "多路复用，可以并行"
+        ],
+        [
+          "头部",
+          "每次原样发送",
+          "压缩（HPACK）"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为服务器会自动记住同一个用户之前的请求",
+        "right": "HTTP 是无状态的，要靠 Cookie、Session 或 Token 把同一个用户的多次请求关联起来"
+      },
+      {
+        "wrong": "认为 HTTP 和 HTTPS 是两种完全不同的协议",
+        "right": "HTTPS 就是在 HTTP 下面加了一层 TLS 加密，请求和响应的格式一样"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "HTTP 是无状态的，那网站怎么知道我已经登录了？",
+        "a": "登录成功后服务器返回一个标识（放在 Cookie 里的 Session ID，或者一个 Token），浏览器之后的每个请求都带上它，服务器据此识别是谁"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "HTTP 是无状态协议，服务器默认不会记住之前的请求",
+        "correct": true,
+        "why": "需要 Cookie、Session 或 Token 来维持状态"
+      },
+      {
+        "statement": "在 HTTP 的请求-响应模型里，服务器可以在没有收到请求的情况下主动给浏览器发送响应",
+        "correct": false,
+        "why": "课件：每个响应都是对客户端某个请求的回复，通信由客户端发起"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-http-请求的结构",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "HTTP 请求的结构",
+    "concept": "HTTP 请求由三部分组成：请求行（Request Line）、0 个或多个请求头（Request Headers）、可选的请求体（Request Body）；请求行包括请求方法、请求 URI 和协议版本",
+    "oneLiner": "比如 POST /login HTTP/1.1 是请求行（方法 POST、URI /login、协议 HTTP/1.1）；后面的 Host、Content-Type、Content-Length 等是请求头，给服务器传递关于这个请求的额外信息；空一行之后是请求体，可以是 JSON、XML 等格式，是可选的，比如 GET /books/123 就不需要请求体。",
+    "explanation": "An HTTP Request contains the following parts：Request Line；0 or more Request Headers；A Request Body (optional)。\n课件的例子：\n```\nPOST /login HTTP/1.1\nHost: drill.beaconfireinc.com\nContent-Type: application/json\nContent-Length: 44\n\n{\n  \"username\": \"kevin\",\n  \"password\": \"123456\"\n}\n```\nRequest Line：HTTP Method (GET, PUT, POST, PATCH, etc.)；Request URI (/login)；HTTP Protocol that is being used。\nRequest Header：In the request section, whatever follows Request Line till before Request Body is a Header；Headers are used to pass additional information about the request to the server；e.g., Host, Content-Type, Accept-Language（课件写作 content-Type、accept-Language；头的名字不区分大小写）。\nRequest Body：the part of the HTTP Request where additional content can be sent to the server；Can be in different formats (JSON, XML, etc.)；It's optional：GET /books/123 doesn't need a request body。\n补充：请求头和请求体之间用一个空行分隔；Content-Type 说明请求体的格式，Content-Length 说明请求体的字节数；HTTP/1.1 要求请求必须带 Host 头，因为一台服务器（一个 IP）上可能有多个网站。",
+    "question": "一个 HTTP 请求由哪几部分组成？请求行里有什么？",
+    "keyPoints": [
+      "请求行：请求方法 + 请求 URI + 协议版本，比如 POST /login HTTP/1.1",
+      "请求头：0 个或多个，传递额外信息，比如 Host、Content-Type、Content-Length、Accept-Language",
+      "请求头和请求体之间有一个空行",
+      "请求体可选，可以是 JSON、XML 等格式",
+      "GET 请求一般没有请求体，POST、PUT、PATCH 通常带请求体"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "部分",
+        "例子",
+        "是否必须"
+      ],
+      "rows": [
+        [
+          "请求行",
+          "POST /login HTTP/1.1",
+          "必须"
+        ],
+        [
+          "请求头",
+          "Host: drill.beaconfireinc.com",
+          "0 个或多个（HTTP/1.1 必须有 Host）"
+        ],
+        [
+          "空行",
+          "（空）",
+          "必须"
+        ],
+        [
+          "请求体",
+          "{\"username\": \"kevin\", ...}",
+          "可选"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为请求行里放的是完整的 URL（包括协议和域名）",
+        "right": "一般只放路径部分（Request URI，比如 /login），主机名放在 Host 请求头里"
+      },
+      {
+        "wrong": "认为请求里的 Content-Type: application/json 表示希望服务器返回 JSON",
+        "right": "请求里的 Content-Type 描述的是请求体本身的格式；希望服务器返回什么格式用 Accept 头"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "HTTP/1.1 为什么要求必须带 Host 头？",
+        "a": "一个 IP 上可能部署了多个网站（虚拟主机），服务器要靠 Host 判断请求的是哪个网站"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "HTTP 请求的请求头和请求体之间用一个空行分隔",
+        "correct": true,
+        "why": "服务器靠这个空行判断请求头结束了"
+      },
+      {
+        "statement": "每个 HTTP 请求都必须带请求体",
+        "correct": false,
+        "why": "课件：请求体是可选的，比如 GET /books/123 不需要请求体"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-get-与-post",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "GET 与 POST",
+    "concept": "HTTP 定义了一组请求方法，表示请求的目的；GET 请求指定资源的表示，应该只读取数据；POST 向指定资源提交一个实体，通常会改变服务器状态或产生副作用",
+    "oneLiner": "GET 用来查数据，参数一般放在 URL 的查询字符串里（?id=1&name=a），会出现在地址栏和历史记录里，可以被收藏和缓存，是安全、幂等的；POST 用来提交数据，参数放在请求体里，通常会改变服务器状态，不幂等；POST 并不比 GET 加密，不用 HTTPS 的话请求体也是明文。",
+    "explanation": "HTTP defines a set of request methods to indicate the purpose of the request and what is expected if the request is successful。\nGET：The GET method requests a representation of the specified resource. Requests using GET should only retrieve data。\nPOST：The POST method is used to submit an entity to the specified resource, often causing a change in state or side effects on the server。\n其他方法：PUT（整体替换）、PATCH（部分更新）、DELETE（删除），以及 HEAD、CONNECT、OPTIONS、TRACE 等（课件在这一行又写了一次 PATCH，是重复）。\n查询字符串：GET /books?author=Fitzgerald&title=The+Great+Gatsby，参数写成 key=value，用 & 连接；特殊字符要 URL 编码，空格写成 + 或 %20，中文写成 %E4%B8%AD 这样的字节。\n表单提交：`<form method=\"get\">` 把参数拼到 URL 上；`<form method=\"post\">` 把参数放进请求体，Content-Type 是 application/x-www-form-urlencoded；在 Servlet 里两种方式都用 request.getParameter(\"name\") 取值，容器会帮你解码。\n安全方法（safe）：不改变服务器状态，GET、HEAD、OPTIONS 是安全的，POST 不是。",
+    "question": "GET 和 POST 有什么区别？",
+    "keyPoints": [
+      "语义：GET 获取数据，不应改变服务器状态；POST 提交数据，通常会改变服务器状态",
+      "参数位置：GET 在 URL 查询字符串里，POST 一般在请求体里",
+      "GET 的参数会出现在地址栏、历史记录和服务器日志里，可以被收藏、缓存",
+      "GET 是幂等的，POST 不是；刷新 POST 的结果页时浏览器会提示重复提交",
+      "安全性：两者在 HTTP 下都是明文，敏感数据要靠 HTTPS"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "GET",
+        "POST"
+      ],
+      "rows": [
+        [
+          "用途",
+          "获取数据",
+          "提交数据"
+        ],
+        [
+          "参数位置",
+          "URL 查询字符串",
+          "请求体"
+        ],
+        [
+          "能否收藏、缓存",
+          "可以",
+          "一般不行"
+        ],
+        [
+          "出现在地址栏、历史记录",
+          "会",
+          "不会"
+        ],
+        [
+          "幂等",
+          "是",
+          "否"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 POST 比 GET 安全，因为 POST 的数据是加密的",
+        "right": "POST 只是把数据放在请求体里、不显示在地址栏；没有 HTTPS 时请求体同样是明文"
+      },
+      {
+        "wrong": "用 GET 请求做删除、下单这类修改操作",
+        "right": "GET 应该只读取数据；浏览器预加载、爬虫、缓存都可能自动发 GET，用它改数据很危险"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "GET 请求的参数有长度限制吗？",
+        "a": "HTTP 规范本身没有规定，但浏览器和服务器都会限制 URL 的长度，所以大量数据要用 POST 放在请求体里"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面代码模拟解析 GET 请求的查询字符串，输出什么？",
+        "lang": "java",
+        "code": "String query = \"name=Tom+Lee&city=New%20York\";\nfor (String pair : query.split(\"&\")) {\n    String[] kv = pair.split(\"=\");\n    String value = java.net.URLDecoder.decode(kv[1], java.nio.charset.StandardCharsets.UTF_8);\n    System.out.print(kv[0] + \":\" + value + \";\");\n}",
+        "options": [
+          "name:Tom Lee;city:New York;",
+          "name:Tom+Lee;city:New York;",
+          "name:Tom+Lee;city:New%20York;",
+          "name:Tom Lee;city:New%20York;"
+        ],
+        "answer": 0,
+        "why": "URLDecoder 按表单编码（application/x-www-form-urlencoded）的规则解码，+ 和 %20 都会还原成空格。GET 请求的参数就是这样编码后放在 URL 的查询字符串里的；在 Servlet 里调用 request.getParameter(\"name\") 时，容器已经帮你完成了这一步解码。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "GET 请求的参数一般放在 URL 的查询字符串里，会出现在浏览器地址栏和历史记录中",
+        "correct": true,
+        "why": "POST 的参数一般放在请求体里"
+      },
+      {
+        "statement": "POST 请求比 GET 请求安全，因为 POST 的数据会被自动加密",
+        "correct": false,
+        "why": "没有 HTTPS 时，POST 的请求体也是明文传输"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-post-put-与-patch",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "POST、PUT 与 PATCH",
+    "concept": "以书店为例：POST 新增一本书，不需要指定 id，由服务器生成；PUT 新增或更新一本书，需要在 URL 里指定 id，资源已存在时用请求的数据替换整个资源（全量更新）；PATCH 只修改请求里给出的字段（部分更新），也需要指定 id",
+    "oneLiner": "POST /books 新增，id 由服务器自动生成，重复提交会创建多本书；PUT /books/123 类似 hashMap.put()：不存在就创建，存在就整体替换，请求里没给的字段会变成 null；PATCH /books/123 只改请求体里出现的字段，其他字段保持不变。",
+    "explanation": "Example: Book Store。\nPOST – add a new book：No need to specify the id, id will be auto-generated；What if we post the same book multiple times? → 会创建多本内容相同、id 不同的书。\nPUT – add or update a book：Similar to hashMap.put()；If doesn't exist, it will create a new one；If exists, the data you send will replace the entire existing resource on the server；Need to specify the id (id=123 in this example)。\nPATCH – partially update：Only modifies specific fields；Need to specify the id。\n课件的方法列表：PUT 是 FULL UPDATE, meaning that if there are some fields not specified in the payload, they will be replaced with null；PATCH 是 PARTIAL UPDATE, meaning that if there are some fields not specified in the payload, they will be left as is。\n课件的请求：\n```\nPOST /books HTTP/1.1\n{\"title\": \"The Great Gatsby\", \"author\": \"F. Scott Fitzgerald\"}\n\nPUT /books/123 HTTP/1.1\n{\"title\": \"The Great Gatsby\", \"author\": \"F. Scott Fitzgerald\"}\n\nPATCH /books/123 HTTP/1.1\n{\"year\": \"1925\"}\n```\n（课件 PUT 例子的 JSON 在最后一个字段后面多了一个逗号，标准 JSON 不允许尾随逗号。）\nREST 风格的约定：POST 创建成功一般返回 201 Created，并在 Location 响应头里给出新资源的地址。",
+    "question": "POST、PUT、PATCH 有什么区别？",
+    "keyPoints": [
+      "POST 新增资源，URL 不带 id（/books），id 由服务器生成",
+      "PUT 新增或整体替换，URL 带 id（/books/123），类似 hashMap.put()",
+      "PUT 是全量更新：请求里没给的字段会被设为 null",
+      "PATCH 是部分更新：只改给出的字段，其他字段保持不变，也要带 id",
+      "同一个 POST 发多次会创建多个资源，同一个 PUT 发多次结果一样"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "POST",
+        "PUT",
+        "PATCH"
+      ],
+      "rows": [
+        [
+          "作用",
+          "新增",
+          "新增或整体替换",
+          "部分更新"
+        ],
+        [
+          "URL",
+          "/books",
+          "/books/123",
+          "/books/123"
+        ],
+        [
+          "没给的字段",
+          "无",
+          "被清空（null）",
+          "保持不变"
+        ],
+        [
+          "幂等",
+          "否",
+          "是",
+          "不一定"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "只想改书的出版年份，却用 PUT 只发了 {\"year\": \"1925\"}",
+        "right": "PUT 会整体替换，title 和 author 会被清空；只改部分字段应该用 PATCH"
+      },
+      {
+        "wrong": "认为 PUT 只能更新、不能创建",
+        "right": "课件：PUT 类似 hashMap.put()，资源不存在时会创建一个新的"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么 POST 创建资源时不需要 id，而 PUT 需要？",
+        "a": "POST 是把实体提交给一个集合（/books），由服务器决定新资源的 id；PUT 是把内容放到一个确定的位置（/books/123），客户端已经知道资源的地址"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "用 Map 模拟对 123 号书分别发 PATCH 和 PUT（请求体都是 {\"year\": \"1925\"}），输出什么？",
+        "lang": "java",
+        "code": "Map<String, String> book = new TreeMap<>(Map.of(\"title\", \"Gatsby\", \"author\", \"Fitzgerald\"));\nMap<String, String> payload = Map.of(\"year\", \"1925\");\n\nMap<String, String> patched = new TreeMap<>(book);\npatched.putAll(payload);\n\nMap<String, String> replaced = new TreeMap<>(payload);\n\nSystem.out.println(patched.keySet() + \" \" + replaced.keySet());",
+        "options": [
+          "[author, title, year] [year]",
+          "[year] [author, title, year]",
+          "[author, title, year] [author, title, year]",
+          "[year] [year]"
+        ],
+        "answer": 0,
+        "why": "PATCH 是部分更新：在原来的数据上只改（或加上）请求里给出的字段，title、author 保留，所以是 [author, title, year]；PUT 是整体替换：新的资源就是请求体本身，没给的 title、author 都没了，只剩 [year]。TreeMap 按 key 的字母顺序排列。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "用 PUT 更新资源时，请求体里没有给出的字段会被清空（替换成 null）",
+        "correct": true,
+        "why": "课件：PUT 是 FULL UPDATE，会替换整个资源"
+      },
+      {
+        "statement": "用 POST 新增一本书时，客户端必须在 URL 里指定这本书的 id",
+        "correct": false,
+        "why": "课件：POST 不需要指定 id，id 由服务器自动生成"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-幂等性",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "幂等性",
+    "concept": "幂等（Idempotency）：f(x) = f(f(x))，即操作做一次和做多次的结果相同；在 Web 应用里 f() 是 HTTP 方法，x 是服务器的状态，同一个请求发一次和发多次对服务器状态的影响相同，这个方法就是幂等的",
+    "oneLiner": "GET、PUT、DELETE 是幂等的：PUT 发多少次 123 号书都是同样的内容，DELETE 删一次和删多次资源都不存在；POST 不幂等，提交多次会创建多个对象；PATCH 不一定幂等，比如 \"loginCount\": user.loginCount + 1 每发一次就加 1；幂等看的是服务器状态而不是响应，DELETE 第二次返回 404 也不影响它是幂等的。",
+    "explanation": "Idempotency：f(x)=f(f(x)) ⇔ f() is idempotent。\nIn web application context：f() means an HTTP method；x means the server status。\nHTTP Methods Idempotency：PUT is idempotent；POST is not idempotent，POST multiple times will create identical objects（更准确地说是内容相同、id 不同的多个对象）；PATCH is not necessarily idempotent，例如 \"loginCount\": user.loginCount + 1；GET, DELETE are also idempotent。\n安全和幂等不同：安全（safe）指不改变服务器状态（GET、HEAD、OPTIONS），幂等指执行多次和执行一次效果相同；安全的方法一定幂等，幂等的方法不一定安全（PUT、DELETE 会改状态，但重复执行效果相同）。\n为什么重要：网络超时后客户端不知道请求有没有成功，幂等的请求可以放心重试；POST 重试可能重复下单，需要额外去重，比如每个请求带一个唯一的请求 id，服务器记录已经处理过的 id。\nPATCH 也可以是幂等的：比如 {\"year\": \"1925\"} 只是把字段设成固定值，发多次结果一样；只有\"在原值基础上计算\"的更新才不幂等。",
+    "question": "什么是幂等？哪些 HTTP 方法是幂等的？",
+    "keyPoints": [
+      "幂等：同一个请求执行一次和执行多次，对服务器状态的影响相同",
+      "GET、PUT、DELETE 是幂等的",
+      "POST 不幂等，重复提交会创建多个资源",
+      "PATCH 不一定幂等，比如计数加 1 的更新",
+      "幂等看服务器状态而不是响应；幂等的请求可以放心重试"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方法",
+        "幂等",
+        "安全（不改状态）"
+      ],
+      "rows": [
+        [
+          "GET",
+          "是",
+          "是"
+        ],
+        [
+          "PUT",
+          "是",
+          "否"
+        ],
+        [
+          "DELETE",
+          "是",
+          "否"
+        ],
+        [
+          "POST",
+          "否",
+          "否"
+        ],
+        [
+          "PATCH",
+          "不一定",
+          "否"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 DELETE 第二次返回 404，和第一次的 200 不一样，所以 DELETE 不幂等",
+        "right": "幂等看的是服务器状态：删一次和删多次，资源都不存在"
+      },
+      {
+        "wrong": "认为幂等就是不修改服务器的数据",
+        "right": "不修改数据叫安全（safe）；PUT、DELETE 会修改数据，但仍然是幂等的"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "用户网络不好，连续点了两次\"提交订单\"，怎样避免创建两个订单？",
+        "a": "POST 本身不幂等，需要自己做幂等：比如页面生成一个唯一的请求 id（或订单号）随请求提交，服务器发现这个 id 已经处理过就直接返回之前的结果；也可以在数据库上加唯一约束"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "用 TreeMap 模拟书店，连发两次相同的 POST 和两次相同的 PUT，输出什么？",
+        "lang": "java",
+        "code": "Map<Integer, String> books = new TreeMap<>();\nint[] nextId = {1};\nRunnable post = () -> books.put(nextId[0]++, \"Gatsby\");   // POST /books：id 自动生成\nRunnable put = () -> books.put(123, \"Gatsby\");            // PUT /books/123\npost.run();\npost.run();\nput.run();\nput.run();\nSystem.out.println(books.size() + \" \" + books.keySet());",
+        "options": [
+          "3 [1, 2, 123]",
+          "2 [1, 123]",
+          "4 [1, 2, 123, 123]",
+          "4 [1, 2, 3, 4]"
+        ],
+        "answer": 0,
+        "why": "POST 每次都由服务器生成新的 id，发两次就创建了 1 号、2 号两本内容相同的书，所以 POST 不幂等；PUT 指定了 id = 123，第二次只是用同样的内容覆盖，和发一次的效果一样，是幂等的。一共 3 本书。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "PUT 和 DELETE 都是幂等的",
+        "correct": true,
+        "why": "课件：PUT is idempotent，GET、DELETE are also idempotent"
+      },
+      {
+        "statement": "幂等是指同一个请求发送多次，每次得到的响应（包括状态码）都完全相同",
+        "correct": false,
+        "why": "幂等看的是服务器状态，DELETE 第二次返回 404 仍然是幂等的"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http请求-uri-与-url",
+    "category": "Web与Servlet/HTTP请求",
+    "title": "URI 与 URL",
+    "concept": "URI（Uniform Resource Identifier，统一资源标识符）是资源的通用标识；URL（Uniform Resource Locator，统一资源定位符）是一种特殊的 URI，还包含了怎样找到这个资源（协议、位置）；所有 URL 都是 URI，但不是所有 URI 都是 URL",
+    "oneLiner": "URI 可以是名字、定位符或两者都是，URL 只是定位符；课件的比喻：你的名字是 URI 但不是 URL（能标识你，但没法靠它找到你），你的地址既是 URI 又是 URL；HTTP URL 由协议、主机名、端口号（可选）、路径组成，比如 https://example.com:8080/books/123，端口省略时 http 默认 80、https 默认 443。",
+    "explanation": "URI (Uniform Resource Identifier)：a generic identifier for a resource。\nURL (Uniform Resource Locator)：a specific type of URI that includes the means to locate the resource (i.e., how to access it, like http, ftp, etc.)；All URLs are URIs, but not all URIs are URLs。\nURL must include：Scheme/protocol：http, https, ftp, etc.；Location：domain, port, path, etc.\nFor an HTTP URL：https://example.com:8080/books/123 → 1 Protocol name（https）、2 Host name（example.com）、3 Port number（8080，Optional）、4 Path（/books/123）。\nURL VS. URI：URI can be a name, locator, or both for an online resource where a URL is just the locator；URLs are a subset of URIs；Your name could be a URI because it identifies you, but it couldn't be a URL because it doesn't help anyone find your location；your address is both a URI and a URL。\n补充：URN（Uniform Resource Name）是只起名字的 URI，比如 urn:isbn:0451450523；完整的 URL 还可以有查询字符串（?id=123）和片段（#top）。\nHTTP 请求行里的 /login 叫 Request URI，只是路径部分；在 Servlet 里，request.getRequestURI() 返回 /ServletDemo/login 这样的路径，request.getRequestURL() 返回带协议、主机、端口的完整地址。",
+    "question": "URI 和 URL 有什么区别？一个 HTTP URL 由哪几部分组成？",
+    "keyPoints": [
+      "URI 是资源的通用标识符，URL 是能定位资源的 URI",
+      "所有 URL 都是 URI，但 URI 不一定是 URL（比如 URN 只是名字）",
+      "URL 包含协议（scheme）和位置（域名、端口、路径）",
+      "HTTP URL：协议 + 主机名 + 端口（可选）+ 路径，还可以有查询字符串",
+      "端口省略时 http 用 80，https 用 443"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "URI",
+        "URL"
+      ],
+      "rows": [
+        [
+          "全称",
+          "Uniform Resource Identifier",
+          "Uniform Resource Locator"
+        ],
+        [
+          "作用",
+          "标识资源（名字、定位符或两者）",
+          "定位资源（告诉你怎么访问）"
+        ],
+        [
+          "关系",
+          "范围更大",
+          "URI 的子集"
+        ],
+        [
+          "课件的比喻",
+          "你的名字",
+          "你的地址"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 URI 是 URL 的一部分，或者两者是完全不相干的东西",
+        "right": "URL 是 URI 的子集：每个 URL 都是 URI"
+      },
+      {
+        "wrong": "认为 URL 里必须写端口号",
+        "right": "端口是可选的，省略时用协议的默认端口（http 80、https 443）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Servlet 里 request.getRequestURI() 和 request.getRequestURL() 有什么区别？",
+        "a": "getRequestURI() 返回路径部分，比如 /ServletDemo/login；getRequestURL() 返回完整地址，比如 http://localhost:8080/ServletDemo/login；两者都不包含查询字符串"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "用 java.net.URI 解析两个地址，输出什么？（多行用空格隔开）",
+        "lang": "java",
+        "code": "java.net.URI a = new java.net.URI(\"https://example.com:8080/books/123\");\njava.net.URI b = new java.net.URI(\"http://example.com/books?id=123\");\nSystem.out.println(a.getScheme() + \" \" + a.getHost() + \" \" + a.getPort() + \" \" + a.getPath());\nSystem.out.println(b.getPort() + \" \" + b.getPath() + \" \" + b.getQuery());",
+        "options": [
+          "https example.com 8080 /books/123 -1 /books id=123",
+          "https example.com 8080 /books/123 80 /books id=123",
+          "https example.com 8080 /books/123 -1 /books?id=123 id=123",
+          "https example.com:8080 8080 /books/123 -1 /books id=123"
+        ],
+        "answer": 0,
+        "why": "URI 按\"协议://主机:端口/路径?查询\"拆开：a 的协议是 https、主机 example.com（不含端口）、端口 8080、路径 /books/123。b 没写端口，getPort() 返回 -1，表示\"URL 里没有指定端口\"，并不会自动填成 80（80 是浏览器访问时使用的默认端口）；路径不包含 ? 后面的查询字符串，查询字符串由 getQuery() 单独返回。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "所有 URL 都是 URI，但不是所有 URI 都是 URL",
+        "correct": true,
+        "why": "课件：URLs are a subset of URIs"
+      },
+      {
+        "statement": "URL 中的端口号不能省略",
+        "correct": false,
+        "why": "课件：端口号是可选的，省略时 http 用 80、https 用 443"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http响应-http-响应的结构",
+    "category": "Web与Servlet/HTTP响应",
+    "title": "HTTP 响应的结构",
+    "concept": "和请求一样，HTTP 响应也由三部分组成：状态行（Status Line）、0 个或多个响应头（Response Headers）、可选的响应体（Response Body）；状态行包括协议版本、状态码和原因短语",
+    "oneLiner": "比如 HTTP/1.1 200 OK 是状态行（协议 HTTP/1.1、状态码 200、原因短语 OK）；状态行之后、响应体之前的行都是响应头，比如 Content-Type、Content-Length，响应几乎总会带头；响应体放客户端请求的资源数据（HTML、JSON、图片），是可选的，204、304 和 HEAD 请求的响应就没有响应体。",
+    "explanation": "Just like HTTP Request, An HTTP Response contains the following parts：Status Line；0 or more Response Headers；A Response Body (optional)（课件 Response Header 和 Response Body 两页把这句写成了 \"An HTTP Request contains\"，应为 Response）。\n课件的例子：\n```\nHTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 47\n\n{\n  \"message\": \"Login successful\",\n  \"token\": \"abc123xyz\"\n}\n```\nStatus Line：HTTP Protocol Version；Status Code & Reason Phrase，e.g. 200 OK。\nResponse Header：Just like a Request, HTTP Response also contains zero or more Header lines. However, it is very uncommon to have zero Headers in the response；Lines just after the Status Line and before the Response Body are all Response Headers lines。\nResponse Body：contains the resource data that was requested by the client。\n常见响应头：Content-Type（响应体格式，如 text/html、application/json）、Content-Length（响应体字节数）、Location（重定向地址）、Set-Cookie（让浏览器保存 Cookie）。\n在 Servlet 里：response.setStatus(201) 设置状态码，response.setContentType(\"application/json\") 设置 Content-Type，response.getWriter().write(...) 写响应体。",
+    "question": "一个 HTTP 响应由哪几部分组成？和请求有什么区别？",
+    "keyPoints": [
+      "状态行：协议版本 + 状态码 + 原因短语，比如 HTTP/1.1 200 OK",
+      "响应头：0 个或多个，但实际上几乎总有，比如 Content-Type、Content-Length",
+      "响应头和响应体之间有一个空行",
+      "响应体可选，放请求的资源数据（HTML、JSON、图片等）",
+      "和请求的区别：请求第一行是请求行（方法 + URI + 版本），响应第一行是状态行（版本 + 状态码 + 短语）"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "请求",
+        "响应"
+      ],
+      "rows": [
+        [
+          "第一行",
+          "请求行：POST /login HTTP/1.1",
+          "状态行：HTTP/1.1 200 OK"
+        ],
+        [
+          "头部",
+          "请求头（Host、Content-Type 等）",
+          "响应头（Content-Type、Set-Cookie 等）"
+        ],
+        [
+          "主体",
+          "请求体，可选",
+          "响应体，可选"
+        ],
+        [
+          "方向",
+          "客户端 → 服务器",
+          "服务器 → 客户端"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为状态行里也会写请求方法，比如 HTTP/1.1 POST 200",
+        "right": "状态行只有协议版本、状态码和原因短语；请求方法只出现在请求行里"
+      },
+      {
+        "wrong": "认为每个响应都有响应体",
+        "right": "响应体是可选的：204 No Content、304 Not Modified、HEAD 请求的响应都没有响应体"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "浏览器怎么知道响应体是 HTML 页面还是 JSON 数据？",
+        "a": "看响应头 Content-Type：text/html 就按网页渲染，application/json 就当作数据处理；在 Servlet 里用 response.setContentType(...) 设置"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "HTTP 响应的状态行由协议版本、状态码和原因短语组成，比如 HTTP/1.1 200 OK",
+        "correct": true,
+        "why": "课件：Status Line 包括 HTTP Protocol Version 和 Status Code & Reason Phrase"
+      },
+      {
+        "statement": "HTTP 响应必须包含响应体",
+        "correct": false,
+        "why": "课件：响应体是可选的，比如 204 No Content 就没有响应体"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-http响应-http-状态码",
+    "category": "Web与Servlet/HTTP响应",
+    "title": "HTTP 状态码",
+    "concept": "HTTP 状态码分为五类：1xx 信息（请求已收到，继续处理）、2xx 成功（请求被成功接收、理解和接受）、3xx 重定向（需要进一步操作才能完成请求）、4xx 客户端错误（请求有语法错误或无法被满足）、5xx 服务器错误（服务器没能处理一个看起来有效的请求）",
+    "oneLiner": "常见的有 200 OK、201 Created、202 Accepted；301 / 302 重定向、304 Not Modified；400 Bad Request（参数不对）、401 没登录、403 没权限、404 Not Found、405 方法不允许；500 Internal Server Error（比如后端 Java 程序抛了没处理的异常）、502 网关错误、503 服务不可用；分 4xx 还是 5xx 的关键是：错在客户端的请求，还是错在服务器。",
+    "explanation": "There are five categories of status code：\n1xx Informational - the request was received, continuing process。\n2xx Successful - the request was successfully received, understood and accepted：200 OK, 201 Created, 202 Accepted。\n3xx Redirection - further action needs to be taken to complete the request。\n4xx Client Error - the request contains bad syntax or cannot be fulfilled：400 Bad Request, 404 Not Found。\n5xx Server Error - the server failed to fulfill an apparently valid request：500 Internal Server Error (e.g., backend java program has an exception)。\n参考：MDN 的 HTTP response status codes 文档；课件把 1xx 和 3xx 显示成灰色，重点是 2xx、4xx、5xx。\n补充：201 Created 常用于 POST 创建成功；202 Accepted 表示已接受但还没处理完（异步任务）；204 No Content 表示成功但没有响应体；301 永久重定向、302 临时重定向（响应头 Location 给出新地址）；304 表示资源没变，用浏览器缓存；401 Unauthorized 是没认证（没登录），403 Forbidden 是认证了但没权限；405 Method Not Allowed 是这个 URL 不支持该请求方法；502 Bad Gateway 是网关（比如 Nginx）收到上游服务器的无效响应；503 Service Unavailable 是服务器暂时不可用。\n在 Servlet 里：doGet 里抛出没有处理的异常时，Tomcat 会返回 500 错误页；response.sendError(404) 可以主动返回错误状态码。",
+    "question": "HTTP 状态码分几类？说几个常见的状态码。",
+    "keyPoints": [
+      "五类：1xx 信息、2xx 成功、3xx 重定向、4xx 客户端错误、5xx 服务器错误",
+      "2xx：200 OK、201 Created、202 Accepted、204 No Content",
+      "3xx：301 永久重定向、302 临时重定向、304 Not Modified",
+      "4xx：400 Bad Request、401 未认证、403 无权限、404 Not Found、405 方法不允许",
+      "5xx：500 服务器内部错误（后端抛异常）、502 Bad Gateway、503 Service Unavailable"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "状态码",
+        "含义",
+        "谁的问题"
+      ],
+      "rows": [
+        [
+          "400 Bad Request",
+          "请求格式或参数不对",
+          "客户端"
+        ],
+        [
+          "401 Unauthorized",
+          "没登录（未认证）",
+          "客户端"
+        ],
+        [
+          "403 Forbidden",
+          "登录了但没权限",
+          "客户端"
+        ],
+        [
+          "404 Not Found",
+          "资源不存在",
+          "客户端"
+        ],
+        [
+          "500 Internal Server Error",
+          "服务器程序出错，比如抛了异常",
+          "服务器"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把 401 和 403 混用",
+        "right": "401 是还没证明你是谁（没登录或 token 失效），403 是知道你是谁、但你没有权限"
+      },
+      {
+        "wrong": "认为 404 表示服务器宕机了",
+        "right": "404 是服务器正常工作、但找不到请求的资源（比如路径写错）；服务器暂时不可用一般是 503，或者根本连不上"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "访问一个 Servlet 返回 404，可能是什么原因？",
+        "a": "URL 和 Servlet 的映射对不上：路径或上下文路径（context path）写错、@WebServlet 的 urlPatterns 和访问地址不一致、应用没有部署成功等"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面用普通 Java 模拟容器根据 doGet 的执行结果设置状态码，输出什么？",
+        "lang": "java",
+        "code": "class MiniContainer {\n    static int handle(Runnable doGet) {\n        try {\n            doGet.run();\n            return 200;\n        } catch (IllegalArgumentException e) {\n            return 400;\n        } catch (RuntimeException e) {\n            return 500;\n        }\n    }\n}\nSystem.out.print(MiniContainer.handle(() -> {}) + \" \");\nSystem.out.print(MiniContainer.handle(() -> { throw new IllegalArgumentException(\"bad id\"); }) + \" \");\nSystem.out.print(MiniContainer.handle(() -> { String s = null; s.length(); }));",
+        "options": [
+          "200 400 500",
+          "200 500 500",
+          "200 400 400",
+          "抛出 NullPointerException"
+        ],
+        "answer": 0,
+        "why": "第一个 doGet 正常结束，返回 200；第二个抛出 IllegalArgumentException，被第一个 catch 捕获，模拟\"请求参数不对\"，返回 400（客户端错误）；第三个抛出 NullPointerException，它不是 IllegalArgumentException，被 catch (RuntimeException e) 捕获，返回 500。真实的 Tomcat 也是这样：Servlet 抛出没有处理的异常时，容器返回 500 Internal Server Error，也就是课件说的 \"backend java program has an exception\"。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "404 Not Found 属于 4xx 客户端错误",
+        "correct": true,
+        "why": "课件：4xx Client Error 包括 400 Bad Request、404 Not Found"
+      },
+      {
+        "statement": "后端 Java 程序处理请求时抛出未处理的异常，服务器一般返回 404",
+        "correct": false,
+        "why": "应该是 500 Internal Server Error，属于 5xx 服务器错误"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-web服务器与dns-web-服务器与-ip-地址",
+    "category": "Web与Servlet/Web服务器与DNS",
+    "title": "Web 服务器与 IP 地址",
+    "concept": "Web 服务器是一个软件应用（有时也指运行它的硬件），它接收客户端（比如浏览器）发来的 HTTP 请求，返回 HTML 页面、图片、JSON 等 Web 内容；服务器连在互联网上，通过 IP 地址被访问",
+    "oneLiner": "Web 服务器 = 接收 HTTP 请求、返回内容的程序（也可以指它所在的机器）；IPv4 地址是 32 位的数，写成 4 个 0~255 的数字、用点隔开（如 142.250.190.14），IPv6 是 128 位；常见的 Web 服务器软件有 Apache HTTP Server、Nginx、Node.js（Express），而 Tomcat 是运行 Java Servlet 的 Servlet 容器，和 Apache HTTP Server 是两个不同的产品。",
+    "explanation": "A web server is a software application (and sometimes also refers to the hardware it runs on) that：Receives HTTP requests from clients (like web browsers)；Responds with web content, such as HTML pages, images, or JSON data。\nThe server is connected to the internet, ready to handle incoming requests。\nEach web server has a unique IP address：A 32-bit number, usually written as four numbers (from 0 to 255) separated by periods；Example: 142.250.190.14（这是 IPv4；IPv6 是 128 位，写成 8 组十六进制数，比如 2001:db8::1；\"唯一\"也不绝对，一个 IP 上可以放多个网站，一个大网站也有很多个 IP）。\n课件的图：服务器从下到上是 Hardware → Operating System (Linux, Windows, Mac) → HTTP Server、Database、Scripting Language。\nIf you want to run a website：First, you need to register a domain name；Then, you must point that domain to the IP address of the web server where your site is hosted；To handle your site's traffic and services, you can use a dedicated server。\nSome leading web server software：Apache HTTP Server - widely used；Nginx Web Server - high performance, stability, simple configuration and low resource usage；Node.js (with Express) - JavaScript runtime, often used for building servers。\n课件写的 \"Apache HTTP Server (like Tomcat)\" 不准确：Apache HTTP Server（httpd）和 Apache Tomcat 是 Apache 基金会的两个不同产品；httpd 是通用 Web 服务器，Tomcat 是 Servlet 容器（自带 HTTP 连接器，也能直接对外提供服务）。\n常见部署：Nginx 在前面处理静态文件、HTTPS 和负载均衡，把动态请求反向代理给后面的 Tomcat。",
+    "question": "什么是 Web 服务器？Nginx、Apache HTTP Server 和 Tomcat 有什么区别？",
+    "keyPoints": [
+      "Web 服务器接收 HTTP 请求，返回 HTML、图片、JSON 等内容；这个词也可以指运行它的硬件",
+      "服务器通过 IP 地址被访问；IPv4 是 32 位，IPv6 是 128 位",
+      "Apache HTTP Server 使用广泛；Nginx 高性能、低资源占用，常用作反向代理和负载均衡",
+      "Tomcat 是 Servlet 容器，用来运行 Java 的 Servlet，和 Apache httpd 是不同的产品",
+      "常见组合：Nginx 处理静态资源和转发，Tomcat 处理 Java 动态请求"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "Apache HTTP Server",
+        "Nginx",
+        "Tomcat"
+      ],
+      "rows": [
+        [
+          "类型",
+          "Web 服务器",
+          "Web 服务器、反向代理",
+          "Servlet 容器"
+        ],
+        [
+          "实现语言",
+          "C",
+          "C",
+          "Java"
+        ],
+        [
+          "擅长",
+          "静态资源、模块丰富",
+          "高并发、低资源占用、负载均衡",
+          "运行 Servlet，生成动态内容"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Tomcat 就是 Apache HTTP Server",
+        "right": "两者都是 Apache 基金会的项目，但 httpd 是通用 Web 服务器，Tomcat 是 Java 的 Servlet 容器"
+      },
+      {
+        "wrong": "认为 IP 地址都是 32 位的",
+        "right": "32 位的是 IPv4；IPv6 是 128 位"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么生产环境常在 Tomcat 前面再放一个 Nginx？",
+        "a": "Nginx 处理静态文件、HTTPS 和大量并发连接的效率更高，还能做负载均衡（把请求分给多台 Tomcat）和反向代理（隐藏后端服务器），Tomcat 专心处理 Java 动态请求"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "IPv4 地址是一个 32 位的数，通常写成 4 个 0 到 255 的数字，用点隔开",
+        "correct": true,
+        "why": "课件：A 32-bit number, usually written as four numbers (from 0 to 255) separated by periods"
+      },
+      {
+        "statement": "Apache HTTP Server 和 Apache Tomcat 是同一个软件",
+        "correct": false,
+        "why": "httpd 是通用 Web 服务器，Tomcat 是 Servlet 容器，是两个不同的产品"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-web服务器与dns-dns-与访问网页的过程",
+    "category": "Web与Servlet/Web服务器与DNS",
+    "title": "DNS 与访问网页的过程",
+    "concept": "DNS（Domain Name System，域名系统）像互联网的电话簿，把人容易记住的域名（如 google.com）翻译成对应的 IP 地址（如 142.250.190.14），浏览器再用这个 IP 地址访问 Web 服务器",
+    "oneLiner": "在浏览器输入 URL 后：先通过 DNS 把域名解析成 IP（先查浏览器、操作系统等缓存）；然后和服务器建立 TCP 连接（https 还要 TLS 握手）；发送 HTTP 请求；服务器（比如 Tomcat 里的 Servlet）处理后返回响应；浏览器解析 HTML，再分别请求里面引用的图片、CSS、JS；最后把所有内容渲染成网页。",
+    "explanation": "DNS：IP addresses like 142.250.190.14 are hard for humans to remember. Instead, we use domain names like google.com；DNS (Domain Name System) acts like the internet's phonebook, translates a domain name into the corresponding IP address。\n课件的图：User 把 google.com 发给 DNS Server → DNS Server 返回 142.250.190.14 → User 用 142.250.190.14 访问 Google。\nHow It Works：\n1. A user enters a URL into a browser (for example, google.com). This request is passed to a DNS server。\n2. The DNS server returns an IP address for the server that hosts the Website (for example, 142.250.190.14)。\n3. The browser requests the page from the Web server using the IP address specified by the domain name server。\n4. The Web server returns the page to the IP address specified by the browser requesting the page. The page may also contain links to other files on the same server, such as images, which the browser will also request。\n5. The browser collects all the information and displays to your computer in the form of Web page。\n补充：DNS 结果会被缓存（浏览器缓存、操作系统缓存和 hosts 文件、本地 DNS 服务器），缓存有过期时间（TTL）；课件省略了 TCP 三次握手和 HTTPS 的 TLS 握手；localhost 是一个特殊的主机名，指向本机 127.0.0.1，开发时访问 http://localhost:8080 就是访问本机上的 Tomcat。",
+    "question": "在浏览器地址栏输入一个网址并回车，到页面显示出来，中间发生了什么？",
+    "keyPoints": [
+      "解析 URL，用 DNS 把域名解析成 IP 地址（先查各级缓存）",
+      "和服务器建立 TCP 连接，https 还要做 TLS 握手",
+      "浏览器发送 HTTP 请求，服务器处理后返回 HTTP 响应",
+      "浏览器解析 HTML，页面引用的图片、CSS、JS 会再发请求获取",
+      "浏览器把所有内容渲染成网页"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "域名",
+        "IP 地址"
+      ],
+      "rows": [
+        [
+          "例子",
+          "google.com",
+          "142.250.190.14"
+        ],
+        [
+          "给谁用",
+          "人（好记）",
+          "网络（定位服务器）"
+        ],
+        [
+          "转换",
+          "由 DNS 翻译成 IP",
+          "网络直接用它通信"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为第一次请求就会把 HTML、图片、CSS 一起返回",
+        "right": "第一次响应一般只有 HTML，浏览器解析后再分别请求页面引用的图片等文件"
+      },
+      {
+        "wrong": "认为每次访问网站都要重新去 DNS 服务器查询",
+        "right": "浏览器、操作系统和本地 DNS 服务器都会缓存解析结果，过期之前直接用缓存"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "本地开发时访问 http://localhost:8080，需要 DNS 吗？",
+        "a": "不需要去外部 DNS 服务器查：localhost 由本机直接解析成 127.0.0.1（回环地址），请求不会离开这台电脑；8080 是 Tomcat 默认的 HTTP 端口"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "DNS 的作用是把域名翻译成对应的 IP 地址",
+        "correct": true,
+        "why": "课件：DNS acts like the internet's phonebook，translates a domain name into the corresponding IP address"
+      },
+      {
+        "statement": "浏览器收到 HTML 后，页面里引用的图片已经包含在这次响应里，不需要再发请求",
+        "correct": false,
+        "why": "课件：页面可能引用了服务器上的其他文件（比如图片），浏览器会再去请求它们"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet与容器-servlet-与-javax-jakarta",
+    "category": "Web与Servlet/Servlet与容器",
+    "title": "Servlet 与 javax、jakarta",
+    "concept": "Servlet 是 Web 应用里用来处理 HTTP 请求和响应的 Java 类；javax.servlet.Servlet 是一个 Java 接口，规定了 Servlet 初始化时、销毁时、收到请求时要做什么；javax 和 jakarta 都是 Java EE（企业版）的包名，Java EE 8 用 javax，Jakarta EE 9 起改成 jakarta",
+    "oneLiner": "Servlet 是运行在 Servlet 容器（如 Tomcat）里、处理请求并生成响应的 Java 类；Servlet 接口定义了 init()、service()、destroy() 等方法，GenericServlet 是和协议无关的抽象实现，我们一般继承 HttpServlet 并重写 doGet / doPost；Java EE 交给 Eclipse 基金会后改名 Jakarta EE，Jakarta EE 9 把包名从 javax.servlet 改成 jakarta.servlet，所以 Tomcat 9 用 javax，Tomcat 10 起用 jakarta。",
+    "explanation": "We are using Java programs to handle HTTP requests and responses；Servlet is a java class to do that job in a web application。\njavax.servlet.Servlet：a Java Interface providing standards for processing HTTP requests：what should you do when initialized；what should you do when destroyed；what should you do when receiving request。\njavax, jakarta：Java EE (Enterprise Edition) package, contains set of functional modules used to build enterprise-level Java applications；Java EE 8 uses javax, Java EE 9 renamed most of the functionalities to jakarta（准确说法是 Jakarta EE 9：Java EE 8 之后 Oracle 把它交给 Eclipse 基金会，改名 Jakarta EE；Jakarta EE 8 仍然是 javax，Jakarta EE 9 才把包名改为 jakarta）。\nServlet 接口的方法：init(ServletConfig)、service(ServletRequest, ServletResponse)、destroy()、getServletConfig()、getServletInfo()。\n继承关系：Servlet（接口）→ GenericServlet（抽象类，和协议无关）→ HttpServlet（抽象类，处理 HTTP，提供 doGet、doPost、doPut、doDelete 等）→ 自己写的 Servlet。\n严格说 Servlet 接口本身和协议无关，处理 HTTP 的是 HttpServlet：service() 的参数是 ServletRequest / ServletResponse，HttpServlet 把它们转成 HttpServletRequest / HttpServletResponse 再分发。\n版本要对应：用 javax.servlet 写的代码部署到 Tomcat 9 及以前，用 jakarta.servlet 写的代码部署到 Tomcat 10 及以后；Spring Boot 3 也已经换成了 jakarta。",
+    "question": "什么是 Servlet？javax.servlet 和 jakarta.servlet 有什么关系？",
+    "keyPoints": [
+      "Servlet 是在服务器端处理 HTTP 请求、生成响应的 Java 类",
+      "Servlet 接口规定了 init（初始化）、service（处理请求）、destroy（销毁）等方法",
+      "一般继承 HttpServlet，重写 doGet、doPost，而不是直接实现 Servlet 接口",
+      "Java EE 8（以及 Jakarta EE 8）用 javax.servlet，Jakarta EE 9 起改名为 jakarta.servlet",
+      "包名要和容器版本对应：Tomcat 9 用 javax，Tomcat 10 起用 jakarta"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "javax.servlet",
+        "jakarta.servlet"
+      ],
+      "rows": [
+        [
+          "平台版本",
+          "Java EE 8 / Jakarta EE 8 及以前",
+          "Jakarta EE 9 及以后"
+        ],
+        [
+          "Tomcat 版本",
+          "Tomcat 9 及以前",
+          "Tomcat 10 及以后"
+        ],
+        [
+          "Spring Boot",
+          "2.x",
+          "3.x"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Java EE 改名 Jakarta EE 的第一个版本（Jakarta EE 8）就已经改用 jakarta 包名",
+        "right": "Jakarta EE 8 仍然用 javax，Jakarta EE 9 才改成 jakarta（课件写的 \"Java EE 9\" 应为 Jakarta EE 9）"
+      },
+      {
+        "wrong": "把用 javax.servlet 写的项目原样部署到 Tomcat 10",
+        "right": "Tomcat 10 只认 jakarta.servlet，要改 import（或用官方迁移工具转换），或者换回 Tomcat 9"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么一般继承 HttpServlet，而不是直接实现 Servlet 接口？",
+        "a": "直接实现接口要写全部 5 个方法，还要自己判断请求方法；HttpServlet 已经实现好了 service()，会按 GET、POST 等分发到 doGet、doPost，我们只需重写需要的方法"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "javax.servlet.Servlet 是一个接口，规定了 Servlet 初始化、处理请求和销毁时要做的事",
+        "correct": true,
+        "why": "课件：a Java Interface providing standards，对应 init、service、destroy"
+      },
+      {
+        "statement": "Java EE 8 的 Servlet API 包名是 jakarta.servlet",
+        "correct": false,
+        "why": "课件：Java EE 8 uses javax，Jakarta EE 9 起才改为 jakarta"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet与容器-servlet-容器与-tomcat",
+    "category": "Web与Servlet/Servlet与容器",
+    "title": "Servlet 容器与 Tomcat",
+    "concept": "Servlet 容器（Servlet Container，也叫 Web 容器）是 Web 服务器中和 Java Servlet 交互的组件，负责管理 Servlet 的生命周期，并把 URL 映射到对应的 Servlet；常见的有 Apache Tomcat、JBoss、IBM WebSphere",
+    "oneLiner": "Servlet 没有 main 方法，由容器创建和调用：容器监听端口、接收 HTTP 请求，把请求报文解析成 HttpServletRequest 对象、准备好 HttpServletResponse，根据 URL 找到对应的 Servlet，用线程池里的线程调用它的 service()，再把 response 组装成 HTTP 响应发回去；它还负责 Servlet 的创建、init 和 destroy；Tomcat 是最常用的开源 Servlet 容器。",
+    "explanation": "Servlet container (also known as a web container) is the component of a web server that interacts with Java servlets。\nA servlet container is responsible for managing the lifecycle of servlets, mapping a URL to a particular servlet。\n课件的图：Web Browser ⇄（HTTP request / HTTP response）⇄ Web Server ⇄（HTTP request / HTTP response）⇄ Servlet Container（里面有多个 Servlet，Servlet 再访问 Database）。\nCommon Web Containers：Apache Tomcat (for java)；JBoss (commercial)；IBM WebSphere (commercial)；...\n补充：JBoss 的社区版（现名 WildFly）是开源免费的，收费的是 Red Hat 的 JBoss EAP；JBoss、WebSphere 是完整的 Java EE 应用服务器，比单纯的 Servlet 容器多了 EJB、JMS 等功能，Tomcat 只实现了 Servlet、JSP 等 Web 相关规范。\n容器做的事：网络通信（监听端口、解析 HTTP 报文）→ 把请求封装成 HttpServletRequest、HttpServletResponse 对象 → 按 URL 映射找到 Servlet → 管理生命周期（创建实例、调用 init、为每个请求调用 service、关闭时调用 destroy）→ 多线程（用线程池并发处理请求）。\nTomcat 默认的 HTTP 端口是 8080；它自带 HTTP 连接器，既是 Servlet 容器，也能直接当 Web 服务器用。",
+    "question": "什么是 Servlet 容器？它负责哪些工作？",
+    "keyPoints": [
+      "Servlet 容器是 Web 服务器中运行和管理 Servlet 的组件，比如 Tomcat",
+      "负责管理 Servlet 的生命周期：创建实例，调用 init、service、destroy",
+      "负责把 URL 映射到对应的 Servlet",
+      "负责把 HTTP 报文封装成 request、response 对象，处理完再转成 HTTP 响应",
+      "用线程池并发处理多个请求；Servlet 没有 main 方法，完全由容器调用"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "Tomcat",
+        "JBoss / WildFly、WebSphere"
+      ],
+      "rows": [
+        [
+          "类型",
+          "Servlet 容器（Web 容器）",
+          "完整的 Java EE 应用服务器"
+        ],
+        [
+          "支持的规范",
+          "Servlet、JSP 等 Web 规范",
+          "Web 规范 + EJB、JMS 等"
+        ],
+        [
+          "收费",
+          "开源免费",
+          "WildFly 开源；JBoss EAP、WebSphere 是商业产品"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为 Servlet 对象是开发者自己 new 出来、再交给容器的",
+        "right": "开发者只写类和配置，Servlet 实例由容器创建、调用和销毁"
+      },
+      {
+        "wrong": "认为 Servlet 像普通 Java 程序一样从 main 方法开始运行",
+        "right": "Servlet 没有 main 方法，入口是容器调用的 init()、service() 等方法"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Tomcat 收到一个 HTTP 请求后，怎么知道交给哪个 Servlet？",
+        "a": "先按请求路径里的上下文路径（context path）找到对应的 Web 应用，再用剩下的路径去匹配这个应用里 web.xml 或 @WebServlet 配置的 url-pattern，找到对应的 Servlet"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "Servlet 容器负责管理 Servlet 的生命周期，并把 URL 映射到对应的 Servlet",
+        "correct": true,
+        "why": "课件：responsible for managing the lifecycle of servlets, mapping a URL to a particular servlet"
+      },
+      {
+        "statement": "Servlet 和普通 Java 程序一样，需要写 main 方法，由开发者启动",
+        "correct": false,
+        "why": "Servlet 没有 main 方法，由 Servlet 容器（比如 Tomcat）创建和调用"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet生命周期与配置-servlet-生命周期-init-service-destroy",
+    "category": "Web与Servlet/Servlet生命周期与配置",
+    "title": "Servlet 生命周期：init、service、destroy",
+    "concept": "Servlet 的生命周期是从创建到销毁的整个过程：调用 init() 初始化，调用 service() 处理客户端的请求，调用 destroy() 终止，最后被 JVM 的垃圾回收器（GC）回收",
+    "oneLiner": "默认情况下，用户第一次请求某个 Servlet 对应的 URL 时，容器才创建它的实例并调用一次 init()（做加载配置、建立数据库连接这类一次性准备）；之后每个请求调用一次 service()；容器关闭或应用卸载时调用一次 destroy()（关闭连接、停止后台线程、把数据写到磁盘）；然后对象等待 GC 回收；设置 loadOnStartup 可以让 Servlet 在容器启动时就创建和初始化。",
+    "explanation": "A servlet life cycle can be defined as the entire process from its creation till the destruction：The servlet is initialized by calling the init() method；The servlet calls service() method to process a client's request；The servlet is terminated by calling the destroy() method；Finally, servlet is garbage collected by the garbage collector (GC) of the JVM。\ninit()：Every Servlet class is responsible for some URL requests；when user first make request call to the URL corresponding to the servlet, an instance of this servlet will be generated；例如 UserLoginServlet will be initialized (init() called) when the first user tries to log in。\ninit() — Initialization：Called once when the servlet is first loaded；Used to perform one-time setup, like loading config data or initializing resources (e.g., database connections)；Executed before any request is handled。\ndestroy()：called only once at the end of the life cycle of a servlet；gives your servlet a chance to close database connections, halt background threads, write cookie lists or hit counts to disk, and perform other such cleanup activities；After the destroy() method is called, the servlet object is marked for garbage collection；destroy() defines the operations before GC。\n补充：loadOnStartup（web.xml 里是 load-on-startup）为 0 或正数时，容器启动时就加载并 init，数字越小越先加载；不设置（默认 -1）就是第一次请求时才加载，所以第一个请求会慢一些。init() 抛出 ServletException 时，这个 Servlet 不会投入使用。destroy() 本身不释放内存，容器不再引用这个对象后，它才变成可以被 GC 回收的对象。\n构造器和 init() 的区别：构造器由容器通过反射调用，这时还拿不到 ServletConfig（初始化参数）；init() 在构造之后调用，可以通过 getServletConfig() 读取配置，所以初始化逻辑放在 init() 里。",
+    "question": "说一下 Servlet 的生命周期。init()、service()、destroy() 分别在什么时候调用、调用几次？",
+    "keyPoints": [
+      "创建实例：默认在第一次请求时，设置 loadOnStartup 后在容器启动时",
+      "init()：创建后调用一次，在处理任何请求之前，做一次性初始化",
+      "service()：每个请求调用一次，由不同的线程调用",
+      "destroy()：容器关闭或应用卸载时调用一次，做清理工作",
+      "destroy() 之后对象等待被 GC 回收"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "方法",
+        "什么时候调用",
+        "调用次数",
+        "典型用途"
+      ],
+      "rows": [
+        [
+          "init()",
+          "实例创建后、处理第一个请求前",
+          "1 次",
+          "加载配置、建立数据库连接"
+        ],
+        [
+          "service()",
+          "每个请求到来时",
+          "每个请求 1 次",
+          "处理请求、生成响应"
+        ],
+        [
+          "destroy()",
+          "容器关闭、应用卸载时",
+          "1 次",
+          "关闭连接、停止后台线程、保存数据"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为每个请求都会创建一个新的 Servlet 实例并调用 init()",
+        "right": "实例只创建一次，init() 只调用一次，之后的请求都调用同一个实例的 service()"
+      },
+      {
+        "wrong": "认为调用 destroy() 就立刻释放了 Servlet 对象的内存",
+        "right": "destroy() 只是做清理工作，之后对象才可以被 GC 回收，什么时候回收由 JVM 决定"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "为什么要把建立数据库连接这类工作放在 init() 里，而不是放在 doGet() 里？",
+        "a": "init() 只执行一次，而且在处理任何请求之前；放在 doGet() 里每个请求都要重做一遍，浪费时间和资源（实际项目里一般用连接池，在 init 或应用启动时初始化）"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面用普通 Java 类模拟 Servlet 容器（默认懒加载），输出什么？",
+        "lang": "java",
+        "code": "class HelloServlet {\n    HelloServlet() { System.out.print(\"new \"); }\n    void init() { System.out.print(\"init \"); }\n    void service(String method) { System.out.print(method + \" \"); }\n    void destroy() { System.out.print(\"destroy \"); }\n}\nclass MiniContainer {\n    private HelloServlet servlet;\n    void handle(String method) {\n        if (servlet == null) {\n            servlet = new HelloServlet();\n            servlet.init();\n        }\n        servlet.service(method);\n    }\n    void shutdown() {\n        if (servlet != null) servlet.destroy();\n    }\n}\nMiniContainer tomcat = new MiniContainer();\nSystem.out.print(\"start \");\ntomcat.handle(\"GET\");\ntomcat.handle(\"POST\");\ntomcat.handle(\"GET\");\ntomcat.shutdown();",
+        "options": [
+          "start new init GET POST GET destroy",
+          "start new init GET new init POST new init GET destroy",
+          "new init start GET POST GET destroy",
+          "start new init GET destroy new init POST destroy new init GET destroy"
+        ],
+        "answer": 0,
+        "why": "这个容器和 Tomcat 的默认行为一样是懒加载：启动时什么都不创建，第一个请求到来时才 new 出实例并调用一次 init()；之后的请求复用同一个实例，只调用 service()；关闭容器时调用一次 destroy()。如果设置了 loadOnStartup，实例才会在容器启动时就创建。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "默认情况下，Servlet 在第一次被请求时才创建实例并调用 init()；设置 loadOnStartup 后可以在容器启动时就初始化",
+        "correct": true,
+        "why": "课件：用户第一次请求对应 URL 时才生成实例；@WebServlet 有 loadOnStartup 字段"
+      },
+      {
+        "statement": "每来一个新请求，容器都会调用一次 init()",
+        "correct": false,
+        "why": "课件：init() 只在 Servlet 第一次加载时调用一次，之后的请求只调用 service()"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet生命周期与配置-service-与-doget-dopost",
+    "category": "Web与Servlet/Servlet生命周期与配置",
+    "title": "service() 与 doGet、doPost",
+    "concept": "service() 负责处理请求：服务器每收到一个发给该 Servlet 的请求，就用一个线程调用它的 service()；HttpServlet 的 service() 会判断请求类型（GET、POST……），调用对应的 doGet()、doPost() 等方法，所以我们一般不改 service()，只按业务需要重写 doGet 或 doPost",
+    "oneLiner": "继承 HttpServlet 后只重写需要的 doXxx 方法，比如登录用 @WebServlet(\"/login\") 映射、重写 doPost 处理表单；service() 由容器调用，按请求方法分发；没有重写的 doXxx 有默认实现：只重写了 doPost 的话，用 GET 访问会得到 405 Method Not Allowed，不会自动转给 doPost；不支持的请求方法返回 501 Not Implemented。",
+    "explanation": "service() — Request Handling：Each time the server receives a servlet request, server will generate a new thread and invoke the service() method（课件的说法；实际上 Tomcat 用线程池，从池里取一个已有的线程来调用，不是每次都新建线程）。\nService() method will detect request type (GET, POST...) and call corresponding method from the servlet (doGet(), doPost()...)。\nThe service method is invoked by the server. Then the service() method will invoke doGet, doPost or other methods based on request type. Thus, we do not need to make any changes to service() method. All we need is to override doGet or doPost method based on business requirement（课件写作 doGET、doPOST，方法名应为 doGet、doPost）。\nThis is where the core logic for processing requests and generating responses happens。\n课件的代码：\n```java\n@WebServlet(\"/login\")\npublic class UserLogInServlet extends HttpServlet {\n    @Override\n    protected void doPost(HttpServletRequest request, HttpServletResponse response) {\n        // 读取用户名、密码，写响应\n    }\n}\n```\nHttpServlet 里 doGet、doPost、doPut、doDelete 的默认实现会返回错误（HTTP/1.1 下是 405 Method Not Allowed）；service() 遇到不支持的请求方法返回 501 Not Implemented。\ndoGet、doPost 的完整签名：protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException。",
+    "question": "HttpServlet 的 service() 方法做了什么？为什么我们一般重写 doGet / doPost 而不是 service()？",
+    "keyPoints": [
+      "容器每收到一个请求，就用一个线程调用 Servlet 的 service()",
+      "HttpServlet 的 service() 根据请求方法分发到 doGet、doPost、doPut、doDelete 等",
+      "我们只需重写需要支持的 doXxx 方法，service() 不用改",
+      "没重写的 doXxx 默认返回 405 Method Not Allowed，不支持的方法返回 501",
+      "重写 service() 会破坏这套分发机制，所有请求方法都走同一段代码"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "请求方法",
+        "service() 调用",
+        "没有重写时的结果"
+      ],
+      "rows": [
+        [
+          "GET",
+          "doGet()",
+          "405 Method Not Allowed"
+        ],
+        [
+          "POST",
+          "doPost()",
+          "405 Method Not Allowed"
+        ],
+        [
+          "PUT",
+          "doPut()",
+          "405 Method Not Allowed"
+        ],
+        [
+          "DELETE",
+          "doDelete()",
+          "405 Method Not Allowed"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "只重写了 doPost，以为用 GET 访问也会交给 doPost 处理",
+        "right": "GET 会走 HttpServlet 默认的 doGet，返回 405；需要的话可以在 doGet 里调用 doPost"
+      },
+      {
+        "wrong": "认为 service() 只在 Servlet 第一次被访问时调用一次",
+        "right": "只调用一次的是 init()；service() 每个请求都会调用"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "在浏览器地址栏直接输入一个只重写了 doPost 的 Servlet 的地址，会看到什么？",
+        "a": "地址栏访问发的是 GET 请求，会走默认的 doGet，返回 405 Method Not Allowed"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面用普通 Java 类模拟 HttpServlet 的分发逻辑，输出什么？",
+        "lang": "java",
+        "code": "abstract class MyHttpServlet {\n    void service(String method) {\n        switch (method) {\n            case \"GET\" -> doGet();\n            case \"POST\" -> doPost();\n            default -> System.out.print(\"501 \");\n        }\n    }\n    void doGet() { System.out.print(\"405 \"); }\n    void doPost() { System.out.print(\"405 \"); }\n}\nclass LoginServlet extends MyHttpServlet {\n    @Override\n    void doPost() { System.out.print(\"login \"); }\n}\nMyHttpServlet servlet = new LoginServlet();\nservlet.service(\"POST\");\nservlet.service(\"GET\");",
+        "options": [
+          "login 405",
+          "login login",
+          "405 405",
+          "login"
+        ],
+        "answer": 0,
+        "why": "service() 按请求方法分发：POST 调用 doPost，LoginServlet 重写了它，输出 login；GET 调用 doGet，LoginServlet 没有重写，用的是父类的默认实现，输出 405。真实的 HttpServlet 也是这样：没重写的 doGet 默认返回 405 Method Not Allowed，不会自动转给 doPost。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "继承 HttpServlet 时，一般只重写 doGet、doPost 等方法，不需要重写 service()",
+        "correct": true,
+        "why": "课件：service() 会根据请求类型调用 doGet、doPost，we do not need to make any changes to service() method"
+      },
+      {
+        "statement": "一个只重写了 doPost 的 Servlet 收到 GET 请求时，会自动交给 doPost 处理",
+        "correct": false,
+        "why": "GET 会调用 HttpServlet 默认的 doGet，返回 405 Method Not Allowed"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet生命周期与配置-servlet-的单实例多线程",
+    "category": "Web与Servlet/Servlet生命周期与配置",
+    "title": "Servlet 的单实例多线程",
+    "concept": "默认情况下，同一个 Servlet（同一个声明）在容器里只有一个实例：实例在第一次请求时创建一次，之后每个请求由一个单独的线程调用这个实例的 service()，所以多个请求会同时执行同一个对象的方法",
+    "oneLiner": "Servlet 是单实例多线程的：成员变量（实例变量）被所有请求、所有线程共享，用来存请求相关的数据会互相覆盖，不是线程安全的；doGet / doPost 里的局部变量在每个线程自己的栈上，是线程安全的；所以 Servlet 最好设计成无状态的，请求数据放局部变量，真正需要共享的计数之类用 AtomicInteger 或小范围的 synchronized，不要给整个 doPost 加 synchronized，那样所有请求都要排队。",
+    "explanation": "课件的两句话放在一起：when user first make request call to the URL corresponding to the servlet, an instance of this servlet will be generated；After started, each request will be handled by a separate thread, and call the corresponding method。\n也就是：一个实例、多个线程，多个请求并发调用同一个对象的 service() → doGet / doPost。\n线程从哪来：Tomcat 用线程池（默认最多 200 个工作线程）处理请求，请求结束后线程回到池里，不是每个请求都新建线程。\n错误写法：\n```java\npublic class UserLoginServlet extends HttpServlet {\n    private String username;                       // 所有请求共享\n    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {\n        username = req.getParameter(\"username\");   // 可能被另一个线程覆盖\n    }\n}\n```\n正确写法：String username = req.getParameter(\"username\"); 写成局部变量，每个线程各有一份。\n和 Java 多线程的关系：成员变量在堆上，被线程共享（会有线程干扰、内存可见性问题）；局部变量在线程私有的栈上。\nServlet 由容器保证默认只有一个实例，但它不是用 private 构造器实现的单例模式：构造器是 public 的，同一个类在 web.xml 里声明两次就会有两个实例。\n老的 SingleThreadModel 接口试图让每个线程用一个实例，早已被废弃，不要用。",
+    "question": "Servlet 是线程安全的吗？在 Servlet 里应该怎样保存数据？",
+    "keyPoints": [
+      "默认一个 Servlet 只有一个实例，多个请求由多个线程同时调用它的 service()",
+      "成员变量被所有线程共享，用来存请求相关的数据会出现线程安全问题",
+      "局部变量在各个线程自己的栈上，是线程安全的，请求数据应放在局部变量里",
+      "真正需要共享的状态用 AtomicInteger、ConcurrentHashMap 或小范围的 synchronized",
+      "不要给整个 doGet / doPost 加 synchronized，会让所有请求串行，失去并发能力"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "成员变量（实例变量）",
+        "局部变量"
+      ],
+      "rows": [
+        [
+          "存在哪",
+          "堆上的 Servlet 对象里",
+          "每个线程自己的栈上"
+        ],
+        [
+          "是否被请求共享",
+          "所有请求、所有线程共享",
+          "每次调用各一份"
+        ],
+        [
+          "线程安全",
+          "不安全（除非只读或做了同步）",
+          "安全"
+        ],
+        [
+          "适合放",
+          "只读的配置、线程安全的工具对象",
+          "请求参数、当前用户等请求数据"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "认为每个请求都有自己的 Servlet 对象，所以成员变量互不影响",
+        "right": "默认只有一个实例，成员变量被所有并发请求共享"
+      },
+      {
+        "wrong": "为了线程安全给整个 doPost 加 synchronized",
+        "right": "所有请求都要排队，吞吐量大幅下降；应该改用局部变量，只对真正共享的数据做最小范围的同步"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "Servlet 由容器保证只有一个实例，它和 Java 里的单例模式一样吗？",
+        "a": "不一样：单例模式靠 private 构造器和 getInstance() 从语言层面保证只有一个实例；Servlet 只是容器默认为每个 Servlet 声明创建一个实例，构造器是 public 的，同一个类在 web.xml 里声明两次就会有两个实例"
+      }
+    ],
+    "codeQuiz": [
+      {
+        "prompt": "下面用一个普通对象模拟\"容器只创建一个 Servlet 实例，三个请求依次调用它\"，输出什么？",
+        "lang": "java",
+        "code": "class CounterServlet {\n    private int count = 0;\n    void service(String user) {\n        int local = 0;\n        count++;\n        local++;\n        System.out.print(user + \":\" + count + \"/\" + local + \" \");\n    }\n}\nCounterServlet servlet = new CounterServlet();\nservlet.service(\"A\");\nservlet.service(\"B\");\nservlet.service(\"C\");",
+        "options": [
+          "A:1/1 B:2/1 C:3/1",
+          "A:1/1 B:1/1 C:1/1",
+          "A:1/1 B:2/2 C:3/3",
+          "A:1/1 B:1/2 C:1/3"
+        ],
+        "answer": 0,
+        "why": "三个请求用的是同一个对象，成员变量 count 被它们共享，依次变成 1、2、3；局部变量 local 每次调用 service() 都重新创建，永远是 1。这里是单线程依次调用，结果是确定的；真实的 Servlet 里多个线程会同时执行 count++，还会出现 Java 多线程里讲的线程干扰，结果就不确定了。"
+      }
+    ],
+    "judge": [
+      {
+        "statement": "默认情况下，一个 Servlet 在容器里只有一个实例，并发的请求由不同线程同时调用它的 service()",
+        "correct": true,
+        "why": "课件：实例在第一次请求时创建，each request will be handled by a separate thread"
+      },
+      {
+        "statement": "Servlet 的成员变量是每个请求各自一份的，所以天然是线程安全的",
+        "correct": false,
+        "why": "所有请求共享同一个实例的成员变量，要用局部变量或做同步"
+      }
+    ]
+  },
+  {
+    "id": "web与servlet-servlet生命周期与配置-web-xml-与-webservlet-配置",
+    "category": "Web与Servlet/Servlet生命周期与配置",
+    "title": "web.xml 与 @WebServlet 配置",
+    "concept": "Servlet 有两种配置方式：XML 配置（WEB-INF 下的 web.xml，多见于老系统和大型企业系统）和注解配置（@WebServlet，开发者更喜欢）；@WebServlet 是 jakarta.servlet.annotation（或 javax.servlet.annotation）包下的类级别注解，有 name、urlPatterns、value、loadOnStartup 等字段",
+    "oneLiner": "web.xml 用 `<servlet>`（名字 + 类）和 `<servlet-mapping>`（名字 + URL）两段把类映射到 URL；Servlet 3.0 起可以直接在类上写 @WebServlet(\"/login\") 或 @WebServlet(name = \"myDemoServlet\", urlPatterns = \"/my-demo-servlet\")，value 和 urlPatterns 二选一、至少写一个；注解本身不改变代码的运行，是容器启动时扫描、读取它来建立映射；访问地址是 http(s)://host:port/应用上下文路径/Servlet 映射路径。",
+    "explanation": "Servlet Configuration - 2 Ways：XML Configuration - web.xml (in legacy and big enterprise systems)；Annotation configuration (developers prefer)。\n课件的项目结构：src/main/java 下的 org.example.ServletDemo 包里有 HelloServlet、MyDemoServlet；配置文件在 src/main/webapp/WEB-INF/web.xml；页面是 src/main/webapp/index.html。\n课件的注解例子：@WebServlet(name = \"myDemoServlet\", urlPatterns = \"/my-demo-servlet\") public class MyDemoServlet extends HttpServlet。\n同样的配置用 web.xml 写：\n```\n<servlet>\n    <servlet-name>myDemoServlet</servlet-name>\n    <servlet-class>org.example.ServletDemo.MyDemoServlet</servlet-class>\n    <load-on-startup>1</load-on-startup>\n</servlet>\n<servlet-mapping>\n    <servlet-name>myDemoServlet</servlet-name>\n    <url-pattern>/my-demo-servlet</url-pattern>\n</servlet-mapping>\n```\nJava Annotations：a form of metadata, provide data about a program that is not part of the program itself. Annotations have no direct effect on the operation of the code they annotate；can have some fields/elements (key-value pairs)，e.g. @Author(name = \"Jane Doe\")；have multiple purposes, can be added to class/method/variable。\n@WebServlet：An annotation under package jakarta.servlet.annotation or javax.servlet.annotation；Class-level annotation；Has some optional fields: name, urlPatterns, value, loadOnStartup, ...（其实 value 和 urlPatterns 至少要写一个，且不能同时使用；只写 URL 时可以省略字段名：@WebServlet(\"/login\")）。\nHow to access a servlet：http(s)://<host>:<port>/<application-context>/<servlet-mapping>，比如 http://localhost:8080/ServletDemo/my-demo-servlet（课件写作 <host: port>）。\n补充：注解是 Servlet 3.0 引入的；web.xml 和注解同时配置同一个 Servlet 时以 web.xml 为准；WEB-INF 下的文件浏览器不能直接访问；url-pattern 有精确匹配（/login）、前缀匹配（/api/*）、扩展名匹配（*.do）和默认 Servlet（/）。",
+    "question": "Servlet 有哪几种配置方式？@WebServlet 有哪些常用属性？配置好之后怎么访问？",
+    "keyPoints": [
+      "两种方式：web.xml（XML 配置，放在 WEB-INF 下）和 @WebServlet 注解（Servlet 3.0 起）",
+      "web.xml 用 `<servlet>` 定义名字和类，用 `<servlet-mapping>` 把名字映射到 URL",
+      "@WebServlet 是类级别注解，常用 name、value / urlPatterns、loadOnStartup",
+      "注解本身不改变代码行为，由容器启动时扫描读取，建立 URL 到 Servlet 的映射",
+      "访问地址：http(s)://host:port/应用上下文路径/Servlet 映射路径"
+    ],
+    "compare": null,
+    "compareTable": {
+      "headers": [
+        "",
+        "web.xml",
+        "@WebServlet"
+      ],
+      "rows": [
+        [
+          "写在哪",
+          "WEB-INF/web.xml",
+          "Servlet 类上"
+        ],
+        [
+          "从哪个版本开始",
+          "一直都有",
+          "Servlet 3.0"
+        ],
+        [
+          "优点",
+          "配置集中，改映射不用改代码",
+          "简单直观，配置和代码在一起"
+        ],
+        [
+          "适用",
+          "老系统、大型企业系统",
+          "新项目，开发者更喜欢"
+        ],
+        [
+          "同时配置同一个 Servlet",
+          "以它为准",
+          "被 web.xml 覆盖"
+        ]
+      ]
+    },
+    "traps": [
+      {
+        "wrong": "把 @WebServlet 加在 doGet 方法上",
+        "right": "@WebServlet 是类级别注解，要加在继承了 HttpServlet 的类上"
+      },
+      {
+        "wrong": "访问时漏掉应用的上下文路径，直接访问 http://localhost:8080/my-demo-servlet",
+        "right": "完整地址是 http://localhost:8080/ServletDemo/my-demo-servlet，上下文路径一般是应用部署的名字（部署成 ROOT 时才为空）"
+      }
+    ],
+    "followUp": [
+      {
+        "q": "注解\"对代码的运行没有直接影响\"，那 @WebServlet 是怎么起作用的？",
+        "a": "注解只是元数据；Tomcat 启动时扫描应用里的类，通过反射读到 @WebServlet，再根据里面的 urlPatterns 等信息注册 Servlet、建立 URL 映射（所以它的保留策略是 RUNTIME）"
+      }
+    ],
+    "codeQuiz": [],
+    "judge": [
+      {
+        "statement": "@WebServlet 是类级别的注解，可以用 urlPatterns 或 value 指定 Servlet 映射的 URL",
+        "correct": true,
+        "why": "课件：Class-level annotation，有 name、urlPatterns、value、loadOnStartup 等字段"
+      },
+      {
+        "statement": "Java 注解会直接改变被注解代码的运行逻辑，不需要任何程序去读取",
+        "correct": false,
+        "why": "课件：Annotations have no direct effect on the operation of the code they annotate，要由编译器或容器读取才起作用"
+      }
+    ]
+  },
+  {
     "id": "ios-uikit核心-responder-chain",
     "category": "iOS/UIKit核心",
     "title": "Responder Chain",
